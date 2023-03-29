@@ -7,6 +7,7 @@ require (
 	github.com/aws/aws-sdk-go-v2 v1.17.7
 	github.com/aws/aws-sdk-go-v2/service/kms v1.20.8
 	github.com/google/go-cmp v0.5.9
+	github.com/google/go-replayers/grpcreplay v1.1.0
 	github.com/google/uuid v1.3.0
 	google.golang.org/api v0.114.0
 	google.golang.org/grpc v1.54.0
