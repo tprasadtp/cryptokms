@@ -42,7 +42,7 @@ type Decrypter struct {
 
 // Returns a new signer backed by AWS KMS asymmetric key which supports signing.
 // keyID must be either key ARN or key alias ARN.
-//   - Key Usage MUST be set to SIGN_VERIFY.
+//   - Key Usage MUST be set to ENCRYPT_DECRYPT.
 //
 // Following key specs(algorithms) are supported.
 //   - RSA_2048

@@ -43,12 +43,36 @@ Uses sensible and sane defaults.
 >
 > `RSA_SIGN_PSS_*`, `RSA_SIGN_RAW_*` and external KMS keys are **not** supported.
 
+## AWS KMS (Signing Keys)
+
+| Key Algorithm | Key Usage | Hash Algorithm | Supported Interfaces |
+|---|---|---|---
+| [`RSA_2048`][awskms_keyspec] | `SIGN_VERIFY` | [sha256], [sha384], [sha512] | [crypto.Signer], [crypto.SignerOpts]
+| [`RSA_3072`][awskms_keyspec] | `SIGN_VERIFY` | [sha256], [sha384], [sha512] | [crypto.Signer], [crypto.SignerOpts]
+| [`RSA_4096`][awskms_keyspec] | `SIGN_VERIFY`| [sha256], [sha384], [sha512] | [crypto.Signer], [crypto.SignerOpts]
+| [`ECC_NIST_P256`][awskms_keyspec](recommended) | `SIGN_VERIFY` | [sha256] | [crypto.Signer], [crypto.SignerOpts]
+| [`ECC_NIST_384`][awskms_keyspec] | `SIGN_VERIFY` | [sha384] | [crypto.Signer], [crypto.SignerOpts]
+| [`ECC_NIST_P521`][awskms_keyspec] | `SIGN_VERIFY` | [sha512] | [crypto.Signer], [crypto.SignerOpts]
+
+
+## AWS KMS (Decryption Keys)
+
+| Key Algorithm | Key Usage | Encryption Algorithms | Supported Interfaces |
+|---|---|---|---
+| [`RSA_2048`][awskms_keyspec] | `ENCRYPT_DECRYPT` | `RSAES_OAEP_SHA_1`,`RSAES_OAEP_SHA_256` | [crypto.Decrypter]
+| [`RSA_3072`][awskms_keyspec] | `ENCRYPT_DECRYPT` | `RSAES_OAEP_SHA_1`,`RSAES_OAEP_SHA_256` | [crypto.Decrypter]
+| [`RSA_4096`][awskms_keyspec] | `ENCRYPT_DECRYPT` | `RSAES_OAEP_SHA_1`,`RSAES_OAEP_SHA_256` | [crypto.Decrypter]
+
 
 [Google Cloud KMS]: https://cloud.google.com/kms/docs
 [AWS KMS]: https://aws.amazon.com/kms/
+
 [gcp_rsa]: https://cloud.google.com/kms/docs/algorithms#rsa_signing_algorithms
 [gcp_decrypt]: https://cloud.google.com/kms/docs/algorithms#asymmetric_encryption_algorithms
 [gcp_ec]: https://cloud.google.com/kms/docs/algorithms#elliptic_curve_signing_algorithms
+
+[awskms_keyspec]: https://docs.aws.amazon.com/kms/latest/developerguide/asymmetric-key-specs.html
+
 [sha1]: https://pkg.go.dev/crypto/sha1
 [sha256]: https://pkg.go.dev/crypto/sha256
 [sha512]: https://pkg.go.dev/crypto/sha512
