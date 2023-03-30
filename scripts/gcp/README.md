@@ -22,7 +22,7 @@ which have immutable references and can never be destroyed(key material which in
     ```
 - Initialize terraform
     ```console
-    terraform init
+    terraform -chdir=scripts/gcp init
     ```
 - Create required KMS Keyring and keys. This keyring **must ony** be used for integration testing. Keyring name is automatically generated.
     > **Warning**
