@@ -31,7 +31,7 @@ which have immutable references and can never be destroyed(key material which in
     > as long as you destroy it soon after recording grpc responses.
 
     ```console
-    terraform -chdir=scripts/gcp apply -var="<your-sandbox-project-id>"
+    terraform -chdir=scripts/gcp apply -var="project=<your-sandbox-project-id>"
     ```
 - Save GRPC responses which can be used for integration tests
     ```console
@@ -41,5 +41,5 @@ which have immutable references and can never be destroyed(key material which in
     ```
 - Destroy **all** keys in the created keyring.
     ```console
-    terraform -chdir=scripts/gcp destroy -var="<your-sandbox-project-id>"
+    terraform -chdir=scripts/gcp destroy -var="project=<your-sandbox-project-id>"
     ```
