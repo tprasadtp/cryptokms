@@ -11,18 +11,6 @@ terraform {
   }
 }
 
-// Types of keys
-locals {
-  key_algorithms = [
-    "RSA_4096",
-    "RSA_3072",
-    "RSA_2048",
-    "ECC_NIST_P521",
-    "ECC_NIST_P384",
-    "ECC_NIST_P256",
-  ]
-}
-
 // Locals
 locals {
   signing_key_algorithms = [
