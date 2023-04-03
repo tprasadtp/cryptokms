@@ -20,7 +20,7 @@ Uses sensible and sane defaults.
 - ECC Keys of size less than 256 are not supported.
 - Signing algorithms with insecure hashes (SHA1, MD5) are not supported.
 
-## Google KMS
+## Google KMS (Signing Keys)
 
 | Key Algorithm | Hash Algorithm | Supported Interfaces |
 |---|---|---
@@ -30,6 +30,15 @@ Uses sensible and sane defaults.
 | [`RSA_SIGN_PKCS1_3072_SHA256`][gcp_rsa] | [sha256] | [crypto.Signer], [crypto.SignerOpts]
 | [`RSA_SIGN_PKCS1_4096_SHA256`][gcp_rsa] | [sha256] | [crypto.Signer], [crypto.SignerOpts]
 | [`RSA_SIGN_PKCS1_4096_SHA512`][gcp_rsa] | [sha512] | [crypto.Signer], [crypto.SignerOpts]
+
+> **Note**
+>
+> `RSA_SIGN_PSS_*`, `RSA_SIGN_RAW_*` and external KMS keys are **not** supported.
+
+## Google KMS (Encryption Keys)
+
+| Key Algorithm | Hash Algorithm | Supported Interfaces |
+|---|---|---
 | [`RSA_DECRYPT_OAEP_2048_SHA1`][gcp_decrypt] | [sha1] | [crypto.Decrypter]
 | [`RSA_DECRYPT_OAEP_3072_SHA1`][gcp_decrypt] | [sha1] | [crypto.Decrypter]
 | [`RSA_DECRYPT_OAEP_4096_SHA1`][gcp_decrypt] | [sha1] | [crypto.Decrypter]
@@ -38,10 +47,6 @@ Uses sensible and sane defaults.
 | [`RSA_DECRYPT_OAEP_4096_SHA256`][gcp_decrypt] | [sha256] | [crypto.Decrypter]
 | [`RSA_DECRYPT_OAEP_4096_SHA512`][gcp_decrypt] | [sha512] | [crypto.Decrypter]
 
-
-> **Note**
->
-> `RSA_SIGN_PSS_*`, `RSA_SIGN_RAW_*` and external KMS keys are **not** supported.
 
 ## AWS KMS (Signing Keys)
 
