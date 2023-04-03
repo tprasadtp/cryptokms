@@ -33,11 +33,17 @@ type opts struct {
 	SecretAccessKey string
 	SessionToken    string
 	Region          string
+	KMSEndpoint     string
 	ConfigFile      string
 	Config          Config
 	Output          string
 	TemplatesOnly   bool
 }
+
+var (
+	_ kms.EndpointResolver    = (*opts)(nil)
+	_ aws.CredentialsProvider = (*opts)(nil)
+)
 
 type Config struct {
 	Keys []Key `json:"Keys"`
@@ -55,6 +61,13 @@ func (o *opts) Retrieve(ctx context.Context) (aws.Credentials, error) {
 		AccessKeyID:     o.AccessKeyID,
 		SecretAccessKey: o.SecretAccessKey,
 		SessionToken:    o.SessionToken,
+	}, nil
+}
+
+// Implements [github.com/aws/aws-sdk-go-v2/kms.EndpointResolver].
+func (o *opts) ResolveEndpoint(region string, options kms.EndpointResolverOptions) (aws.Endpoint, error) {
+	return aws.Endpoint{
+		URL: o.KMSEndpoint,
 	}, nil
 }
 
@@ -86,13 +99,16 @@ func (o *opts) GenerateTestData(ctx context.Context, keyID, keyUsage, keyAlgorit
 		"Amz-Sdk-Invocation-Id", // ignore
 	)
 
+	kmsOptions := kms.Options{
+		Credentials:      o,
+		Region:           o.Region,
+		HTTPClient:       rec.Client(),
+		EndpointResolver: o,
+	}
+
 	// We want to avoid a call to sts service
 	// as it gets recorded as well, so we don't use any aws cli configs.
-	client := kms.New(kms.Options{
-		Credentials: o,
-		Region:      o.Region,
-		HTTPClient:  rec.Client(),
-	})
+	client := kms.New(kmsOptions)
 
 	// Based on interface switch flow.
 	var pub crypto.PublicKey
@@ -249,7 +265,8 @@ func main() {
 	flag.StringVar(&o.ConfigFile, "config", "", "Config JSON (required)")
 	flag.BoolVar(&o.TemplatesOnly, "templates-only", false, "Skip sign/decrypt only render templates")
 	flag.StringVar(&o.Region, "region", "", "AWS Region (required)")
-	flag.StringVar(&o.AccessKeyID, "access-key", "", "AWS Access Key ID (required)")
+	flag.StringVar(&o.AccessKeyID, "access-key-id", "", "AWS Access Key ID (required)")
+	flag.StringVar(&o.KMSEndpoint, "kms-endpoint", "", "AWS KMS API endpoint URL")
 	flag.StringVar(&o.SecretAccessKey, "secret-access-key", "", "AWS Secret Access Key (required)")
 	flag.StringVar(&o.SessionToken, "session-token", "", "AWS Session Token")
 	flag.StringVar(&o.Output, "output", "", "Directory to save test data (required)")

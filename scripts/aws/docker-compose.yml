@@ -1,0 +1,7 @@
+services:
+  localstack:
+    container_name: "localstack_cryptokms"
+    image: localstack/localstack:latest
+    ports:
+      - "127.0.0.1:4566:4566"            # LocalStack Gateway
+    restart: unless-stopped

@@ -7,8 +7,18 @@ terraform {
   }
 }
 
+variable "kms_endpoint" {
+  type        = string
+  description = "AWS KMS endpoint. If not specified uses default AWS KMS endpoint."
+  default     = null
+  nullable    = true
+}
+
 // Provider
 provider "aws" {
+  endpoints {
+    kms = var.kms_endpoint
+  }
 }
 
 // Types of keys
@@ -23,10 +33,8 @@ locals {
   ]
   encryption_key_algorithms = [
     "RSA_4096",
-    # "RSA_3072",
-    # "RSA_2048",
-    # "ECC_NIST_P521",
-    # "ECC_NIST_P384",
+    "RSA_3072",
+    "RSA_2048",
   ]
 }
 
