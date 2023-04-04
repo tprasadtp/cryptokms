@@ -6,6 +6,7 @@ import (
 	"crypto/x509"
 	"fmt"
 	"io"
+	"sync"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/kms"
@@ -27,6 +28,8 @@ var (
 type Signer struct {
 	// Key ID is key ARN
 	keyID   string
+	ctx     context.Context
+	mu      sync.RWMutex
 	keySpec types.KeySpec
 	// signer can use different hashes
 	// this maps crypto.Hash to SigningAlgorithmSpec
@@ -180,9 +183,33 @@ func (s *Signer) CreatedAt() time.Time {
 	return s.ctime
 }
 
+// context returns the context for this signer or
+// if context is nil, returns [context.Background]
+func (s *Signer) context() context.Context {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	ctx := s.ctx
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	return ctx
+}
+
+// WithContext adds the given context to the signer.
+//
+// Deprecated: Use SignContext instead.
+func (s *Signer) WithContext(ctx context.Context) *Signer {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	s.ctx = ctx
+	return s
+}
+
 // Sign is a wrapper around SignContext.
 func (s *Signer) Sign(rand io.Reader, digest []byte, opts crypto.SignerOpts) ([]byte, error) {
-	return s.SignContext(context.Background(), rand, digest, opts)
+	return s.SignContext(s.context(), rand, digest, opts)
 }
 
 // SignContext signs the given digest with asymmetric key.
