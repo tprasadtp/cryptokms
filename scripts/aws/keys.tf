@@ -14,8 +14,37 @@ variable "kms_endpoint" {
   nullable    = true
 }
 
+variable "access_key" {
+  type        = string
+  description = "AWS Access Key ID"
+  default     = null
+  nullable    = true
+}
+
+variable "secret_key" {
+  type        = string
+  description = "AWS Secret Access Key"
+  default     = null
+  nullable    = true
+}
+
+variable "region" {
+  type        = string
+  description = "AWS Region"
+  default     = "us-east-1"
+}
+
+
+
 // Provider
 provider "aws" {
+  access_key = var.access_key
+  secret_key = var.secret_key
+  region = var.region
+  // Skip validations when api endpoint is specified.
+  skip_credentials_validation = var.kms_endpoint != "" ? true : null
+  skip_requesting_account_id = var.kms_endpoint != "" ? true : null
+  skip_metadata_api_check = var.kms_endpoint != "" ? true : null
   endpoints {
     kms = var.kms_endpoint
   }

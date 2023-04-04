@@ -184,7 +184,7 @@ func (s *Signer) CreatedAt() time.Time {
 }
 
 // context returns the context for this signer or
-// if context is nil, returns [context.Background]
+// if context is nil, returns [context.Background].
 func (s *Signer) context() context.Context {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -208,6 +208,8 @@ func (s *Signer) WithContext(ctx context.Context) *Signer {
 }
 
 // Sign is a wrapper around SignContext.
+//
+// Deprecated: Use SignContext instead.
 func (s *Signer) Sign(rand io.Reader, digest []byte, opts crypto.SignerOpts) ([]byte, error) {
 	return s.SignContext(s.context(), rand, digest, opts)
 }

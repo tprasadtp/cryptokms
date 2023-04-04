@@ -101,11 +101,16 @@ func NewDecrypter(ctx context.Context, client Client, keyID string) (*Decrypter,
 
 	// Create new decrypter
 	decrypter := &Decrypter{
-		keyID:                   *keyInfo.KeyMetadata.Arn,
-		ctime:                   *keyInfo.KeyMetadata.CreationDate,
-		client:                  client,
-		keySpec:                 keyInfo.KeyMetadata.KeySpec,
-		hashToEncryptionAlgoMap: make(map[crypto.Hash]types.EncryptionAlgorithmSpec),
+		keyID:         *keyInfo.KeyMetadata.Arn,
+		ctime:         *keyInfo.KeyMetadata.CreationDate,
+		client:        client,
+		keySpec:       keyInfo.KeyMetadata.KeySpec,
+		defaultHasher: crypto.SHA256, // defaults to RSA OAEP SHA256
+		//nolint:exhaustive // not all hashes are supported.
+		hashToEncryptionAlgoMap: map[crypto.Hash]types.EncryptionAlgorithmSpec{
+			crypto.SHA1:   types.EncryptionAlgorithmSpecRsaesOaepSha1,
+			crypto.SHA256: types.EncryptionAlgorithmSpecRsaesOaepSha256,
+		},
 	}
 
 	// GetPublicKey
@@ -124,22 +129,6 @@ func NewDecrypter(ctx context.Context, client Client, keyID string) (*Decrypter,
 			cryptokms.ErrGetKeyMetadata, err)
 	}
 
-	// KMS keys only support certain decryption (thus digest) algorithms.
-	// This iterates over all supported decryption algorithms,
-	// and builds a map of [crypto.Hash] -> EncryptionAlgorithmSpec
-	// unsupported decryption algorithms are not populated in the map.
-	// Thus decrypter can simply lookup opts.Hash and use KMS API directly
-	// for decryption.
-	for _, item := range getPublicKeyResp.EncryptionAlgorithms {
-		//nolint:exhaustive // other encryption algorithms are unsupported ignore them.
-		switch item {
-		case types.EncryptionAlgorithmSpecRsaesOaepSha1:
-			decrypter.hashToEncryptionAlgoMap[crypto.SHA1] = types.EncryptionAlgorithmSpecRsaesOaepSha1
-		case types.EncryptionAlgorithmSpecRsaesOaepSha256:
-			decrypter.hashToEncryptionAlgoMap[crypto.SHA256] = types.EncryptionAlgorithmSpecRsaesOaepSha256
-		}
-	}
-
 	// maxCiphertextLen is key modulus.
 	//
 	//nolint:exhaustive // other encryption KeySpecs do not support asymmetric encryption.
@@ -150,23 +139,6 @@ func NewDecrypter(ctx context.Context, client Client, keyID string) (*Decrypter,
 		decrypter.maxCiphertextLen = 3072
 	case types.KeySpecRsa4096:
 		decrypter.maxCiphertextLen = 4096
-	}
-
-	// Ensure decrypter.hashToEncryptionAlgoMap has at-least one key.
-	if len(decrypter.hashToEncryptionAlgoMap) == 0 {
-		return nil, fmt.Errorf("%w: no supported encryption algorithm for key(%s)",
-			cryptokms.ErrDigestAlgorithm, decrypter.keyID)
-	}
-
-	// Build default hasher.
-	// If SHA56 is supported select it,
-	// otherwise select a supported hashing algorithm.
-	for _, item := range [2]crypto.Hash{crypto.SHA256, crypto.SHA1} {
-		_, ok := decrypter.hashToEncryptionAlgoMap[item]
-		if ok {
-			decrypter.defaultHasher = item
-			break
-		}
 	}
 
 	return decrypter, nil
@@ -214,12 +186,8 @@ func (d *Decrypter) context() context.Context {
 }
 
 // WithContext adds the given context to the decrypter.
-//   - This is goroutine safe.
-//   - There are lot of pitfalls with this method,
-//     incorrect or invalid context being used etc,
-//     are easy to miss an can be difficult to debug.
-//     Use DecryptContext instead, which accepts
-//     [context.Context] directly.
+//
+// Deprecated: Use DecryptContext instead.
 func (d *Decrypter) WithContext(ctx context.Context) *Decrypter {
 	d.mu.Lock()
 	defer d.mu.Unlock()
@@ -229,8 +197,8 @@ func (d *Decrypter) WithContext(ctx context.Context) *Decrypter {
 }
 
 // This is a wrapper around DecryptContext.
-// It is recommended to use DecryptContext instead as it is context aware.
-// The random parameter is ignored, and thus it can be as nil.
+//
+// Deprecated: Use DecryptContext instead.
 func (d *Decrypter) Decrypt(rand io.Reader, ciphertext []byte, opts crypto.DecrypterOpts) ([]byte, error) {
 	return d.DecryptContext(d.context(), rand, ciphertext, opts)
 }

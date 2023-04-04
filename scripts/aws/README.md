@@ -3,7 +3,7 @@
 This directory contains HTTP replay data generators, used for integration testing.
 This is intentionally does not use of `go generate` as it requires non-trivial setup.
 
-## Creating AWS Resources (Without localstack)
+## Creating AWS Resources
 
 > **Warning**
 >
@@ -34,38 +34,46 @@ in additional dependencies as well as to avoiding calls to STS which does not wo
     aws-vault exec <aws-profile> -- terraform -chdir=scripts/aws destroy
     ```
 
-## Creating AWS Resources (With localstack)
+## Creating AWS Resources (With local-kms)
 
-- Run [localstack] (if not running already)
+> **Warning**
+>
+> localstack is not supported, as it **does not** support [asymmetric encryption](localstack_asymmetric)
+
+- Run [local-kms] (if not running already)
     ```console
-    docker compose --file scripts/aws/docker-compose.yml up --wait --wait-timeout=60
+    docker compose --file scripts/aws/docker-compose.yml up -d
     ```
 - Create KMS Keys
     ```console
-    AWS_ACCESS_KEY_ID=test \
-        AWS_SECRET_ACCESSS_KEY=test \
-        AWS_REGION=us-east-1 \
-        terraform \
+    terraform \
         -chdir=scripts/aws apply \
-        -var="kms_endpoint=http://127.0.0.1:4566/"
+        -var="kms_endpoint=http://localhost:8088/" \
+        -var="access_key=test" \
+        -var="secret_key=test" \
+        -var="region=us-east-1"
     ```
 
 - Save request and responses for HTTP replayer.
     ```console
     go run scripts/aws/testdata.go \
-        -config keys.json \
-        -output aws/internal/testdata
+        -output awskms/internal/testdata/ \
+        -config scripts/aws/keys.json \
+        -access-key-id=test \
+        -secret-access-key=test \
+        -region=us-east-1 \
+        -kms-endpoint="http://localhost:8088/"
     ```
 - Destroy Keys
     ```console
-        AWS_ACCESS_KEY_ID=test \
-        AWS_SECRET_ACCESSS_KEY=test \
-        AWS_REGION=us-east-1 \
-        terraform \
-        -chdir=scripts/aws \
-        destroy
+    terraform \
+        -chdir=scripts/aws destroy \
+        -var="kms_endpoint=http://localhost:8088/" \
+        -var="access_key=test" \
+        -var="secret_key=test" \
+        -var="region=us-east-1"
     ```
 
 
 [aws-vault]: https://github.com/99designs/aws-vault
-[localstack]: https://docs.localstack.cloud/user-guide/integrations/terraform/
+[local-kms]: https://github.com/nsmithuk/local-kms

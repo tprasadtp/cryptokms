@@ -100,10 +100,13 @@ func (o *opts) GenerateTestData(ctx context.Context, keyID, keyUsage, keyAlgorit
 	)
 
 	kmsOptions := kms.Options{
-		Credentials:      o,
-		Region:           o.Region,
-		HTTPClient:       rec.Client(),
-		EndpointResolver: o,
+		Credentials: o,
+		Region:      o.Region,
+		HTTPClient:  rec.Client(),
+	}
+
+	if o.KMSEndpoint != "" {
+		kmsOptions.EndpointResolver = o
 	}
 
 	// We want to avoid a call to sts service
