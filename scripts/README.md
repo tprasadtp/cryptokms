@@ -4,7 +4,7 @@ This directory contains scripts for spinning up resources in various KMS service
 for generating integration test responses. Terraform state is intentionally not shared nor
 saved as resources are meant to be destroyed after generating test data.
 
-Please refer to README in individual directory for more info.
+Please refer to README in individual directories for more info.
 
 > **Warning**
 >

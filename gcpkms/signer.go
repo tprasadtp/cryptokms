@@ -204,12 +204,8 @@ func (s *Signer) context() context.Context {
 }
 
 // WithContext adds the given context to the signer.
-//   - This is goroutine safe.
-//   - There are lot of pitfalls with this method,
-//     incorrect or invalid context being used etc,
-//     are easy to miss an can be difficult to debug.
-//     Use SignContext instead which accepts
-//     [context.Context] directly.
+//
+// Deprecated: Use SignContext instead.
 func (s *Signer) WithContext(ctx context.Context) *Signer {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -219,7 +215,8 @@ func (s *Signer) WithContext(ctx context.Context) *Signer {
 }
 
 // This is a wrapper around SignContext.
-// It is recommended to use SignContext instead as it is context aware.
+//
+// Deprecated: Use SignContext instead.
 func (s *Signer) Sign(rand io.Reader, digest []byte, opts crypto.SignerOpts) ([]byte, error) {
 	return s.SignContext(s.context(), rand, digest, opts)
 }

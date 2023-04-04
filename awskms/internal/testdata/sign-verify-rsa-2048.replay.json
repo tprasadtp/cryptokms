@@ -1,0 +1,168 @@
+{
+  "Initial": null,
+  "Version": "0.2",
+  "Converter": {
+    "ScrubBody": null,
+    "ClearHeaders": [
+      "^X-Goog-.*Encryption-Key$"
+    ],
+    "RemoveRequestHeaders": [
+      "^Authorization$",
+      "^Proxy-Authorization$",
+      "^Connection$",
+      "^Content-Type$",
+      "^Date$",
+      "^Host$",
+      "^Transfer-Encoding$",
+      "^Via$",
+      "^X-Forwarded-.*$",
+      "^X-Cloud-Trace-Context$",
+      "^X-Goog-Api-Client$",
+      "^X-Google-.*$",
+      "^X-Gfe-.*$",
+      "^User-Agent$",
+      "^X-Amz-Date$",
+      "^X-Amz-Credential$",
+      "^X-Amz-Security-Token$",
+      "^X-Amz-Signature$",
+      "^Amz-Sdk-Invocation-Id$"
+    ],
+    "RemoveResponseHeaders": [
+      "^X-Google-.*$",
+      "^X-Gfe-.*$"
+    ],
+    "ClearParams": null,
+    "RemoveParams": null
+  },
+  "Entries": [
+    {
+      "ID": "a7ab625c435ff69c",
+      "Request": {
+        "Method": "POST",
+        "URL": "http://localhost:8088/",
+        "Header": {
+          "Accept-Encoding": [
+            "gzip"
+          ],
+          "Amz-Sdk-Request": [
+            "attempt=1; max=3"
+          ],
+          "Content-Length": [
+            "87"
+          ],
+          "X-Amz-Target": [
+            "TrentService.DescribeKey"
+          ]
+        },
+        "MediaType": "application/x-amz-json-1.1",
+        "BodyParts": [
+          "eyJLZXlJZCI6ImFybjphd3M6a21zOnVzLWVhc3QtMTowMDAwMDAwMDAwMDA6a2V5L2RhOWI1NjMwLTgyZjQtNDM5MC1iNGRhLTc1ZmI5NTVjMmE4MCJ9"
+        ]
+      },
+      "Response": {
+        "StatusCode": 200,
+        "Proto": "HTTP/1.1",
+        "ProtoMajor": 1,
+        "ProtoMinor": 1,
+        "Header": {
+          "Content-Length": [
+            "605"
+          ],
+          "Content-Type": [
+            "application/x-amz-json-1.1"
+          ],
+          "Date": [
+            "Tue, 04 Apr 2023 15:11:36 GMT"
+          ]
+        },
+        "Body": "eyJLZXlNZXRhZGF0YSI6eyJBV1NBY2NvdW50SWQiOiIwMDAwMDAwMDAwMDAiLCJBcm4iOiJhcm46YXdzOmttczp1cy1lYXN0LTE6MDAwMDAwMDAwMDAwOmtleS9kYTliNTYzMC04MmY0LTQzOTAtYjRkYS03NWZiOTU1YzJhODAiLCJDcmVhdGlvbkRhdGUiOjE2ODA2MjEwMjQsIkRlc2NyaXB0aW9uIjoiU2luZ2VyIC0gUlNBXzIwNDggdHByYXNhZHRwL2NyeXB0b2ttcyBpbnRlcmdyYXRpb24gdGVzdCIsIkVuYWJsZWQiOnRydWUsIktleUlkIjoiZGE5YjU2MzAtODJmNC00MzkwLWI0ZGEtNzVmYjk1NWMyYTgwIiwiS2V5TWFuYWdlciI6IkNVU1RPTUVSIiwiS2V5U3RhdGUiOiJFbmFibGVkIiwiS2V5VXNhZ2UiOiJTSUdOX1ZFUklGWSIsIk9yaWdpbiI6IkFXU19LTVMiLCJTaWduaW5nQWxnb3JpdGhtcyI6WyJSU0FTU0FfUFNTX1NIQV8yNTYiLCJSU0FTU0FfUFNTX1NIQV8zODQiLCJSU0FTU0FfUFNTX1NIQV81MTIiLCJSU0FTU0FfUEtDUzFfVjFfNV9TSEFfMjU2IiwiUlNBU1NBX1BLQ1MxX1YxXzVfU0hBXzM4NCIsIlJTQVNTQV9QS0NTMV9WMV81X1NIQV81MTIiXSwiS2V5U3BlYyI6IlJTQV8yMDQ4IiwiQ3VzdG9tZXJNYXN0ZXJLZXlTcGVjIjoiUlNBXzIwNDgifX0="
+      }
+    },
+    {
+      "ID": "e93b4336bef003a3",
+      "Request": {
+        "Method": "POST",
+        "URL": "http://localhost:8088/",
+        "Header": {
+          "Accept-Encoding": [
+            "gzip"
+          ],
+          "Amz-Sdk-Request": [
+            "attempt=1; max=3"
+          ],
+          "Content-Length": [
+            "87"
+          ],
+          "X-Amz-Target": [
+            "TrentService.GetPublicKey"
+          ]
+        },
+        "MediaType": "application/x-amz-json-1.1",
+        "BodyParts": [
+          "eyJLZXlJZCI6ImFybjphd3M6a21zOnVzLWVhc3QtMTowMDAwMDAwMDAwMDA6a2V5L2RhOWI1NjMwLTgyZjQtNDM5MC1iNGRhLTc1ZmI5NTVjMmE4MCJ9"
+        ]
+      },
+      "Response": {
+        "StatusCode": 200,
+        "Proto": "HTTP/1.1",
+        "ProtoMajor": 1,
+        "ProtoMinor": 1,
+        "Header": {
+          "Content-Length": [
+            "744"
+          ],
+          "Content-Type": [
+            "application/x-amz-json-1.1"
+          ],
+          "Date": [
+            "Tue, 04 Apr 2023 15:11:36 GMT"
+          ]
+        },
+        "Body": "eyJLZXlJZCI6ImFybjphd3M6a21zOnVzLWVhc3QtMTowMDAwMDAwMDAwMDA6a2V5L2RhOWI1NjMwLTgyZjQtNDM5MC1iNGRhLTc1ZmI5NTVjMmE4MCIsIkN1c3RvbWVyTWFzdGVyS2V5U3BlYyI6IlJTQV8yMDQ4IiwiS2V5U3BlYyI6IlJTQV8yMDQ4IiwiU2lnbmluZ0FsZ29yaXRobXMiOlsiUlNBU1NBX1BTU19TSEFfMjU2IiwiUlNBU1NBX1BTU19TSEFfMzg0IiwiUlNBU1NBX1BTU19TSEFfNTEyIiwiUlNBU1NBX1BLQ1MxX1YxXzVfU0hBXzI1NiIsIlJTQVNTQV9QS0NTMV9WMV81X1NIQV8zODQiLCJSU0FTU0FfUEtDUzFfVjFfNV9TSEFfNTEyIl0sIktleVVzYWdlIjoiU0lHTl9WRVJJRlkiLCJQdWJsaWNLZXkiOiJNSUlCSWpBTkJna3Foa2lHOXcwQkFRRUZBQU9DQVE4QU1JSUJDZ0tDQVFFQThudyt5ZEtUWTJROUV5aWpPbGVBY0F2ZkVOUGo5Rmw2RFpvRTMyNWhxckk5QzhTL1V4ajhLUU5oWjJ6M2VFMnp4R0xPVmFTdExweWFGMTM3UnpYVjdyc0dsRVIrRHdHUmxnTFIwR0JGN2FWMkh0SFNCSU81blJ2VUpwdXRRUHk4cmQ3THNvM0l2SWcrampDQ2NkSTZJeHdjQVhhWHdsdzRJVDE3bkZJZXJLVjhZTTB6L0Y0cDU1ZytFeHRzZmxmaW1nVlVsdjFCRlhhbG9uQXhlSFFpUEVZY3o2d053K2tGaFlwL05SMGhsMTRQbm1rOHNlRGJ2T3NHaUJrNU80QW43elBvaldUbURDRXVCUzViZklyaGZobVJvMkZ2THl4KzBNd3dPdVhxVjRRcTV0T09RN09rL3FLeGtob21qUnA3R3c2blQrNXREbWR3bm0wWGNqUytHUUlEQVFBQiJ9"
+      }
+    },
+    {
+      "ID": "3af849aa1ab9c9c5",
+      "Request": {
+        "Method": "POST",
+        "URL": "http://localhost:8088/",
+        "Header": {
+          "Accept-Encoding": [
+            "gzip"
+          ],
+          "Amz-Sdk-Request": [
+            "attempt=1; max=3"
+          ],
+          "Content-Length": [
+            "214"
+          ],
+          "X-Amz-Target": [
+            "TrentService.Sign"
+          ]
+        },
+        "MediaType": "application/x-amz-json-1.1",
+        "BodyParts": [
+          "eyJLZXlJZCI6ImFybjphd3M6a21zOnVzLWVhc3QtMTowMDAwMDAwMDAwMDA6a2V5L2RhOWI1NjMwLTgyZjQtNDM5MC1iNGRhLTc1ZmI5NTVjMmE4MCIsIk1lc3NhZ2UiOiJPQjFKSmhYTzVETis5RUhaK3k0MmdzQXdiN21iZ3YrV2F2VE1YY2piWWJjPSIsIk1lc3NhZ2VUeXBlIjoiRElHRVNUIiwiU2lnbmluZ0FsZ29yaXRobSI6IlJTQVNTQV9QS0NTMV9WMV81X1NIQV8yNTYifQ=="
+        ]
+      },
+      "Response": {
+        "StatusCode": 200,
+        "Proto": "HTTP/1.1",
+        "ProtoMajor": 1,
+        "ProtoMinor": 1,
+        "Header": {
+          "Content-Length": [
+            "493"
+          ],
+          "Content-Type": [
+            "application/x-amz-json-1.1"
+          ],
+          "Date": [
+            "Tue, 04 Apr 2023 15:11:36 GMT"
+          ]
+        },
+        "Body": "eyJLZXlJZCI6ImFybjphd3M6a21zOnVzLWVhc3QtMTowMDAwMDAwMDAwMDA6a2V5L2RhOWI1NjMwLTgyZjQtNDM5MC1iNGRhLTc1ZmI5NTVjMmE4MCIsIlNpZ25hdHVyZSI6IlV3NW0wdkJFZEx4MWdJQmVremZRNEgwS1g2ZkpLSkJ1MFNBNmdmRGlMQUxrSVlyS1QxOHZpZzRZdlY0aVFESzQyK0JTOUFZR3FVQUozK0pQbFJvRHBIUnJ3eWsvZnkzWFpCWHNnM3pjYWhtOGpJQ1BPMzJUQitHcklFQy9LUk9tNGY1eGhsbjBOcGVEeDVmbUx2TlNxZkJTRDN4TG1HZDB4a1QyRGlzNCtsQ2ZPVnpsVk1WSU9LOCs3b1RTclhNNzNIUzNBbzBNM2VUQUNzMUltUGt6MjRtaGh2NzhOR2NIN1ZDQnZMd0d1QmVHZjgrbjJNNXhjVTEzSHIwN0FKUjNaZnNqdnVkY0l0UTdsQVZCTUZSeUduUXFUeFJqMWVVdXBxMmFVV01YaXZBbnJzcmhOamZEQ2NLNUZucWlRU0VLRk54ckN4bndaclZPbUZTekVxZW04QT09IiwiU2lnbmluZ0FsZ29yaXRobSI6IlJTQVNTQV9QS0NTMV9WMV81X1NIQV8yNTYifQ=="
+      }
+    }
+  ]
+}

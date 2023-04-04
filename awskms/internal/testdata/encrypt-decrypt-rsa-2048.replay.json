@@ -1,0 +1,168 @@
+{
+  "Initial": null,
+  "Version": "0.2",
+  "Converter": {
+    "ScrubBody": null,
+    "ClearHeaders": [
+      "^X-Goog-.*Encryption-Key$"
+    ],
+    "RemoveRequestHeaders": [
+      "^Authorization$",
+      "^Proxy-Authorization$",
+      "^Connection$",
+      "^Content-Type$",
+      "^Date$",
+      "^Host$",
+      "^Transfer-Encoding$",
+      "^Via$",
+      "^X-Forwarded-.*$",
+      "^X-Cloud-Trace-Context$",
+      "^X-Goog-Api-Client$",
+      "^X-Google-.*$",
+      "^X-Gfe-.*$",
+      "^User-Agent$",
+      "^X-Amz-Date$",
+      "^X-Amz-Credential$",
+      "^X-Amz-Security-Token$",
+      "^X-Amz-Signature$",
+      "^Amz-Sdk-Invocation-Id$"
+    ],
+    "RemoveResponseHeaders": [
+      "^X-Google-.*$",
+      "^X-Gfe-.*$"
+    ],
+    "ClearParams": null,
+    "RemoveParams": null
+  },
+  "Entries": [
+    {
+      "ID": "d7076ca892bff2ad",
+      "Request": {
+        "Method": "POST",
+        "URL": "http://localhost:8088/",
+        "Header": {
+          "Accept-Encoding": [
+            "gzip"
+          ],
+          "Amz-Sdk-Request": [
+            "attempt=1; max=3"
+          ],
+          "Content-Length": [
+            "87"
+          ],
+          "X-Amz-Target": [
+            "TrentService.DescribeKey"
+          ]
+        },
+        "MediaType": "application/x-amz-json-1.1",
+        "BodyParts": [
+          "eyJLZXlJZCI6ImFybjphd3M6a21zOnVzLWVhc3QtMTowMDAwMDAwMDAwMDA6a2V5Lzg5MWI1MTk0LThmMzctNGEzMS04MjBmLTg3ODRlOTEzYmU5OSJ9"
+        ]
+      },
+      "Response": {
+        "StatusCode": 200,
+        "Proto": "HTTP/1.1",
+        "ProtoMajor": 1,
+        "ProtoMinor": 1,
+        "Header": {
+          "Content-Length": [
+            "508"
+          ],
+          "Content-Type": [
+            "application/x-amz-json-1.1"
+          ],
+          "Date": [
+            "Tue, 04 Apr 2023 15:11:36 GMT"
+          ]
+        },
+        "Body": "eyJLZXlNZXRhZGF0YSI6eyJBV1NBY2NvdW50SWQiOiIwMDAwMDAwMDAwMDAiLCJBcm4iOiJhcm46YXdzOmttczp1cy1lYXN0LTE6MDAwMDAwMDAwMDAwOmtleS84OTFiNTE5NC04ZjM3LTRhMzEtODIwZi04Nzg0ZTkxM2JlOTkiLCJDcmVhdGlvbkRhdGUiOjE2ODA2MjEwNzksIkRlc2NyaXB0aW9uIjoiRGVjcnlwdGVyIC0gUlNBXzIwNDggdHByYXNhZHRwL2NyeXB0b2ttcyBpbnRlcmdyYXRpb24gdGVzdCIsIkVuYWJsZWQiOnRydWUsIktleUlkIjoiODkxYjUxOTQtOGYzNy00YTMxLTgyMGYtODc4NGU5MTNiZTk5IiwiS2V5TWFuYWdlciI6IkNVU1RPTUVSIiwiS2V5U3RhdGUiOiJFbmFibGVkIiwiS2V5VXNhZ2UiOiJFTkNSWVBUX0RFQ1JZUFQiLCJPcmlnaW4iOiJBV1NfS01TIiwiRW5jcnlwdGlvbkFsZ29yaXRobXMiOlsiUlNBRVNfT0FFUF9TSEFfMSIsIlJTQUVTX09BRVBfU0hBXzI1NiJdLCJLZXlTcGVjIjoiUlNBXzIwNDgiLCJDdXN0b21lck1hc3RlcktleVNwZWMiOiJSU0FfMjA0OCJ9fQ=="
+      }
+    },
+    {
+      "ID": "1dd503c69da18452",
+      "Request": {
+        "Method": "POST",
+        "URL": "http://localhost:8088/",
+        "Header": {
+          "Accept-Encoding": [
+            "gzip"
+          ],
+          "Amz-Sdk-Request": [
+            "attempt=1; max=3"
+          ],
+          "Content-Length": [
+            "87"
+          ],
+          "X-Amz-Target": [
+            "TrentService.GetPublicKey"
+          ]
+        },
+        "MediaType": "application/x-amz-json-1.1",
+        "BodyParts": [
+          "eyJLZXlJZCI6ImFybjphd3M6a21zOnVzLWVhc3QtMTowMDAwMDAwMDAwMDA6a2V5Lzg5MWI1MTk0LThmMzctNGEzMS04MjBmLTg3ODRlOTEzYmU5OSJ9"
+        ]
+      },
+      "Response": {
+        "StatusCode": 200,
+        "Proto": "HTTP/1.1",
+        "ProtoMajor": 1,
+        "ProtoMinor": 1,
+        "Header": {
+          "Content-Length": [
+            "604"
+          ],
+          "Content-Type": [
+            "application/x-amz-json-1.1"
+          ],
+          "Date": [
+            "Tue, 04 Apr 2023 15:11:36 GMT"
+          ]
+        },
+        "Body": "eyJLZXlJZCI6ImFybjphd3M6a21zOnVzLWVhc3QtMTowMDAwMDAwMDAwMDA6a2V5Lzg5MWI1MTk0LThmMzctNGEzMS04MjBmLTg3ODRlOTEzYmU5OSIsIkN1c3RvbWVyTWFzdGVyS2V5U3BlYyI6IlJTQV8yMDQ4IiwiS2V5U3BlYyI6IlJTQV8yMDQ4IiwiU2lnbmluZ0FsZ29yaXRobXMiOm51bGwsIktleVVzYWdlIjoiRU5DUllQVF9ERUNSWVBUIiwiUHVibGljS2V5IjoiTUlJQklqQU5CZ2txaGtpRzl3MEJBUUVGQUFPQ0FROEFNSUlCQ2dLQ0FRRUF2MzhMYWZDRTJqS2Y0ckV2aU1iTG9pV3MvS0kvZEROY2w5eURvdHBmK3VMUlNzUHY0bFBvNkYwNUdIcDk0aTVRMnZVUW9KN3ZrUGVsejRySGJZNlRMclNIQnNObCtUUHNKMGE1b0pXN0UyODFqSGl0a1JDcWFkQXg5N1lFNHVEZWFHcDk3ZnZmWEprMjVjV0pKQk9zUDl5aktUcFZHeCtSZ0dGK0d0OWlUUndGQm9jdzRuVTBBb1lGTjhFUHpWSmk4eFBzbTJ1c1lEa0swRE43Q3dDMEFBM09xUXgraWxLZFdRVktlWlRCYjh6SHdoSXYrTWdoR2l3NXhSVktRK1BHYTBsR3VqeGU1WFNMbVBVMmVGRzRWeGx5OU9QWm9YUTBDMi9SRlFBTFhCRklCRG9QZXRzS3VhZHFKQVpaSnZFc0oya1NaTm1CUUR4aUNsZE1mMkhxV3dJREFRQUIifQ=="
+      }
+    },
+    {
+      "ID": "0353dce8820a8589",
+      "Request": {
+        "Method": "POST",
+        "URL": "http://localhost:8088/",
+        "Header": {
+          "Accept-Encoding": [
+            "gzip"
+          ],
+          "Amz-Sdk-Request": [
+            "attempt=1; max=3"
+          ],
+          "Content-Length": [
+            "494"
+          ],
+          "X-Amz-Target": [
+            "TrentService.Decrypt"
+          ]
+        },
+        "MediaType": "application/x-amz-json-1.1",
+        "BodyParts": [
+          "eyJDaXBoZXJ0ZXh0QmxvYiI6InFpUzRabDN5S05obFdPd2x6Slc2anEzcHhxS2xWdDBmbGRrYm84KzJGQ3JOMTRjM2pVWFk2N3NzemxxVzdFbVlaUy9RK3QyVFp3TDk0eE82M2wrTUZsN0VPaFRPREN2cy9DSG9sd0p2TWZ2ZEM4K1dwbE1RVHZoV3BpNldXR2tISXpFWHlXR0o5R3pGSGlEc0tpRGZlSExFazRMTlRhR0x3M1NoUUNXbWFoalhEbUh2U1VYaWU1Sy9PUWh0bWprYnhMVkxid2NOWTlqYTFiTWJOclNDa0RJYVNwckE1T3p5US9vMkY4c0JYTWRIc1c0TUxNQTM4UkNQVUJGWlNvUno1OFZQZDU1RHl2RklLeHd2KzErUDVLc2V4UVJxdkh2azRYelBpTHJuUnZ0Q3dON2Vub2VLejNRM0NoYUVHL0hvY0IvYUE4VjdkZDRxai91cFpkaE1YQT09IiwiRW5jcnlwdGlvbkFsZ29yaXRobSI6IlJTQUVTX09BRVBfU0hBXzI1NiIsIktleUlkIjoiYXJuOmF3czprbXM6dXMtZWFzdC0xOjAwMDAwMDAwMDAwMDprZXkvODkxYjUxOTQtOGYzNy00YTMxLTgyMGYtODc4NGU5MTNiZTk5In0="
+        ]
+      },
+      "Response": {
+        "StatusCode": 200,
+        "Proto": "HTTP/1.1",
+        "ProtoMajor": 1,
+        "ProtoMinor": 1,
+        "Header": {
+          "Content-Length": [
+            "181"
+          ],
+          "Content-Type": [
+            "application/x-amz-json-1.1"
+          ],
+          "Date": [
+            "Tue, 04 Apr 2023 15:11:36 GMT"
+          ]
+        },
+        "Body": "eyJLZXlJZCI6ImFybjphd3M6a21zOnVzLWVhc3QtMTowMDAwMDAwMDAwMDA6a2V5Lzg5MWI1MTk0LThmMzctNGEzMS04MjBmLTg3ODRlOTEzYmU5OSIsIlBsYWludGV4dCI6IlQyZ2dRbVVnUVNCR2FXNWxJRWRwY213Z1MybHpjeUJOWlE9PSIsIkVuY3J5cHRpb25BbGdvcml0aG0iOiJSU0FFU19PQUVQX1NIQV8yNTYifQ=="
+      }
+    }
+  ]
+}

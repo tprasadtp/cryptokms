@@ -188,12 +188,8 @@ func (d *Decrypter) context() context.Context {
 }
 
 // WithContext adds the given context to the decrypter.
-//   - This is goroutine safe.
-//   - There are lot of pitfalls with this method,
-//     incorrect or invalid context being used etc,
-//     are easy to miss an can be difficult to debug.
-//     Use DecryptContext instead, which accepts
-//     [context.Context] directly.
+//
+// Deprecated: Use DecryptContext instead.
 func (d *Decrypter) WithContext(ctx context.Context) *Decrypter {
 	d.mu.Lock()
 	defer d.mu.Unlock()
@@ -203,7 +199,8 @@ func (d *Decrypter) WithContext(ctx context.Context) *Decrypter {
 }
 
 // This is a wrapper around DecryptContext.
-// It is recommended to use DecryptContext instead as it is context aware.
+//
+// Deprecated: Use DecryptContext instead.
 func (d *Decrypter) Decrypt(rand io.Reader, ciphertext []byte, opts crypto.DecrypterOpts) ([]byte, error) {
 	return d.DecryptContext(d.context(), rand, ciphertext, opts)
 }
