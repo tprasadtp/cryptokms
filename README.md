@@ -60,7 +60,7 @@ Uses sensible and sane defaults.
 | [`ECC_NIST_P521`][awskms_keyspec] | `SIGN_VERIFY` | [sha512] | [crypto.Signer], [crypto.SignerOpts]
 
 
-## AWS KMS (Decryption Keys)
+## AWS KMS (Encryption Keys)
 
 | Key Algorithm | Key Usage | Encryption Algorithms | Supported Interfaces |
 |---|---|---|---

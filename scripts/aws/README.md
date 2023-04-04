@@ -1,7 +1,7 @@
 # Test Data Generators
 
 This directory contains HTTP replay data generators, used for integration testing.
-This is intentionally does not use of `go generate` as it requires non-trivial setup.
+This is intentionally does not make use of `go generate` as it requires non-trivial setup.
 
 ## Creating AWS Resources
 
