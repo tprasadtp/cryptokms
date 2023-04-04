@@ -9,6 +9,7 @@ import (
 	"encoding/pem"
 	"fmt"
 	"io"
+	"sync"
 	"time"
 
 	kms "cloud.google.com/go/kms/apiv1"
@@ -29,6 +30,8 @@ var (
 // RSA_SIGN_PSS_* and RSA_SIGN_RAW_* keys are not supported.
 type Signer struct {
 	name   string
+	ctx    context.Context
+	mu     sync.RWMutex
 	pub    crypto.PublicKey
 	hash   crypto.Hash
 	ctime  time.Time
@@ -187,10 +190,38 @@ func (s *Signer) CreatedAt() time.Time {
 	return s.ctime
 }
 
+// context returns the context for this signer or
+// if context is nil, returns [context.Background].
+func (s *Signer) context() context.Context {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	ctx := s.ctx
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	return ctx
+}
+
+// WithContext adds the given context to the signer.
+//   - This is goroutine safe.
+//   - There are lot of pitfalls with this method,
+//     incorrect or invalid context being used etc,
+//     are easy to miss an can be difficult to debug.
+//     Use SignContext instead which accepts
+//     [context.Context] directly.
+func (s *Signer) WithContext(ctx context.Context) *Signer {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	s.ctx = ctx
+	return s
+}
+
 // This is a wrapper around SignContext.
 // It is recommended to use SignContext instead as it is context aware.
 func (s *Signer) Sign(rand io.Reader, digest []byte, opts crypto.SignerOpts) ([]byte, error) {
-	return s.SignContext(context.Background(), rand, digest, opts)
+	return s.SignContext(s.context(), rand, digest, opts)
 }
 
 // SignContext signs the digest with asymmetric key.
