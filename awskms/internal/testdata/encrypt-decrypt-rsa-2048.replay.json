@@ -39,7 +39,7 @@
       "ID": "8cb578c95673276a",
       "Request": {
         "Method": "POST",
-        "URL": "http://192.168.122.245:8088/",
+        "URL": "http://localhost:8088/",
         "Header": {
           "Accept-Encoding": [
             "gzip"
@@ -82,7 +82,7 @@
       "ID": "da5eb1bba9b1b664",
       "Request": {
         "Method": "POST",
-        "URL": "http://192.168.122.245:8088/",
+        "URL": "http://localhost:8088/",
         "Header": {
           "Accept-Encoding": [
             "gzip"
@@ -125,7 +125,7 @@
       "ID": "34efc42fc487ed31",
       "Request": {
         "Method": "POST",
-        "URL": "http://192.168.122.245:8088/",
+        "URL": "http://localhost:8088/",
         "Header": {
           "Accept-Encoding": [
             "gzip"
