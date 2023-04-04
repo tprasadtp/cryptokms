@@ -66,11 +66,6 @@ func (o *opts) Retrieve(ctx context.Context) (aws.Credentials, error) {
 
 // Implements [github.com/aws/aws-sdk-go-v2/kms.EndpointResolver].
 func (o *opts) ResolveEndpoint(region string, options kms.EndpointResolverOptions) (aws.Endpoint, error) {
-	if o.KMSEndpoint == "" {
-		// returning EndpointNotFoundError will,
-		// allow the service to fallback to it's default resolution.
-		return aws.Endpoint{}, &aws.EndpointNotFoundError{}
-	}
 	return aws.Endpoint{
 		URL: o.KMSEndpoint,
 	}, nil
@@ -105,10 +100,13 @@ func (o *opts) GenerateTestData(ctx context.Context, keyID, keyUsage, keyAlgorit
 	)
 
 	kmsOptions := kms.Options{
-		Credentials:      o,
-		Region:           o.Region,
-		HTTPClient:       rec.Client(),
-		EndpointResolver: o,
+		Credentials: o,
+		Region:      o.Region,
+		HTTPClient:  rec.Client(),
+	}
+
+	if o.KMSEndpoint != "" {
+		kmsOptions.EndpointResolver = o
 	}
 
 	// We want to avoid a call to sts service

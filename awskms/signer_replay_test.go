@@ -66,12 +66,15 @@ func Test_Signer_Replay(t *testing.T) {
 
 			// setup client
 			ctx := context.Background()
-			client := kms.New(kms.Options{
-				Region:           testdata.AWSRegion,
-				HTTPClient:       rep.Client(),
-				Credentials:      &aws.AnonymousCredentials{},
-				EndpointResolver: &endpointResolver{},
-			})
+			kmsOptions := kms.Options{
+				Region:      testdata.AWSRegion,
+				HTTPClient:  rep.Client(),
+				Credentials: &aws.AnonymousCredentials{},
+			}
+			if testdata.KMSEndpoint != "" {
+				kmsOptions.EndpointResolver = &endpointResolver{}
+			}
+			client := kms.New(kmsOptions)
 
 			signer, err := awskms.NewSigner(ctx, client,
 				testdata.MustGetKeyARN(tc.KeySpec, "SIGN_VERIFY"))

@@ -38,28 +38,28 @@ func MustGetKeyARN(keySpec, keyUsage string) string {
     case "ENCRYPT_DECRYPT":
         switch strings.ToUpper(keySpec) {
         case "RSA_2048":
-            return "arn:aws:kms:us-east-1:000000000000:key/8b4d2e51-397b-4bbc-99b2-f6720c480564"
+            return "arn:aws:kms:us-east-1:000000000000:key/891b5194-8f37-4a31-820f-8784e913be99"
         case "RSA_3072":
-            return "arn:aws:kms:us-east-1:000000000000:key/81d2b37e-ec0d-4729-8b11-eaccb742cf27"
+            return "arn:aws:kms:us-east-1:000000000000:key/e9205d5b-0870-4832-8bd1-707b16ca4857"
         case "RSA_4096":
-            return "arn:aws:kms:us-east-1:000000000000:key/a5c8ed96-1327-4525-a9ed-66513ce753b0"
+            return "arn:aws:kms:us-east-1:000000000000:key/563e26bd-626a-4999-bd3d-e01d8246fdb7"
         default:
             panic(fmt.Sprintf("unsupported keySpec=%s(%s)", keySpec, keyUsage))
         }
     case "SIGN_VERIFY":
         switch strings.ToUpper(keySpec) {
         case "ECC_NIST_P256":
-            return "arn:aws:kms:us-east-1:000000000000:key/f0af276c-b794-4fc1-acda-39c4e4fccb14"
+            return "arn:aws:kms:us-east-1:000000000000:key/4b4734b0-d248-481d-85a1-8791bb8d8ade"
         case "ECC_NIST_P384":
-            return "arn:aws:kms:us-east-1:000000000000:key/55e2ec54-fb6f-4ef9-acfa-d1537ef7d82e"
+            return "arn:aws:kms:us-east-1:000000000000:key/a5dc6661-e171-4bd1-ab4e-0c65c0d8b16b"
         case "ECC_NIST_P521":
-            return "arn:aws:kms:us-east-1:000000000000:key/9d5d8f46-ad8a-4bb5-8016-581db7366a65"
+            return "arn:aws:kms:us-east-1:000000000000:key/77d0a400-577e-409c-9739-a584793d9db6"
         case "RSA_2048":
-            return "arn:aws:kms:us-east-1:000000000000:key/2fd8eb4e-2ff6-495a-903c-a178d864bba3"
+            return "arn:aws:kms:us-east-1:000000000000:key/da9b5630-82f4-4390-b4da-75fb955c2a80"
         case "RSA_3072":
-            return "arn:aws:kms:us-east-1:000000000000:key/df961b3a-79a7-443c-a695-9bbef083d7ae"
+            return "arn:aws:kms:us-east-1:000000000000:key/f17321e0-33d5-46d8-807a-6033642c19e4"
         case "RSA_4096":
-            return "arn:aws:kms:us-east-1:000000000000:key/5d99b6f0-e8ff-4aad-8ab1-c02a6f9e310f"
+            return "arn:aws:kms:us-east-1:000000000000:key/d0e362d7-f144-4d8d-b4c0-2496f6c4e0a0"
         default:
             panic(fmt.Sprintf("unsupported keySpec=%s(%s)", keySpec, keyUsage))
         }
