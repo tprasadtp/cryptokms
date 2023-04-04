@@ -8,6 +8,7 @@ import (
 	"encoding/pem"
 	"fmt"
 	"io"
+	"sync"
 	"time"
 
 	kms "cloud.google.com/go/kms/apiv1"
@@ -49,6 +50,8 @@ var (
 // [cloudkms.cryptoOperator]: https://cloud.google.com/kms/docs/reference/permissions-and-roles#cloudkms.cryptoOperator
 type Decrypter struct {
 	name   string
+	ctx    context.Context
+	mu     sync.RWMutex
 	pub    crypto.PublicKey
 	hash   crypto.Hash
 	ctime  time.Time
@@ -171,10 +174,38 @@ func (d *Decrypter) CreatedAt() time.Time {
 	return d.ctime
 }
 
+// context returns the context for this decrypter or
+// if context is nil, returns [context.Background].
+func (d *Decrypter) context() context.Context {
+	d.mu.RLock()
+	defer d.mu.RUnlock()
+
+	ctx := d.ctx
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	return ctx
+}
+
+// WithContext adds the given context to the decrypter.
+//   - This is goroutine safe.
+//   - There are lot of pitfalls with this method,
+//     incorrect or invalid context being used etc,
+//     are easy to miss an can be difficult to debug.
+//     Use DecryptContext instead, which accepts
+//     [context.Context] directly.
+func (d *Decrypter) WithContext(ctx context.Context) *Decrypter {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+
+	d.ctx = ctx
+	return d
+}
+
 // This is a wrapper around DecryptContext.
 // It is recommended to use DecryptContext instead as it is context aware.
 func (d *Decrypter) Decrypt(rand io.Reader, ciphertext []byte, opts crypto.DecrypterOpts) ([]byte, error) {
-	return d.DecryptContext(context.Background(), rand, ciphertext, opts)
+	return d.DecryptContext(d.context(), rand, ciphertext, opts)
 }
 
 // DecryptContext decrypts the message with asymmetric key.

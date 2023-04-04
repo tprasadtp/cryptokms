@@ -193,7 +193,7 @@ func Test_NewDecrypter(t *testing.T) {
 			diff := cmp.Diff(
 				resp, tc.Decrypter,
 				cmp.AllowUnexported(Decrypter{}),
-				cmpopts.IgnoreFields(Decrypter{}, "client", "keyID"))
+				cmpopts.IgnoreFields(Decrypter{}, "client", "keyID", "mu"))
 			if diff != "" {
 				t.Errorf("did not get expected response: \n%s", diff)
 			}
@@ -213,6 +213,16 @@ func Test_Decrypter_Decrypt_UnInitialized(t *testing.T) {
 
 	if !errors.Is(err, cryptokms.ErrInvalidKMSClient) {
 		t.Errorf("expected error=%+v, but got=%+v", cryptokms.ErrInvalidKMSClient, err)
+	}
+}
+
+func Test_Decrypter_WithContext(t *testing.T) {
+	s := new(Decrypter)
+	ctx := context.Background()
+	s = s.WithContext(ctx)
+
+	if ctx != s.ctx {
+		t.Fatalf("expected %#v to be %#v", ctx, s.ctx)
 	}
 }
 
