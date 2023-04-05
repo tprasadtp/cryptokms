@@ -23,6 +23,10 @@ const (
 	// ErrInvalidInput is returned when input to verifier/encrypt is invalid or nil.
 	ErrInvalidInput = Error("cryptokms: input is invalid, nil or empty")
 
+	// ErrCertNotFound is returned when kms backing the signer
+	// does not contain associated x509certificate.
+	ErrCertNotFound = Error("cryptokms: certificate not found")
+
 	// Unknown or unsupported ley algorithm. This can be because either key algorithm
 	// is unsupported by this library or the KMS backend does not support specified
 	// crypto operation due to key usage restrictions or limitations.

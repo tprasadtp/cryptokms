@@ -162,7 +162,7 @@ func (d *Decrypter) HashFunc() crypto.Hash {
 }
 
 // DecrypterOpts returns supported DecrypterOpts options.
-func (d *Decrypter) DecrypterOpts() any {
+func (d *Decrypter) DecrypterOpts() crypto.DecrypterOpts {
 	return &rsa.OAEPOptions{
 		Hash: d.hash,
 	}

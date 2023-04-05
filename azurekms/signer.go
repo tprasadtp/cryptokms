@@ -46,11 +46,13 @@ func NewSigner(ctx context.Context, client *azkeys.Client, keyID azkeys.ID) (*Si
 
 	keyInfo, err := client.GetKey(ctx, keyID.Name(), keyID.Version(), nil)
 	if err != nil {
-		return nil, fmt.Errorf("%w: azurekms: failed to get key(%s): %w", cryptokms.ErrGetKeyMetadata, keyID, err)
+		return nil, fmt.Errorf("%w: azurekms: failed to get key(%s): %w",
+			cryptokms.ErrGetKeyMetadata, keyID, err)
 	}
 
 	if *keyInfo.KeyBundle.Attributes.Enabled {
-		return nil, fmt.Errorf("%w: azurekms: key(%s) is not enabled", cryptokms.ErrUnusableKeyState, keyID)
+		return nil, fmt.Errorf("%w: azurekms: key(%s) is not enabled",
+			cryptokms.ErrUnusableKeyState, keyID)
 	}
 
 	// Azure keys can be marked as not before

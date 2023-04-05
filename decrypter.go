@@ -29,4 +29,7 @@ type Decrypter interface {
 	// supported by the KMS key. If KMS key supports multiple signers, this
 	// returns sane default, typically [crypto.SHA256].
 	HashFunc() crypto.Hash
+
+	// Default decryption options.
+	DecrypterOpts() crypto.DecrypterOpts
 }
