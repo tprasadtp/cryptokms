@@ -134,11 +134,11 @@ func NewDecrypter(ctx context.Context, client Client, keyID string) (*Decrypter,
 	//nolint:exhaustive // other encryption KeySpecs do not support asymmetric encryption.
 	switch keyInfo.KeyMetadata.KeySpec {
 	case types.KeySpecRsa2048:
-		decrypter.maxCiphertextLen = 2048
+		decrypter.maxCiphertextLen = 2048 / 8
 	case types.KeySpecRsa3072:
-		decrypter.maxCiphertextLen = 3072
+		decrypter.maxCiphertextLen = 3072 / 8
 	case types.KeySpecRsa4096:
-		decrypter.maxCiphertextLen = 4096
+		decrypter.maxCiphertextLen = 4096 / 8
 	}
 
 	return decrypter, nil

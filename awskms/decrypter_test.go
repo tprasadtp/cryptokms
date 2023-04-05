@@ -137,7 +137,7 @@ func Test_NewDecrypter(t *testing.T) {
 				},
 				defaultHasher:    crypto.SHA256,
 				pub:              testkeys.GetRSA2048PublicKey(),
-				maxCiphertextLen: 2048,
+				maxCiphertextLen: 2048 / 8,
 				ctime:            knownTS,
 			},
 		},
@@ -157,7 +157,7 @@ func Test_NewDecrypter(t *testing.T) {
 				},
 				defaultHasher:    crypto.SHA256,
 				pub:              testkeys.GetRSA3072PublicKey(),
-				maxCiphertextLen: 3072,
+				maxCiphertextLen: 3072 / 8,
 				ctime:            knownTS,
 			},
 		},
@@ -177,7 +177,7 @@ func Test_NewDecrypter(t *testing.T) {
 				},
 				defaultHasher:    crypto.SHA256,
 				pub:              testkeys.GetRSA4096PublicKey(),
-				maxCiphertextLen: 4096,
+				maxCiphertextLen: 4096 / 8,
 				ctime:            knownTS,
 			},
 		},
@@ -260,7 +260,7 @@ func Test_Decrypter_Decrypt(t *testing.T) {
 		{
 			Name: "rsa-4096-oaep-ciphertext-too-large",
 			Ciphertext: func() []byte {
-				buf := make([]byte, 8192)
+				buf := make([]byte, 4096/8+1)
 				//nolint:errcheck // ignore as test will fail if err != nil
 				rand.Reader.Read(buf)
 				return buf
