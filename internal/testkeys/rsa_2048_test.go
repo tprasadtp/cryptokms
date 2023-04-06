@@ -5,7 +5,6 @@ package testkeys_test
 import (
 	"testing"
 
-	"github.com/tprasadtp/cryptokms/internal/cryptoutils"
 	"github.com/tprasadtp/cryptokms/internal/testkeys"
 )
 
@@ -18,7 +17,7 @@ func Test_Get_RSA2048(t *testing.T) {
     }
 
     // Ensure GetRSA2048PublicKey returns same key as GetRSA2048PublicKeyPEM
-    pubFromPEM := cryptoutils.MustParseRSAPublicKey(testkeys.GetRSA2048PublicKeyPEM())
+    pubFromPEM := testkeys.MustParseRSAPublicKey(testkeys.GetRSA2048PublicKeyPEM())
 	if !pubFromPEM.Equal(testkeys.GetRSA2048PublicKey()) {
 		t.Errorf("parse(GetRSA2048PrivateKeyPEM) != GetRSA2048PrivateKey.Public")
 	}

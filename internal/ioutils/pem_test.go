@@ -1,10 +1,10 @@
-package shared_test
+package ioutils_test
 
 import (
 	"path/filepath"
 	"testing"
 
-	"github.com/tprasadtp/cryptokms/internal/shared"
+	"github.com/tprasadtp/cryptokms/internal/ioutils"
 	"github.com/tprasadtp/cryptokms/internal/testkeys"
 )
 
@@ -42,7 +42,7 @@ func Test_WritePublicKey(t *testing.T) {
 	}
 	for _, tc := range tt {
 		t.Run(tc.Name, func(t *testing.T) {
-			err := shared.WritePublicKey(tc.Output, tc.Pub)
+			err := ioutils.WritePublicKey(tc.Output, tc.Pub)
 			if tc.Err {
 				if err == nil {
 					t.Error("expected to error, but got nil")
@@ -90,7 +90,7 @@ func Test_WritePrivateKey(t *testing.T) {
 	}
 	for _, tc := range tt {
 		t.Run(tc.Name, func(t *testing.T) {
-			err := shared.WritePrivateKey(tc.Output, tc.Priv)
+			err := ioutils.WritePrivateKey(tc.Output, tc.Priv)
 			if tc.Err {
 				if err == nil {
 					t.Error("expected to error, but got nil")

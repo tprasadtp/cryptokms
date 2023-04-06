@@ -5,8 +5,7 @@ package testkeys_test
 import (
 	"testing"
 
-	"github.com/tprasadtp/cryptokms/internal/cryptoutils"
-	"github.com/tprasadtp/cryptokms/internal/testkeys"
+    "github.com/tprasadtp/cryptokms/internal/testkeys"
 )
 
 
@@ -23,7 +22,7 @@ func Test_Get_ECP521(t *testing.T) {
     }
 
     // Ensure GetECP521PublicKey returns same key as GetECP521PublicKeyPEM
-    pubFromPEM := cryptoutils.MustParseECPublicKey(testkeys.GetECP521PublicKeyPEM())
+    pubFromPEM := testkeys.MustParseECPublicKey(testkeys.GetECP521PublicKeyPEM())
     if ! pubFromPEM.Equal(testkeys.GetECP521PublicKey()) {
         t.Errorf("parse(GetECP521PublicKeyPEM) != GetECP521PublicKey")
     }

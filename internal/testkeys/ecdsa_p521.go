@@ -6,8 +6,6 @@ import (
 	"crypto/ecdsa"
 
     _ "embed"
-
-    "github.com/tprasadtp/cryptokms/internal/cryptoutils"
 )
 
 //go:embed keys/ecdsa_p521.key
@@ -18,8 +16,8 @@ var ecP521PrivateKey *ecdsa.PrivateKey
 
 //nolint:gochecknoinits // generated code
 func init() {
-    ecP521PrivateKey = cryptoutils.MustParseECPrivateKey(ecP521PrivateKeyPEM)
-    ecP521PublicKeyPEM = cryptoutils.MustMarshalPublicKey(&ecP521PrivateKey.PublicKey)
+    ecP521PrivateKey = MustParseECPrivateKey(ecP521PrivateKeyPEM)
+    ecP521PublicKeyPEM = MustMarshalPublicKey(&ecP521PrivateKey.PublicKey)
 }
 
 // GetECP521PrivateKey returns a known ECDSA-P521 private key.

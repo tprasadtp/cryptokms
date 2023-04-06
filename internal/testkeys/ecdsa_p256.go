@@ -6,8 +6,6 @@ import (
 	"crypto/ecdsa"
 
     _ "embed"
-
-    "github.com/tprasadtp/cryptokms/internal/cryptoutils"
 )
 
 //go:embed keys/ecdsa_p256.key
@@ -18,8 +16,8 @@ var ecP256PrivateKey *ecdsa.PrivateKey
 
 //nolint:gochecknoinits // generated code
 func init() {
-    ecP256PrivateKey = cryptoutils.MustParseECPrivateKey(ecP256PrivateKeyPEM)
-    ecP256PublicKeyPEM = cryptoutils.MustMarshalPublicKey(&ecP256PrivateKey.PublicKey)
+    ecP256PrivateKey = MustParseECPrivateKey(ecP256PrivateKeyPEM)
+    ecP256PublicKeyPEM = MustMarshalPublicKey(&ecP256PrivateKey.PublicKey)
 }
 
 // GetECP256PrivateKey returns a known ECDSA-P256 private key.

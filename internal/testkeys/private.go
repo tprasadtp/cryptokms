@@ -1,7 +1,8 @@
-package cryptoutils
+package testkeys
 
 import (
 	"crypto/ecdsa"
+	"crypto/ed25519"
 	"crypto/rsa"
 	"crypto/x509"
 	"encoding/pem"
@@ -38,5 +39,15 @@ func MustParseECPrivateKey(key []byte) *ecdsa.PrivateKey {
 		panic(fmt.Sprintf("got %T, not *ecdsa.PrivateKey", priv))
 	} else {
 		return rv
+	}
+}
+
+// MustParseED25519PrivateKey parses ED25519 Key from PEM.
+func MustParseED25519PrivateKey(key []byte) *ed25519.PrivateKey {
+	priv := MustParsePrivateKey(key)
+	if rv, ok := priv.(ed25519.PrivateKey); !ok {
+		panic(fmt.Sprintf("got %T, not ed25519.PrivateKey", priv))
+	} else {
+		return &rv
 	}
 }

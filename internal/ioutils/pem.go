@@ -1,4 +1,4 @@
-package shared
+package ioutils
 
 import (
 	"crypto"
@@ -14,7 +14,7 @@ import (
 func WritePublicKey(output string, pub crypto.PublicKey) error {
 	b, err := x509.MarshalPKIXPublicKey(pub)
 	if err != nil {
-		return fmt.Errorf("cryptoutils: failed to marshal public key: %w", err)
+		return fmt.Errorf("cryptokms(ioutils): failed to marshal public key: %w", err)
 	}
 	file, err := os.OpenFile(
 		output,
@@ -22,7 +22,7 @@ func WritePublicKey(output string, pub crypto.PublicKey) error {
 		0644,
 	)
 	if err != nil {
-		return fmt.Errorf("cryptoutils: failed to open/create file %s : %w", output, err)
+		return fmt.Errorf("cryptokms(ioutils): failed to open/create file %s : %w", output, err)
 	}
 	defer file.Close()
 
@@ -33,7 +33,7 @@ func WritePublicKey(output string, pub crypto.PublicKey) error {
 		Bytes: b,
 	})
 	if err != nil {
-		return fmt.Errorf("cryptoutils: failed to write publicKey to %s: %w", output, err)
+		return fmt.Errorf("cryptokms(ioutils): failed to write publicKey to %s: %w", output, err)
 	}
 	return nil
 }
@@ -44,7 +44,7 @@ func WritePublicKey(output string, pub crypto.PublicKey) error {
 func WritePrivateKey(output string, priv crypto.PrivateKey) error {
 	b, err := x509.MarshalPKCS8PrivateKey(priv)
 	if err != nil {
-		return fmt.Errorf("cryptoutils: failed to marshal private key: %w", err)
+		return fmt.Errorf("cryptokms(ioutils): failed to marshal private key: %w", err)
 	}
 	file, err := os.OpenFile(
 		output,
@@ -52,7 +52,7 @@ func WritePrivateKey(output string, priv crypto.PrivateKey) error {
 		0644,
 	)
 	if err != nil {
-		return fmt.Errorf("cryptoutils: failed to open/create file %s : %w", output, err)
+		return fmt.Errorf("cryptokms(shared): failed to open/create file %s : %w", output, err)
 	}
 	defer file.Close()
 
@@ -63,7 +63,7 @@ func WritePrivateKey(output string, priv crypto.PrivateKey) error {
 		Bytes: b,
 	})
 	if err != nil {
-		return fmt.Errorf("cryptoutils: failed to write private key to %s: %w", output, err)
+		return fmt.Errorf("cryptokms(ioutils): failed to write private key to %s: %w", output, err)
 	}
 	return nil
 }

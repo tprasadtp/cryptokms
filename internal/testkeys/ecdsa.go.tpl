@@ -6,8 +6,6 @@ import (
 	"crypto/ecdsa"
 
     _ "embed"
-
-    "github.com/tprasadtp/cryptokms/internal/cryptoutils"
 )
 
 //go:embed keys/ecdsa_p{{.Size}}.key
@@ -18,8 +16,8 @@ var ecP{{.Size}}PrivateKey *ecdsa.PrivateKey
 
 //nolint:gochecknoinits // generated code
 func init() {
-    ecP{{.Size}}PrivateKey = cryptoutils.MustParseECPrivateKey(ecP{{.Size}}PrivateKeyPEM)
-    ecP{{.Size}}PublicKeyPEM = cryptoutils.MustMarshalPublicKey(&ecP{{.Size}}PrivateKey.PublicKey)
+    ecP{{.Size}}PrivateKey = MustParseECPrivateKey(ecP{{.Size}}PrivateKeyPEM)
+    ecP{{.Size}}PublicKeyPEM = MustMarshalPublicKey(&ecP{{.Size}}PrivateKey.PublicKey)
 }
 
 // GetECP{{.Size}}PrivateKey returns a known ECDSA-P{{.Size}} private key.

@@ -5,8 +5,7 @@ package testkeys_test
 import (
 	"testing"
 
-	"github.com/tprasadtp/cryptokms/internal/cryptoutils"
-	"github.com/tprasadtp/cryptokms/internal/testkeys"
+    "github.com/tprasadtp/cryptokms/internal/testkeys"
 )
 
 
@@ -23,7 +22,7 @@ func Test_Get_ECP{{.Size}}(t *testing.T) {
     }
 
     // Ensure GetECP{{.Size}}PublicKey returns same key as GetECP{{.Size}}PublicKeyPEM
-    pubFromPEM := cryptoutils.MustParseECPublicKey(testkeys.GetECP{{.Size}}PublicKeyPEM())
+    pubFromPEM := testkeys.MustParseECPublicKey(testkeys.GetECP{{.Size}}PublicKeyPEM())
     if ! pubFromPEM.Equal(testkeys.GetECP{{.Size}}PublicKey()) {
         t.Errorf("parse(GetECP{{.Size}}PublicKeyPEM) != GetECP{{.Size}}PublicKey")
     }

@@ -1,4 +1,4 @@
-package cryptoutils_test
+package testkeys_test
 
 const ecPrivNotPKCS8 = `-----BEGIN EC PRIVATE KEY-----
 MHcCAQEEIK9cMvZyAXPpAzUgvZhggxHMbo5+i5K4MKRYMEZ348nioAoGCCqGSM49
@@ -84,3 +84,21 @@ OFZFKaJeYKyeTSFQvpnfLDwYmijp+Ctx48LtWi2xgVkltnHhGCCldeHhkQ1PrUKg
 1FEN5X7W/1T/wWswRfDpej8qyjBYW+dYgUqsSpnUVvVSehq28GUwJpBwk0QYWtCr
 BwIDAQAB
 -----END PUBLIC KEY-----`
+
+const ed25519Priv = `-----BEGIN PRIVATE KEY-----
+MC4CAQAwBQYDK2VwBCIEIIU3ealBBvtyUX15lbU3nUmSW7zHJrCK052ZRQy+8kUJ
+-----END PRIVATE KEY-----`
+
+const ed25519Pub = `-----BEGIN PUBLIC KEY-----
+MCowBQYDK2VwAyEAefut1kKjQyYlT1yHbRLqSMZId3JdQeWXcwYyBk7Y8B0=
+-----END PUBLIC KEY-----`
+
+const x25519Priv = `-----BEGIN PRIVATE KEY-----
+MC4CAQAwBQYDK2VuBCIEIPAnwtEcfPESihe5h44VIw+ycP/EKlFWfDNK0V0/J/lh
+-----END PRIVATE KEY-----
+`
+
+const x25519Pub = `-----BEGIN PUBLIC KEY-----
+MCowBQYDK2VuAyEAOXKfXX9yfHbeWejglc6D/0um+3PUciXk/lxYoE67qVg=
+-----END PUBLIC KEY-----
+`

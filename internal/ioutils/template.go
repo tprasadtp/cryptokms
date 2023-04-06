@@ -1,4 +1,4 @@
-package shared
+package ioutils
 
 import (
 	"fmt"
@@ -12,7 +12,7 @@ import (
 func RenderTemplate(output string, tpl string, data any) error {
 	t, err := template.New("template.go.tpl").Parse(tpl)
 	if err != nil {
-		return fmt.Errorf("shared(template): failed to parse template: %w", err)
+		return fmt.Errorf("cryptokms(shared): failed to parse template: %w", err)
 	}
 
 	// create file if required.
@@ -22,7 +22,7 @@ func RenderTemplate(output string, tpl string, data any) error {
 		0644,
 	)
 	if err != nil {
-		return fmt.Errorf("shared(template): failed to create file %s: %w", output, err)
+		return fmt.Errorf("cryptokms(shared): failed to create file %s: %w", output, err)
 	}
 	defer file.Close()
 
@@ -30,7 +30,7 @@ func RenderTemplate(output string, tpl string, data any) error {
 	// thus it is not covered by unit tests.
 	err = t.Execute(file, data)
 	if err != nil {
-		return fmt.Errorf("shared(template): failed to write template: %w", err)
+		return fmt.Errorf("cryptokms(shared): failed to write template: %w", err)
 	}
 	return nil
 }

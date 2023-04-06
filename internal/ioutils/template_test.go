@@ -1,10 +1,10 @@
-package shared_test
+package ioutils_test
 
 import (
 	"path/filepath"
 	"testing"
 
-	"github.com/tprasadtp/cryptokms/internal/shared"
+	"github.com/tprasadtp/cryptokms/internal/ioutils"
 )
 
 type Data struct {
@@ -58,7 +58,7 @@ func Test_RenderMetadata(t *testing.T) {
 
 	for _, tc := range tt {
 		t.Run(tc.Name, func(t *testing.T) {
-			err := shared.RenderTemplate(tc.Output, tc.Template, tc.Data)
+			err := ioutils.RenderTemplate(tc.Output, tc.Template, tc.Data)
 			if tc.Err {
 				if err == nil {
 					t.Errorf("expected to error, got nil")

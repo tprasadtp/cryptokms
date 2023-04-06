@@ -18,6 +18,7 @@ while [[ ${1} != "" ]]; do
     *)
         log "Unknown flag: $1"
         exit 1
+        ;;
     esac
     shift
 done
@@ -43,6 +44,14 @@ if [[ $GENERATE_PRIVATE_KEYS == "1" ]]; then
             -pkeyopt "ec_param_enc:named_curve" \
             -out "${BASE_DIR}/ecdsa_p${curve}.key"
     done
+
+    for curve in x25519 ed25519; do
+        log "Generating ${curve} Private Key"
+        openssl genpkey \
+            -algorithm "$curve" \
+            -outform PEM \
+            -out "${BASE_DIR}/$curve.key"
+    done
 fi
 
 for size in 1024 2048 3072 4096; do
@@ -59,4 +68,12 @@ for curve in 256 384 521; do
         -in "${BASE_DIR}/ecdsa_p${curve}.key" \
         -outform PEM \
         -pubout -out "${BASE_DIR}/ecdsa_p${curve}.pub"
+done
+
+for curve in x25519 ed25519; do
+    log "Generating ${curve} Public Key"
+    openssl pkey \
+        -in "${BASE_DIR}/$curve.key" \
+        -outform PEM \
+        -pubout -out "${BASE_DIR}/$curve.pub"
 done

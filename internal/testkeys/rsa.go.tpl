@@ -5,8 +5,6 @@ package testkeys
 import (
 	"crypto/rsa"
     _ "embed"
-
-    "github.com/tprasadtp/cryptokms/internal/cryptoutils"
 )
 
 //go:embed keys/rsa_{{.Size}}.key
@@ -17,8 +15,8 @@ var rsa{{.Size}}PrivateKey *rsa.PrivateKey
 
 //nolint:gochecknoinits // generated code
 func init() {
-    rsa{{.Size}}PrivateKey = cryptoutils.MustParseRSAPrivateKey(rsa{{.Size}}PrivateKeyPEM)
-	rsa{{.Size}}PublicKeyPEM = cryptoutils.MustMarshalPublicKey(&rsa{{.Size}}PrivateKey.PublicKey)
+    rsa{{.Size}}PrivateKey = MustParseRSAPrivateKey(rsa{{.Size}}PrivateKeyPEM)
+	rsa{{.Size}}PublicKeyPEM = MustMarshalPublicKey(&rsa{{.Size}}PrivateKey.PublicKey)
 }
 
 // GetRSA{{.Size}}PrivateKey returns a known RSA{{.Size}} private key.

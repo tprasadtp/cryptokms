@@ -5,8 +5,6 @@ package testkeys
 import (
 	"crypto/rsa"
     _ "embed"
-
-    "github.com/tprasadtp/cryptokms/internal/cryptoutils"
 )
 
 //go:embed keys/rsa_1024.key
@@ -17,8 +15,8 @@ var rsa1024PrivateKey *rsa.PrivateKey
 
 //nolint:gochecknoinits // generated code
 func init() {
-    rsa1024PrivateKey = cryptoutils.MustParseRSAPrivateKey(rsa1024PrivateKeyPEM)
-	rsa1024PublicKeyPEM = cryptoutils.MustMarshalPublicKey(&rsa1024PrivateKey.PublicKey)
+    rsa1024PrivateKey = MustParseRSAPrivateKey(rsa1024PrivateKeyPEM)
+	rsa1024PublicKeyPEM = MustMarshalPublicKey(&rsa1024PrivateKey.PublicKey)
 }
 
 // GetRSA1024PrivateKey returns a known RSA1024 private key.

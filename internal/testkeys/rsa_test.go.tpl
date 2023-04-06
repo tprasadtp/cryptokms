@@ -5,7 +5,6 @@ package testkeys_test
 import (
 	"testing"
 
-	"github.com/tprasadtp/cryptokms/internal/cryptoutils"
 	"github.com/tprasadtp/cryptokms/internal/testkeys"
 )
 
@@ -18,7 +17,7 @@ func Test_Get_RSA{{.Size}}(t *testing.T) {
     }
 
     // Ensure GetRSA{{.Size}}PublicKey returns same key as GetRSA{{.Size}}PublicKeyPEM
-    pubFromPEM := cryptoutils.MustParseRSAPublicKey(testkeys.GetRSA{{.Size}}PublicKeyPEM())
+    pubFromPEM := testkeys.MustParseRSAPublicKey(testkeys.GetRSA{{.Size}}PublicKeyPEM())
 	if !pubFromPEM.Equal(testkeys.GetRSA{{.Size}}PublicKey()) {
 		t.Errorf("parse(GetRSA{{.Size}}PrivateKeyPEM) != GetRSA{{.Size}}PrivateKey.Public")
 	}

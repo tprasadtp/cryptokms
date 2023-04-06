@@ -5,8 +5,6 @@ package testkeys
 import (
 	"crypto/rsa"
     _ "embed"
-
-    "github.com/tprasadtp/cryptokms/internal/cryptoutils"
 )
 
 //go:embed keys/rsa_3072.key
@@ -17,8 +15,8 @@ var rsa3072PrivateKey *rsa.PrivateKey
 
 //nolint:gochecknoinits // generated code
 func init() {
-    rsa3072PrivateKey = cryptoutils.MustParseRSAPrivateKey(rsa3072PrivateKeyPEM)
-	rsa3072PublicKeyPEM = cryptoutils.MustMarshalPublicKey(&rsa3072PrivateKey.PublicKey)
+    rsa3072PrivateKey = MustParseRSAPrivateKey(rsa3072PrivateKeyPEM)
+	rsa3072PublicKeyPEM = MustMarshalPublicKey(&rsa3072PrivateKey.PublicKey)
 }
 
 // GetRSA3072PrivateKey returns a known RSA3072 private key.

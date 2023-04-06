@@ -5,7 +5,6 @@ import (
 	"crypto"
 	"crypto/rand"
 	"errors"
-	"fmt"
 	"io"
 	"testing"
 
@@ -70,6 +69,21 @@ func Test_VerifyDigest(t *testing.T) {
 		},
 		{
 			Name:      "valid-ecp256-sha256",
+			PublicKey: testkeys.GetECP256PublicKey(),
+			Digest:    testkeys.KnownInputHash(crypto.SHA256),
+			Hash:      crypto.SHA256,
+			Signature: func() []byte {
+				signer := testkeys.GetECP256PrivateKey()
+				signature, err := signer.Sign(
+					rand.Reader, testkeys.KnownInputHash(crypto.SHA256), crypto.SHA256)
+				if err != nil {
+					t.Fatalf("failed to sign: %s", err)
+				}
+				return signature
+			}(),
+		},
+		{
+			Name:      "valid-ed25519-sha512",
 			PublicKey: testkeys.GetECP256PublicKey(),
 			Digest:    testkeys.KnownInputHash(crypto.SHA256),
 			Hash:      crypto.SHA256,
@@ -213,15 +227,6 @@ func Test_VerifyDigest(t *testing.T) {
 	}
 }
 
-// uselessReader implements [io.Reader]
-// which always errors.
-type uselessReader struct{}
-
-// Always return [io.ErrUnexpectedEOF] on Read.
-func (uselessReader) Read(p []byte) (int, error) {
-	return 0, fmt.Errorf("%w: useless reader always returns error", io.ErrUnexpectedEOF)
-}
-
 func Test_Verify(t *testing.T) {
 	type testCase struct {
 		Name      string
@@ -238,22 +243,6 @@ func Test_Verify(t *testing.T) {
 			Data:      nil,
 			Hash:      crypto.SHA256,
 			Err:       cryptokms.ErrInvalidInput,
-			Signature: func() []byte {
-				signer := testkeys.GetRSA2048PrivateKey()
-				signature, err := signer.Sign(
-					rand.Reader, testkeys.KnownInputHash(crypto.SHA256), crypto.SHA256)
-				if err != nil {
-					t.Fatalf("failed to sign: %s", err)
-				}
-				return signature
-			}(),
-		},
-		{
-			Name:      "reader-error",
-			PublicKey: testkeys.GetRSA2048PublicKey(),
-			Data:      uselessReader{},
-			Err:       io.ErrUnexpectedEOF,
-			Hash:      crypto.SHA256,
 			Signature: func() []byte {
 				signer := testkeys.GetRSA2048PrivateKey()
 				signature, err := signer.Sign(

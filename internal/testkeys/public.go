@@ -1,7 +1,8 @@
-package cryptoutils
+package testkeys
 
 import (
 	"crypto/ecdsa"
+	"crypto/ed25519"
 	"crypto/rsa"
 	"crypto/x509"
 	"encoding/pem"
@@ -14,7 +15,7 @@ func MustParsePublicKey(key []byte) any {
 	b, _ := pem.Decode(key)
 	pub, err := x509.ParsePKIXPublicKey(b.Bytes)
 	if err != nil {
-		panic(fmt.Sprintf("failed to parse ecdsa public key: %s", err))
+		panic(fmt.Sprintf("failed to parse public key: %s", err))
 	}
 	return pub
 }
@@ -38,6 +39,17 @@ func MustParseECPublicKey(key []byte) *ecdsa.PublicKey {
 		panic(fmt.Sprintf("got %T, not *ecdsa.PublicKey", pub))
 	} else {
 		return rv
+	}
+}
+
+// MustParseED25519PublicKey parses EC public key in PEM format.
+// It panics if it cannot parse input key or key is of type other than ed25519.PublicKey.
+func MustParseED25519PublicKey(key []byte) *ed25519.PublicKey {
+	pub := MustParsePublicKey(key)
+	if rv, ok := pub.(ed25519.PublicKey); !ok {
+		panic(fmt.Sprintf("got %T, not ed25519.PublicKey", pub))
+	} else {
+		return &rv
 	}
 }
 
