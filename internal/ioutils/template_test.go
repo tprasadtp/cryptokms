@@ -24,7 +24,7 @@ func Test_RenderMetadata(t *testing.T) {
 	tt := []testCase{
 		{
 			Name:     "valid-template",
-			Template: "Hello, {{ .Name }}",
+			Template: `Hello, {{ .Name | replace "Go" "Golang" | lower | upper }}`,
 			Output:   filepath.Join(dir, "valid-template"),
 			Data: struct {
 				Name string

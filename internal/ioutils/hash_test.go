@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"testing"
+	"testing/iotest"
 
 	"github.com/tprasadtp/cryptokms/internal/ioutils"
 )
@@ -25,9 +26,9 @@ var knownInputHash = map[crypto.Hash]string{
 // uselessReader implements [io.Reader] which always errors.
 type uselessReader struct{}
 
-// Always return [io.ErrUnexpectedEOF] on Read.
+// Always return [iotest.ErrTimeout] on Read.
 func (uselessReader) Read(p []byte) (int, error) {
-	return 0, fmt.Errorf("%w: useless reader always returns error", io.ErrUnexpectedEOF)
+	return 0, fmt.Errorf("%w: useless reader always returns error", iotest.ErrTimeout)
 }
 
 func Test_HashBlob(t *testing.T) {
@@ -61,7 +62,7 @@ func Test_HashBlob(t *testing.T) {
 			Name:  "reader-error",
 			Input: &uselessReader{},
 			Hash:  crypto.SHA512,
-			Err:   io.ErrUnexpectedEOF,
+			Err:   iotest.ErrTimeout,
 		},
 		{
 			Name:  "hash-not-available",

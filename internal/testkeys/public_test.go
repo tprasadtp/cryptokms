@@ -6,61 +6,134 @@ import (
 	"github.com/tprasadtp/cryptokms/internal/testkeys"
 )
 
-func Test_MustParsePublicKey_Panics(t *testing.T) {
+func Test_MustParseRSAPublicKey_Panics(t *testing.T) {
 	type testCase struct {
 		Name string
 		Func func()
 	}
 	tt := []testCase{
 		{
-			Name: "MustParseRSAPublicKey-nil-input",
+			Name: "nil-input",
 			Func: func() {
 				testkeys.MustParseRSAPublicKey(nil)
 			},
 		},
 		{
-			Name: "MustParseRSAPublicKey-rsa-private-key",
+			Name: "rsa-private-key",
 			Func: func() {
 				testkeys.MustParseRSAPublicKey([]byte(rsa2048PrivPKCS8))
 			},
 		},
 		{
-			Name: "MustParseRSAPublicKey-rsa-private-key-pkcs1",
+			Name: "rsa-private-key-pkcs1",
 			Func: func() {
 				testkeys.MustParseRSAPublicKey([]byte(rsa2048PrivPKCS1))
 			},
 		},
 		{
-			Name: "MustParseRSAPublicKey-ec-private-key-not-pkcs8",
+			Name: "ec-private-key-not-pkcs8",
 			Func: func() {
 				testkeys.MustParseRSAPublicKey([]byte(ecPrivNotPKCS8))
 			},
 		},
 		{
-			Name: "MustParseRSAPublicKey-ec-private-key",
+			Name: "ec-private-key",
 			Func: func() {
 				testkeys.MustParseRSAPublicKey([]byte(ecPrivPKCS8))
 			},
 		},
 		{
-			Name: "MustParseRSAPublicKey-ec-pub-key",
+			Name: "ec-pub-key",
 			Func: func() {
 				testkeys.MustParseRSAPublicKey([]byte(ecPub))
 			},
 		},
 		{
-			Name: "MustParseRSAPublicKey-ed25519-pub",
+			Name: "ed25519-pub",
 			Func: func() {
 				testkeys.MustParseRSAPublicKey([]byte(ed25519Pub))
 			},
 		},
 		{
-			Name: "MustParseRSAPublicKey-ed25519-priv",
+			Name: "ed25519-priv",
 			Func: func() {
 				testkeys.MustParseRSAPublicKey([]byte(ed25519Priv))
 			},
 		},
-		// EC
+		{
+			Name: "invalid",
+			Func: func() {
+				testkeys.MustParseRSAPublicKey([]byte("foo bar"))
+			},
+		},
+	}
+	for _, tc := range tt {
+		t.Run(tc.Name, func(t *testing.T) {
+			shouldPanic(t, tc.Func)
+		})
+	}
+}
+
+func Test_MustParseECPublicKey_Panics(t *testing.T) {
+	type testCase struct {
+		Name string
+		Func func()
+	}
+	tt := []testCase{
+		{
+			Name: "nil-input",
+			Func: func() {
+				testkeys.MustParseECPublicKey(nil)
+			},
+		},
+		{
+			Name: "rsa-pub-key",
+			Func: func() {
+				testkeys.MustParseECPublicKey([]byte(rsa2048Pub))
+			},
+		},
+		{
+			Name: "rsa-private-key",
+			Func: func() {
+				testkeys.MustParseECPublicKey([]byte(rsa2048PrivPKCS8))
+			},
+		},
+		{
+			Name: "rsa-private-key-pkcs1",
+			Func: func() {
+				testkeys.MustParseECPublicKey([]byte(rsa2048PrivPKCS1))
+			},
+		},
+		{
+			Name: "ec-private-key-not-pkcs8",
+			Func: func() {
+				testkeys.MustParseECPublicKey([]byte(ecPrivNotPKCS8))
+			},
+		},
+		{
+			Name: "ec-private-key",
+			Func: func() {
+				testkeys.MustParseECPublicKey([]byte(ecPrivPKCS8))
+			},
+		},
+		{
+			Name: "ed25519-pub",
+			Func: func() {
+				testkeys.MustParseECPublicKey([]byte(ed25519Pub))
+			},
+		},
+		{
+			Name: "ed25519-priv",
+			Func: func() {
+				testkeys.MustParseECPublicKey([]byte(ed25519Priv))
+			},
+		},
+		{
+			Name: "invalid",
+			Func: func() {
+				testkeys.MustParseECPublicKey([]byte("foo bar"))
+			},
+		},
 	}
 	for _, tc := range tt {
 		t.Run(tc.Name, func(t *testing.T) {
