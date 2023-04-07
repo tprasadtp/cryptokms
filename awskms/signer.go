@@ -208,8 +208,6 @@ func (s *Signer) WithContext(ctx context.Context) *Signer {
 }
 
 // Sign is a wrapper around SignContext.
-//
-// Deprecated: Use SignContext instead.
 func (s *Signer) Sign(rand io.Reader, digest []byte, opts crypto.SignerOpts) ([]byte, error) {
 	return s.SignContext(s.context(), rand, digest, opts)
 }

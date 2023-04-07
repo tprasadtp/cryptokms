@@ -18,7 +18,7 @@ import (
 	kms "cloud.google.com/go/kms/apiv1"
 	"github.com/google/go-replayers/grpcreplay"
 	"github.com/tprasadtp/cryptokms/gcpkms"
-	"github.com/tprasadtp/cryptokms/internal/shared"
+	"github.com/tprasadtp/cryptokms/internal/ioutils"
 	"github.com/tprasadtp/cryptokms/internal/testkeys"
 	"google.golang.org/api/option"
 )
@@ -101,7 +101,7 @@ func (o *opts) GenerateTestData(ctx context.Context, keyID, keyUsage, keyAlgorit
 		}
 		signatureFile := filepath.Join(o.Output, fileNameBase+".sig")
 		log.Printf("Save signature to - %s", signatureFile)
-		err = shared.WriteBinaryBlob(signatureFile, signature)
+		err = ioutils.WriteBlob(signatureFile, signature)
 		if err != nil {
 			return fmt.Errorf("failed to write signature to %s: %w", signatureFile, err)
 		}
@@ -128,7 +128,7 @@ func (o *opts) GenerateTestData(ctx context.Context, keyID, keyUsage, keyAlgorit
 
 		encryptedFile := filepath.Join(o.Output, fileNameBase+".crypt")
 		log.Printf("Save encrypted text to - %s", encryptedFile)
-		err = shared.WriteBinaryBlob(encryptedFile, encrypted)
+		err = ioutils.WriteBlob(encryptedFile, encrypted)
 		if err != nil {
 			return fmt.Errorf("failed to write encrypted text to %s: %w", encryptedFile, err)
 		}
@@ -144,7 +144,7 @@ func (o *opts) GenerateTestData(ctx context.Context, keyID, keyUsage, keyAlgorit
 
 	publicKeyFile := filepath.Join(o.Output, fileNameBase+".pub")
 	log.Printf("Save PublicKey to - %s", publicKeyFile)
-	err = shared.WritePublicKey(publicKeyFile, pub)
+	err = ioutils.WritePublicKey(publicKeyFile, pub)
 	if err != nil {
 		return fmt.Errorf("testdata: %w", err)
 	}
@@ -181,7 +181,7 @@ func (o *opts) RunE(ctx context.Context) error {
 	// to be used by test code.
 	metadataFileName := filepath.Join(o.Output, "metadata.go")
 	log.Printf("Writing: %s", metadataFileName)
-	err = shared.RenderTemplate(metadataFileName, metadataGoTpl, o)
+	err = ioutils.RenderGoTemplate(metadataFileName, metadataGoTpl, o)
 	if err != nil {
 		log.Fatalf("failed to create file - %s: %s", metadataFileName, err)
 	}
@@ -189,7 +189,7 @@ func (o *opts) RunE(ctx context.Context) error {
 	// Write content file
 	dataFileName := filepath.Join(o.Output, "data.txt")
 	log.Printf("Writing: %s", dataFileName)
-	err = shared.WriteBinaryBlob(dataFileName, []byte(testkeys.KnownInput))
+	err = ioutils.WriteBlob(dataFileName, []byte(testkeys.KnownInput))
 	if err != nil {
 		log.Fatalf("failed to write data file - %s: %s", dataFileName, err)
 	}

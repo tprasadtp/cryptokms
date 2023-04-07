@@ -47,6 +47,16 @@ linters-settings:
     # Minimal code complexity to report
     min-complexity: 30
 
+  goconst:
+    match-constant: true
+    min-len: 3
+    min-occurrences: 4
+    ignore-tests: true
+    ignore-calls: true
+    numbers: false
+    min: 4
+    max: 4
+
   gocritic:
     # Settings passed to gocritic.
     # The settings key is the name of a supported gocritic checker.
@@ -95,7 +105,11 @@ linters-settings:
   nolintlint:
     # Exclude following linters from requiring an explanation.
     # Default: []
-    allow-no-explanation: [ funlen, gocognit, lll, gochecknoglobals ]
+    allow-no-explanation:
+      - funlen
+      - gocognit
+      - lll
+      - gochecknoglobals
     # Enable to require an explanation of nonzero length after each nolint directive.
     # Default: false
     require-explanation: true

@@ -1,4 +1,4 @@
-package cryptoutils_test
+package testkeys_test
 
 import (
 	"testing"

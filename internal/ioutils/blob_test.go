@@ -1,10 +1,10 @@
-package shared_test
+package ioutils_test
 
 import (
 	"path/filepath"
 	"testing"
 
-	"github.com/tprasadtp/cryptokms/internal/shared"
+	"github.com/tprasadtp/cryptokms/internal/ioutils"
 )
 
 func Test_WriteBinaryBlob(t *testing.T) {
@@ -43,7 +43,7 @@ func Test_WriteBinaryBlob(t *testing.T) {
 
 	for _, tc := range tt {
 		t.Run(tc.Name, func(t *testing.T) {
-			err := shared.WriteBinaryBlob(tc.Output, tc.Blob)
+			err := ioutils.WriteBlob(tc.Output, tc.Blob)
 			if tc.Err {
 				if err == nil {
 					t.Errorf("expected to error, got nil")

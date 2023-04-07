@@ -1,14 +1,14 @@
-package shared
+package ioutils
 
 import (
 	"fmt"
 	"os"
 )
 
-// WriteBinaryBlob writes given binary blob to file.
+// WriteBlob writes given binary blob to file.
 //   - If output file does not exist it is created.
 //   - If output file exists, it is overwritten.
-func WriteBinaryBlob(output string, blob []byte) error {
+func WriteBlob(output string, blob []byte) error {
 	if len(blob) == 0 {
 		return fmt.Errorf("shared(blob): blob is empty")
 	}
