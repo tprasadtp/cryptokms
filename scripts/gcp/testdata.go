@@ -181,7 +181,7 @@ func (o *opts) RunE(ctx context.Context) error {
 	// to be used by test code.
 	metadataFileName := filepath.Join(o.Output, "metadata.go")
 	log.Printf("Writing: %s", metadataFileName)
-	err = ioutils.RenderTemplate(metadataFileName, metadataGoTpl, o)
+	err = ioutils.RenderGoTemplate(metadataFileName, metadataGoTpl, o)
 	if err != nil {
 		log.Fatalf("failed to create file - %s: %s", metadataFileName, err)
 	}

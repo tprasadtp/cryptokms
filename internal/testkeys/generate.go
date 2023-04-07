@@ -3,87 +3,52 @@
 package main
 
 import (
+	_ "embed"
 	"flag"
-	"fmt"
 	"log"
-	"os"
-	"strings"
-	"text/template"
+	"path/filepath"
+
+	"github.com/tprasadtp/cryptokms/internal/ioutils"
 )
 
-func renderTemplate(tpl string, output string, data any) {
-	b := template.New(tpl).Funcs(template.FuncMap{
-		"lower": strings.ToLower,
-	})
-	t, err := b.ParseFiles(tpl)
-	if err != nil {
-		log.Fatalf("Failed to parse template %s: %s", tpl, err)
-	}
-	file, err := os.OpenFile(
-		output,
-		os.O_CREATE|os.O_TRUNC|os.O_WRONLY,
-		0644,
-	)
-	if err != nil {
-		log.Fatalf("Failed to open/create file: %s", err)
-	}
+var output string
 
-	err = t.Execute(file, data)
-	if err != nil {
-		file.Close()
-		log.Fatalf("Failed to render template %s to %s : %s", tpl, output, err)
-	}
-	file.Close()
-}
+var (
+	//go:embed keys.go.tpl
+	keysTpl string
+	//go:embed keys_test.go.tpl
+	keysTestTpl string
+)
 
-// Generate RSA code.
-func genRSAGoCode() {
-	type RSATemplateParams struct {
-		Size      uint
-		EmbedFile string
-	}
-
-	for _, bits := range []uint{1024, 2048, 3072, 4096} {
-		ktype := fmt.Sprintf("RSA (%d)", bits)
-		fname := fmt.Sprintf("rsa_%d.go", bits)
-		ftname := fmt.Sprintf("rsa_%d_test.go", bits)
-		log.Printf("Generate go code: %s", ktype)
-		params := RSATemplateParams{
-			Size: bits,
-		}
-		renderTemplate("rsa.go.tpl", fname, params)
-		renderTemplate("rsa_test.go.tpl", ftname, params)
-	}
-}
-
-// Generate ECDSA code.
-func genECGoCode() {
-	type ECTemplateParams struct {
-		Size      int
-		EmbedFile string
-	}
-	for _, size := range []int{256, 384, 521} {
-		ktype := fmt.Sprintf("EC (P-%d)", size)
-		fname := fmt.Sprintf("ecdsa_p%d.go", size)
-		ftname := fmt.Sprintf("ecdsa_p%d_test.go", size)
-		log.Printf("Generate go code: %s", ktype)
-		params := ECTemplateParams{
-			Size: size,
-		}
-		renderTemplate("ecdsa.go.tpl", fname, params)
-		renderTemplate("ecdsa_test.go.tpl", ftname, params)
-	}
+type Keys struct {
+	RSA []int
+	EC  []int
 }
 
 func main() {
-	var gentype string
-	flag.StringVar(&gentype, "type", "", "Type to generate. can be 'go'")
+	flag.StringVar(&output, "output", "", "Output directory (required)")
 	flag.Parse()
-	switch gentype {
-	case "go", "code", "gocode":
-		genRSAGoCode()
-		genECGoCode()
-	default:
-		log.Fatalf("Unknown mode or not specified: %s", gentype)
+
+	if output == "" {
+		log.Fatalf("output not specified")
+	}
+
+	data := Keys{
+		RSA: []int{2048, 3072, 4096},
+		EC:  []int{256, 384, 521},
+	}
+
+	log.Printf("Rendering template - keys.go.tpl")
+	keysOutputFile := filepath.Join(output, "keys.go")
+	err := ioutils.RenderGoTemplate(keysOutputFile, keysTpl, data)
+	if err != nil {
+		log.Fatalf("failed to render keys.go: %s", err)
+	}
+
+	log.Printf("Rendering template - keys_test.go.tpl")
+	keysTestOutputFile := filepath.Join(output, "keys_test.go")
+	err = ioutils.RenderGoTemplate(keysTestOutputFile, keysTestTpl, data)
+	if err != nil {
+		log.Fatalf("failed to render keys_test.go: %s", err)
 	}
 }

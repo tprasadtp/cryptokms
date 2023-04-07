@@ -1,3 +1,6 @@
+// Package testkeys provides private RSA, ECC and ED-25519 keys
+// to be used in unit and integration testing purposes.
+// This will generate test keys upon import.
 package testkeys
 
 import (
