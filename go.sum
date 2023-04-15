@@ -56,8 +56,8 @@ github.com/aws/aws-sdk-go-v2/internal/configsources v1.1.32 h1:dpbVNUjczQ8Ae3QKH
 github.com/aws/aws-sdk-go-v2/internal/configsources v1.1.32/go.mod h1:RudqOgadTWdcS3t/erPQo24pcVEoYyqj/kKW5Vya21I=
 github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.4.26 h1:QH2kOS3Ht7x+u0gHCh06CXL/h6G8LQJFpZfFBYBNboo=
 github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.4.26/go.mod h1:vq86l7956VgFr0/FWQ2BWnK07QC3WYsepKzy33qqY5U=
-github.com/aws/aws-sdk-go-v2/service/kms v1.20.9 h1:OPTjgUHRJPWu4UC7lo7JEVSXqlGCnjJWKitnUuGdn/g=
-github.com/aws/aws-sdk-go-v2/service/kms v1.20.9/go.mod h1:gSdg6VjsqS8EeGjkXAaLjiwG9fwNrCPAj/kAD6of7EI=
+github.com/aws/aws-sdk-go-v2/service/kms v1.20.10 h1:rmw2sdnYS5kP96hKmcm8Yr+ttZLC/zHER8nuQ9vbomc=
+github.com/aws/aws-sdk-go-v2/service/kms v1.20.10/go.mod h1:gSdg6VjsqS8EeGjkXAaLjiwG9fwNrCPAj/kAD6of7EI=
 github.com/aws/smithy-go v1.13.5 h1:hgz0X/DX0dGqTYpGALqXJoRKRj5oQ7150i5FdTePzO8=
 github.com/aws/smithy-go v1.13.5/go.mod h1:Tg+OJXh4MB2R/uN61Ko2f6hTZwB/ZYGOtib8J3gBHzA=
 github.com/census-instrumentation/opencensus-proto v0.2.1/go.mod h1:f6KPmirojxKA12rnyqOA5BBL4O983OfeGPqjHWSTneU=
