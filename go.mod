@@ -11,7 +11,7 @@ require (
 	github.com/google/go-replayers/httpreplay v1.2.0
 	github.com/google/uuid v1.3.0
 	google.golang.org/api v0.116.0
-	google.golang.org/grpc v1.54.0
+	google.golang.org/grpc v1.55.0
 	google.golang.org/protobuf v1.30.0
 )
 
