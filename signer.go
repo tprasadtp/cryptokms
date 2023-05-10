@@ -31,9 +31,14 @@ type Signer interface {
 
 	// Returns default hashing algorithm.
 	//  - Some KMS providers restrict hashing algorithm. This
-	//    ensures Signer can act as [crypto.SignerOpts] and selects appropriate hash
-	//    supported by the KMS key.
+	//    ensures Signer selects appropriate hash supported by the KMS key.
 	//  - If KMS key supports multiple signers, this
 	//    returns sane default, typically [crypto.SHA256].
 	HashFunc() crypto.Hash
+
+	// Some KMS providers restrict signing algorithm. This
+	// enures Signer can return valid, supported [crypto.SignerOpts],
+	// supported by the KMS key. If KMS key supports multiple decryption algorithms,
+	// this returns sane default, typically RSA PKCS1v5 with SHA256.
+	SignerOpts() crypto.SignerOpts
 }

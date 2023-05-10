@@ -163,7 +163,7 @@ func (d *Decrypter) HashFunc() crypto.Hash {
 // this is [crypto.SHA256].
 func (d *Decrypter) DecrypterOpts() crypto.DecrypterOpts {
 	return &rsa.OAEPOptions{
-		Hash: d.HashFunc(),
+		Hash: d.defaultHasher,
 	}
 }
 
@@ -186,8 +186,6 @@ func (d *Decrypter) context() context.Context {
 }
 
 // WithContext adds the given context to the decrypter.
-//
-// Deprecated: Use DecryptContext instead.
 func (d *Decrypter) WithContext(ctx context.Context) *Decrypter {
 	d.mu.Lock()
 	defer d.mu.Unlock()
@@ -197,8 +195,6 @@ func (d *Decrypter) WithContext(ctx context.Context) *Decrypter {
 }
 
 // This is a wrapper around DecryptContext.
-//
-// Deprecated: Use DecryptContext instead.
 func (d *Decrypter) Decrypt(rand io.Reader, ciphertext []byte, opts crypto.DecrypterOpts) ([]byte, error) {
 	return d.DecryptContext(d.context(), rand, ciphertext, opts)
 }

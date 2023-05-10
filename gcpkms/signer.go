@@ -190,6 +190,11 @@ func (s *Signer) CreatedAt() time.Time {
 	return s.ctime
 }
 
+// SignerOpts Returns a valid signer option suitable for using with Sign.
+func (s *Signer) SignerOpts() crypto.SignerOpts {
+	return s.hash
+}
+
 // context returns the context for this signer or
 // if context is nil, returns [context.Background].
 func (s *Signer) context() context.Context {
@@ -204,8 +209,6 @@ func (s *Signer) context() context.Context {
 }
 
 // WithContext adds the given context to the signer.
-//
-// Deprecated: Use SignContext instead.
 func (s *Signer) WithContext(ctx context.Context) *Signer {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -215,8 +218,6 @@ func (s *Signer) WithContext(ctx context.Context) *Signer {
 }
 
 // This is a wrapper around SignContext.
-//
-// Deprecated: Use SignContext instead.
 func (s *Signer) Sign(rand io.Reader, digest []byte, opts crypto.SignerOpts) ([]byte, error) {
 	return s.SignContext(s.context(), rand, digest, opts)
 }

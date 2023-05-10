@@ -35,6 +35,11 @@ const (
 	// ErrAsymmetricDecrypt is returned when AsymmetricDecrypt operation fails.
 	ErrAsymmetricDecrypt = Error("cryptokms: failed to perform asymmetric decryption")
 
+	// ErrSignerOpts is returned when signer options are not supported by the
+	// KMS key backend. This can happen for example if you try to
+	// sign with PSS but backed only supports PKCSv1_5.
+	ErrSignerOpts = Error("cryptokms: unsupported signer options")
+
 	// ErrDecrypterOpts is returned when decryption options are not supported by the
 	// KMS key backend. This can happen for example if you try to decrypt
 	// with [rsa.PKCS1v15DecryptOptions] when backed only supports [rsa.OAEPOptions].

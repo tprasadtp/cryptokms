@@ -171,10 +171,16 @@ func (s *Signer) Public() crypto.PublicKey {
 }
 
 // HashFunc returns the default hash algorithm used for computing the digest.
-// If underlying KMS key supports multiple hashes, defaults to best suitable hash.
-// In most AWSKMS cases when multiple signing algorithms are supported, this
-// is [crypto.SHA256].
+// If multiple signing algorithms are supported, this returns sane default,
+// typically [crypto.SHA256].
 func (s *Signer) HashFunc() crypto.Hash {
+	return s.defaultHasher
+}
+
+// DecrypterOpts Returns a valid signer option suitable for using with Sign interface.
+// If multiple signing algorithms are supported, this returns sane default,
+// typically RSA PKCS1v5 with [crypto.SHA256].
+func (s *Signer) SignerOpts() crypto.SignerOpts {
 	return s.defaultHasher
 }
 
@@ -197,8 +203,6 @@ func (s *Signer) context() context.Context {
 }
 
 // WithContext adds the given context to the signer.
-//
-// Deprecated: Use SignContext instead.
 func (s *Signer) WithContext(ctx context.Context) *Signer {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -219,10 +223,9 @@ func (s *Signer) SignContext(ctx context.Context, rand io.Reader, digest []byte,
 		return nil, cryptokms.ErrInvalidKMSClient
 	}
 
-	// When no options are specified, use default hashing algorithm.
-	// and when specified, ensure specified digest matches the options.
+	// When no options are specified, use default provided by signer.
 	if opts == nil {
-		opts = s.HashFunc()
+		opts = s.SignerOpts()
 	}
 
 	// Check if given hash function is supported by KMS key

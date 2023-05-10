@@ -24,9 +24,17 @@ type Decrypter interface {
 	//  - Building to GPG public key packets which are deterministic etc.
 	CreatedAt() time.Time
 
-	// Some KMS providers restrict hashing algorithm. This
-	// enures Decrypter can act as [crypto.SignerOpts] and selects appropriate hash
-	// supported by the KMS key. If KMS key supports multiple signers, this
-	// returns sane default, typically [crypto.SHA256].
+	// Returns default hashing algorithm.
+	//  - Some KMS providers restrict hashing algorithm. This
+	//    ensures Signer can act as [crypto.SignerOpts] and selects appropriate hash
+	//    supported by the KMS key.
+	//  - If KMS key supports multiple signers, this
+	//    returns sane default, typically [crypto.SHA256].
 	HashFunc() crypto.Hash
+
+	// Some KMS providers restrict hashing algorithm. This
+	// enures Decrypter can return valid, supported [crypto.DecrypterOpts],
+	// supported by the KMS key. If KMS key supports multiple decryption algorithms,
+	// this returns sane default, typically RSA OAEP with SHA256..
+	DecrypterOpts() crypto.DecrypterOpts
 }
