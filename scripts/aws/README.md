@@ -14,7 +14,7 @@ in additional dependencies as well as to avoiding calls to STS which does not wo
 
 > **Warning**
 >
-> This will incur some billing, though it should be around ~5$ as long as you run terraform destroy afterwards. You can use localstack to avoid it.
+> This will incur some billing, though it should be around ~5$ as long as you run terraform destroy afterwards. You can use local-kms to avoid it.
 
 - Create KMS Keys
     ```console
