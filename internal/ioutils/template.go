@@ -29,18 +29,18 @@ func RenderGoTemplate(output string, tpl string, data any) error {
 		return fmt.Errorf("cryptokms(ioutils): failed to parse template: %w", err)
 	}
 
-	// Render Template
+	// Render template
 	var buf = &bytes.Buffer{}
 	err = t.Execute(buf, data)
 	if err != nil {
 		return fmt.Errorf("cryptokms(ioutils): failed to render template: %w", err)
 	}
 
-	// Format Template Output
-	bw, err := format.Source(buf.Bytes())
+	// gofmt rendered output
+	blob, err := format.Source(buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("cryptokms(ioutils): failed to format rendered template: %w", err)
 	}
 
-	return WriteBlob(output, bw)
+	return WriteBlob(output, blob)
 }

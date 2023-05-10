@@ -11,6 +11,7 @@ Currently it supports keys backed by,
 
 - [Google Cloud KMS]
 - [AWS KMS]
+- Test keys generated per run for testing.
 
 Dependencies are neatly isolated. If you pull gcpkms package only google cloud dependencies should be pulled. Code has extensive unit tests and integration tests.
 
@@ -67,6 +68,12 @@ Uses sensible and sane defaults.
 | [`RSA_2048`][awskms_keyspec] | `ENCRYPT_DECRYPT` | `RSAES_OAEP_SHA_1`,`RSAES_OAEP_SHA_256` | [crypto.Decrypter]
 | [`RSA_3072`][awskms_keyspec] | `ENCRYPT_DECRYPT` | `RSAES_OAEP_SHA_1`,`RSAES_OAEP_SHA_256` | [crypto.Decrypter]
 | [`RSA_4096`][awskms_keyspec] | `ENCRYPT_DECRYPT` | `RSAES_OAEP_SHA_1`,`RSAES_OAEP_SHA_256` | [crypto.Decrypter]
+
+
+## Fake KMS
+
+Library also provides a fake KMS provider backed by ephemeral in-memory keys for test usage.
+**DO NOT** use them for in non-test code. Keys are generated on `init()` and are used during the lifecycle of the binary.
 
 
 [Google Cloud KMS]: https://cloud.google.com/kms/docs

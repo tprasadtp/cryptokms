@@ -224,7 +224,7 @@ func Test_Decrypter(t *testing.T) {
 			ctx := context.Background()
 			resp, err := NewDecrypter(ctx, tc.Client, tc.KeyID)
 			if !errors.Is(err, tc.ResponseErr) {
-				t.Errorf("expected error=%+v, but got=%+v", tc.ResponseErr, err)
+				t.Errorf("expected error=%v, but got=%v", tc.ResponseErr, err)
 			}
 			diff := cmp.Diff(
 				resp, tc.Response,
@@ -248,7 +248,7 @@ func Test_Decrypter_Decrypt_UnInitialized(t *testing.T) {
 	)
 
 	if !errors.Is(err, cryptokms.ErrInvalidKMSClient) {
-		t.Errorf("expected error=%+v, but got=%+v", cryptokms.ErrInvalidKMSClient, err)
+		t.Errorf("expected error=%v, but got=%v", cryptokms.ErrInvalidKMSClient, err)
 	}
 }
 
@@ -289,6 +289,22 @@ func Test_Decrypter_Decrypt(t *testing.T) {
 			Name:        "error-response-integrity",
 			KeyID:       "ERROR_RESP_INTEGRITY_RSA_DECRYPT_OAEP_2048_SHA256",
 			ResponseErr: ErrResponseIntegrity,
+		},
+		{
+			Name: "error-mismatch-options-hash",
+			DecrypterOpts: &rsa.OAEPOptions{
+				Hash: crypto.SHA1, // should be SHA256
+			},
+			ResponseErr: cryptokms.ErrDigestAlgorithm,
+			KeyID:       "RSA_DECRYPT_OAEP_2048_SHA256",
+		},
+		{
+			Name: "error-mismatch-options-type",
+			DecrypterOpts: rsa.OAEPOptions{ // should be pointer
+				Hash: crypto.SHA256,
+			},
+			ResponseErr: cryptokms.ErrAsymmetricDecrypt,
+			KeyID:       "RSA_DECRYPT_OAEP_2048_SHA256",
 		},
 		{
 			Name:  "RSA_DECRYPT_OAEP_2048_SHA256",
