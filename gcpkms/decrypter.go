@@ -162,7 +162,7 @@ func (d *Decrypter) HashFunc() crypto.Hash {
 }
 
 // DecrypterOpts returns supported DecrypterOpts options.
-func (d *Decrypter) DecrypterOpts() any {
+func (d *Decrypter) DecrypterOpts() crypto.DecrypterOpts {
 	return &rsa.OAEPOptions{
 		Hash: d.hash,
 	}
@@ -188,8 +188,6 @@ func (d *Decrypter) context() context.Context {
 }
 
 // WithContext adds the given context to the decrypter.
-//
-// Deprecated: Use DecryptContext instead.
 func (d *Decrypter) WithContext(ctx context.Context) *Decrypter {
 	d.mu.Lock()
 	defer d.mu.Unlock()
@@ -199,8 +197,6 @@ func (d *Decrypter) WithContext(ctx context.Context) *Decrypter {
 }
 
 // This is a wrapper around DecryptContext.
-//
-// Deprecated: Use DecryptContext instead.
 func (d *Decrypter) Decrypt(rand io.Reader, ciphertext []byte, opts crypto.DecrypterOpts) ([]byte, error) {
 	return d.DecryptContext(d.context(), rand, ciphertext, opts)
 }
@@ -209,6 +205,17 @@ func (d *Decrypter) Decrypt(rand io.Reader, ciphertext []byte, opts crypto.Decry
 func (d *Decrypter) DecryptContext(ctx context.Context, _ io.Reader, ciphertext []byte, opts crypto.DecrypterOpts) ([]byte, error) {
 	if d.client == nil || d.name == "" || d.pub == nil {
 		return nil, cryptokms.ErrInvalidKMSClient
+	}
+
+	// Ensure hash is same as one supported by KMS key.
+	switch v := opts.(type) {
+	case nil:
+	case *rsa.OAEPOptions:
+		if v.Hash != d.hash {
+			return nil, fmt.Errorf("%w: expected OAEPOptions.Hash=%s, got=%s", cryptokms.ErrDigestAlgorithm, v.Hash, d.hash)
+		}
+	default:
+		return nil, fmt.Errorf("%w: unknown DecrypterOpts type %T", cryptokms.ErrAsymmetricDecrypt, opts)
 	}
 
 	// Decrypt the message
