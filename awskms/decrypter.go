@@ -226,9 +226,11 @@ func (d *Decrypter) DecryptContext(ctx context.Context, rand io.Reader, cipherte
 		hasher = v.Hash
 
 		// Ensure MGFHash is same as Hash when it is set to non zero value.
-		if v.MGFHash != v.Hash && v.MGFHash != crypto.Hash(0) {
-			return nil, fmt.Errorf("%w: expected MGFHash=%s, but got=%s",
-				cryptokms.ErrDigestAlgorithm, v.Hash, v.MGFHash)
+		if v.MGFHash != crypto.Hash(0) {
+			if v.MGFHash != v.Hash {
+				return nil, fmt.Errorf("%w: expected MGFHash=%s, but got=%s",
+					cryptokms.ErrDigestAlgorithm, v.Hash, v.MGFHash)
+			}
 		}
 	// return a helpful error if PKCS1v15DecryptOptions are specified.
 	case *rsa.PKCS1v15DecryptOptions:
