@@ -155,6 +155,11 @@
     "name": "provider/hashicorp-vault"
   },
   {
+    "color": "025e8c",
+    "description": "Dependencies",
+    "name": "dependencies"
+  },
+  {
     "color": "ceef86",
     "description": "GitHub Actions Updates",
     "name": "dep/actions"
