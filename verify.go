@@ -28,6 +28,7 @@ const (
 //   - [crypto/rsa.VerifyPKCS1v15]
 //   - [crypto/ecdsa.Verify]
 //   - [crypto/ed25519.VerifyWithOptions]
+//   - [crypto/rsa.VerifyPSS]
 //
 // Even though keys may be backed by KMS, this does not make use of KMS APIs
 // for verifying signatures, instead uses locally available Public keys.
@@ -49,11 +50,16 @@ func VerifyDigestSignature(pub crypto.PublicKey, hash crypto.Hash, digest, signa
 
 	switch v := pub.(type) {
 	case *rsa.PublicKey:
-		err := rsa.VerifyPKCS1v15(v, hash, digest, signature)
-		if err == nil {
+		pkcs1v15 := rsa.VerifyPKCS1v15(v, hash, digest, signature)
+		if pkcs1v15 == nil {
 			return nil
 		}
-		return fmt.Errorf("%w: %w", ErrSignatureRSA, err)
+		pss := rsa.VerifyPSS(v, hash, digest, signature, nil)
+		if pss == nil {
+			return nil
+		}
+
+		return fmt.Errorf("%w: %w : %w", ErrSignatureRSA, pkcs1v15, pss)
 	case *ecdsa.PublicKey:
 		var ps struct{ R, S *big.Int }
 		if _, err := asn1.Unmarshal(signature, &ps); err != nil {

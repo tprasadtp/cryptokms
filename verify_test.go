@@ -5,6 +5,7 @@ import (
 	"crypto"
 	"crypto/ed25519"
 	"crypto/rand"
+	"crypto/rsa"
 	"errors"
 	"fmt"
 	"io"
@@ -15,6 +16,7 @@ import (
 	"github.com/tprasadtp/cryptokms/internal/testkeys"
 )
 
+//nolint:gocognit
 func Test_VerifyDigest(t *testing.T) {
 	type testCase struct {
 		Name      string
@@ -329,6 +331,70 @@ func Test_VerifyDigest(t *testing.T) {
 				}
 				// purposefully return invalid signature
 				return signature[1:]
+			}(),
+		},
+		// RSA PSS
+		{
+			Name:      "invalid-rsa-pss-signature",
+			PublicKey: testkeys.GetRSA2048PublicKey(),
+			Digest:    testkeys.KnownInputHash(crypto.SHA256),
+			Hash:      crypto.SHA256,
+			Err:       cryptokms.ErrSignatureRSA,
+			Signature: func() []byte {
+				signer := testkeys.GetRSA2048PrivateKey()
+				signature, err := signer.Sign(
+					rand.Reader,
+					testkeys.KnownInputHash(crypto.SHA256),
+					&rsa.PSSOptions{
+						SaltLength: crypto.SHA256.Size(),
+						Hash:       crypto.SHA256,
+					})
+				if err != nil {
+					t.Fatalf("failed to sign: %s", err)
+				}
+				// purposefully return invalid signature
+				return signature[1:]
+			}(),
+		},
+		{
+			Name:      "rsa-pss-signature-invalid-hash",
+			PublicKey: testkeys.GetRSA2048PublicKey(),
+			Digest:    testkeys.KnownInputHash(crypto.SHA256),
+			Hash:      crypto.SHA256,
+			Err:       cryptokms.ErrSignatureRSA,
+			Signature: func() []byte {
+				signer := testkeys.GetRSA2048PrivateKey()
+				signature, err := signer.Sign(
+					rand.Reader,
+					testkeys.KnownInputHash(crypto.SHA512),
+					&rsa.PSSOptions{
+						SaltLength: crypto.SHA512.Size(),
+						Hash:       crypto.SHA512,
+					})
+				if err != nil {
+					t.Fatalf("failed to sign: %s", err)
+				}
+				return signature
+			}(),
+		},
+		{
+			Name:      "rsa-pss-signature-valid",
+			PublicKey: testkeys.GetRSA2048PublicKey(),
+			Digest:    testkeys.KnownInputHash(crypto.SHA256),
+			Hash:      crypto.SHA256,
+			Signature: func() []byte {
+				signer := testkeys.GetRSA2048PrivateKey()
+				signature, err := signer.Sign(
+					rand.Reader,
+					testkeys.KnownInputHash(crypto.SHA256),
+					&rsa.PSSOptions{
+						SaltLength: crypto.SHA256.Size(),
+						Hash:       crypto.SHA256,
+					})
+				if err != nil {
+					t.Fatalf("failed to sign: %s", err)
+				}
+				return signature
 			}(),
 		},
 		// key-mismatch-ecdsa
