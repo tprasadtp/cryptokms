@@ -298,6 +298,10 @@ func Test_NewSigner(t *testing.T) {
 			if diff != "" {
 				t.Errorf("did not get expected response: \n%s", diff)
 			}
+
+			if resp.Backend() != cryptokms.BackendGoogleCloudKMS {
+				t.Errorf("expected Backend=%v, got=%v", cryptokms.BackendGoogleCloudKMS, resp.Backend())
+			}
 		})
 	}
 }

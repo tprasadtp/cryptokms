@@ -26,8 +26,7 @@ type Decrypter interface {
 
 	// Returns default hashing algorithm.
 	//  - Some KMS providers restrict hashing algorithm. This
-	//    ensures Signer can act as [crypto.SignerOpts] and selects appropriate hash
-	//    supported by the KMS key.
+	//    ensures Decrypter appropriate hash supported by the KMS key.
 	//  - If KMS key supports multiple signers, this
 	//    returns sane default, typically [crypto.SHA256].
 	HashFunc() crypto.Hash
@@ -37,4 +36,7 @@ type Decrypter interface {
 	// supported by the KMS key. If KMS key supports multiple decryption algorithms,
 	// this returns sane default, typically RSA OAEP with SHA256..
 	DecrypterOpts() crypto.DecrypterOpts
+
+	// Returns KMS backend.
+	Backend() Backend
 }

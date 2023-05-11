@@ -7,7 +7,7 @@ var _ error = (*Error)(nil)
 //
 // While exported errors are covered by semver compatibility,
 // error strings themselves are not. Use [errors.Is] for checking
-// errors. This is mainly due to fact that cloud provides
+// errors. This is mainly due to fact that cloud providers
 // rename products or product brands and can add new functionality.
 type Error string
 

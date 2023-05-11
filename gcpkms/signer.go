@@ -217,6 +217,11 @@ func (s *Signer) WithContext(ctx context.Context) *Signer {
 	return s
 }
 
+// Returns KMS backend. This is always [github.com/tprasadtp/cryptokms.BackendGoogleCloudKMS].
+func (s *Signer) Backend() cryptokms.Backend {
+	return cryptokms.BackendGoogleCloudKMS
+}
+
 // This is a wrapper around SignContext.
 func (s *Signer) Sign(rand io.Reader, digest []byte, opts crypto.SignerOpts) ([]byte, error) {
 	return s.SignContext(s.context(), rand, digest, opts)

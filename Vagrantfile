@@ -3,13 +3,13 @@ VM_NAME = "cryptokms"
 $install = <<-SCRIPT
 echo "Installing Tools"
 echo "---------------------------------"
-dnf install -y curl jq htop
+apt-get update
+apt-get install -y curl jq htop
 SCRIPT
 
 Vagrant.require_version ">= 2.2.0"
 Vagrant.configure("2") do |config|
-  config.vm.box = "fedora/38-cloud-base"
-  config.vm.box_version = "38.20230413.1"
+  config.vm.box = "debian/testing64"
   config.vm.define VM_NAME
   config.vm.hostname = VM_NAME
   config.vm.network "private_network", type: "dhcp"
@@ -59,10 +59,10 @@ Vagrant.configure("2") do |config|
     end
   end
 
-  # config.vm.provision "podman" do |podman|
-  #   podman.run "localkms_cryptokms",
-  #       image: "nsmithuk/local-kms:latest",
-  #       args: "-e KMS_REGION=us-east-1 -e KMS_ACCOUNT_ID=000000000000"
-  # end
   config.vm.provision "shell", inline: $install
+  config.vm.provision "docker" do |docker|
+    docker.run "localkms_cryptokms",
+      image: "nsmithuk/local-kms:latest",
+      args: "-p 8088:8080  -e KMS_REGION=us-east-1 -e KMS_ACCOUNT_ID=000000000000"
+  end
 end

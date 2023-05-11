@@ -41,4 +41,7 @@ type Signer interface {
 	// supported by the KMS key. If KMS key supports multiple decryption algorithms,
 	// this returns sane default, typically RSA PKCS1v5 with SHA256.
 	SignerOpts() crypto.SignerOpts
+
+	// Returns KMS backend.
+	Backend() Backend
 }

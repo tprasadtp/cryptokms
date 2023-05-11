@@ -1,99 +1,95 @@
 package fakekms_test
 
-// func ExampleSigner() {
-// 	ctx := context.Background()
+import (
+	"context"
+	"crypto/rand"
+	"crypto/rsa"
+	"fmt"
 
-// 	// Create a New KMS client
-// 	client, err := kms.NewKeyManagementClient(ctx)
-// 	if err != nil {
-// 		// TODO: Handle error
-// 		panic(err)
-// 	}
-// 	// Key Version Resource name.
-// 	keyID := "projects/crypto-kms-integration-testing/locations/global/keyRings/itest-5/cryptoKeys/ec-sign-p384-sha384/cryptoKeyVersions/1"
+	"github.com/tprasadtp/cryptokms"
+	"github.com/tprasadtp/cryptokms/fakekms"
+)
 
-// 	// Create a new Signer.
-// 	signer, err := gcpkms.NewSigner(ctx, client, keyID)
-// 	if err != nil {
-// 		// TODO: Handle error
-// 		panic(err)
-// 	}
+func ExampleSigner() {
+	ctx := context.Background()
 
-// 	// Message you want to sign
-// 	// A nod to https://en.wikipedia.org/wiki/Stellar_classification.
-// 	msg := []byte(`Oh Be A Fine Girl Kiss Me`)
+	// Create a fakekms signer
+	signer, err := fakekms.NewSigner("rsa-2048")
+	if err != nil {
+		// TODO: Handle error
+		panic(err)
+	}
 
-// 	// hash the message you want to sign.
-// 	// with defined hash function.
-// 	h := signer.HashFunc().New()
-// 	h.Write(msg)
-// 	digest := h.Sum(nil)
+	// Message you want to sign
+	// A nod to https://en.wikipedia.org/wiki/Stellar_classification.
+	msg := []byte(`Oh Be A Fine Girl Kiss Me`)
 
-// 	// Sign the digest
-// 	signature, err := signer.SignContext(ctx, nil, digest, signer)
-// 	if err != nil {
-// 		// TODO: Handle error
-// 		panic(err)
-// 	}
+	// hash the message you want to sign.
+	// with defined hash function.
+	h := signer.HashFunc().New()
+	h.Write(msg)
+	digest := h.Sum(nil)
 
-// 	// Verify the signature
-// 	err = cryptokms.VerifyDigestSignature(signer.Public(), signer.HashFunc(), digest, signature)
-// 	if err != nil {
-// 		// TODO: Handle error
-// 		panic(err)
-// 	}
-// }
+	// Sign the digest with PKCSv15 signature scheme
+	signature, err := signer.SignContext(ctx, nil, digest, signer.SignerOpts())
+	if err != nil {
+		// TODO: Handle error
+		panic(err)
+	}
 
-// func ExampleDecrypter() {
-// 	ctx := context.Background()
+	// Verify the signature
+	err = cryptokms.VerifyDigestSignature(signer.Public(), signer.HashFunc(), digest, signature)
+	if err != nil {
+		// TODO: Handle error
+		panic(err)
+	} else {
+		fmt.Println("Verified")
+	}
+	// Output: Verified
+}
 
-// 	// Create a New KMS client
-// 	client, err := kms.NewKeyManagementClient(ctx)
-// 	if err != nil {
-// 		// TODO: Handle error
-// 		panic(err)
-// 	}
-// 	// Key Version Resource name
-// 	keyID := "projects/crypto-kms-integration-testing/locations/global/keyRings/itest-5/cryptoKeys/rsa-decrypt-oaep-4096-sha256/cryptoKeyVersions/1"
+func ExampleDecrypter() {
+	ctx := context.Background()
 
-// 	// Create a new Decrypter
-// 	decrypter, err := gcpkms.NewDecrypter(ctx, client, keyID)
-// 	if err != nil {
-// 		// TODO: Handle error
-// 		panic(err)
-// 	}
+	// Create a new Decrypter
+	decrypter, err := fakekms.NewDecrypter("rsa-2048")
+	if err != nil {
+		// TODO: Handle error
+		panic(err)
+	}
 
-// 	// Message you want to encrypt
-// 	// A nod to https://en.wikipedia.org/wiki/Stellar_classification.
-// 	msg := []byte(`Oh Be A Fine Girl Kiss Me`)
+	// Message you want to encrypt
+	// A nod to https://en.wikipedia.org/wiki/Stellar_classification.
+	msg := []byte(`Oh Be A Fine Girl Kiss Me`)
 
-// 	// This should not be really necessary as currently only asymmetric keys supported
-// 	// for encryption are RSA keys.
-// 	pub, ok := decrypter.Public().(*rsa.PublicKey)
-// 	if !ok {
-// 		// TODO: Handle error
-// 		panic("not rsa key")
-// 	}
+	// This should not be really necessary as currently only asymmetric keys supported
+	// for encryption are RSA keys.
+	pub, ok := decrypter.Public().(*rsa.PublicKey)
+	if !ok {
+		// TODO: Handle error
+		panic("not rsa key")
+	}
 
-// 	// Encrypt the message using public key.
-// 	encrypted, err := rsa.EncryptOAEP(
-// 		decrypter.HashFunc().New(),
-// 		rand.Reader,
-// 		pub,
-// 		msg,
-// 		nil,
-// 	)
-// 	if err != nil {
-// 		// TODO: Handle error
-// 		panic(err)
-// 	}
+	// Encrypt the message using public key and default hash function.
+	encrypted, err := rsa.EncryptOAEP(
+		decrypter.HashFunc().New(),
+		rand.Reader,
+		pub,
+		msg,
+		nil,
+	)
+	if err != nil {
+		// TODO: Handle error
+		panic(err)
+	}
 
-// 	// Decrypt the message
-// 	plaintext, err := decrypter.DecryptContext(ctx, nil, encrypted, &rsa.OAEPOptions{Hash: decrypter.HashFunc()})
-// 	if err != nil {
-// 		// TODO: Handle error
-// 		panic(err)
-// 	}
+	// Decrypt the message using default decrypter options.
+	plaintext, err := decrypter.DecryptContext(ctx, nil, encrypted, decrypter.DecrypterOpts())
+	if err != nil {
+		// TODO: Handle error
+		panic(err)
+	}
 
-// 	fmt.Printf("Plaintext: %s", string(plaintext))
-// }
+	fmt.Printf("Plaintext: %s", string(plaintext))
+	//Output: Plaintext: Oh Be A Fine Girl Kiss Me
+}

@@ -12,7 +12,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/keyvault/azkeys"
+	"github.com/Azure/azure-sdk-for-go/sdk/security/keyvault/azkeys"
 	"github.com/tprasadtp/cryptokms"
 )
 
@@ -172,6 +172,11 @@ func (s *Signer) WithContext(ctx context.Context) *Signer {
 
 	s.ctx = ctx
 	return s
+}
+
+// Returns KMS backend. This is always [github.com/tprasadtp/cryptokms.BackendAzureKeyVault].
+func (s *Signer) Backend() cryptokms.Backend {
+	return cryptokms.BackendAzureKeyVault
 }
 
 // Sign is a wrapper around SignContext.

@@ -233,6 +233,10 @@ func Test_Decrypter(t *testing.T) {
 			if diff != "" {
 				t.Errorf("did not get expected response: \n%s", diff)
 			}
+
+			if resp.Backend() != cryptokms.BackendGoogleCloudKMS {
+				t.Errorf("expected Backend=%v, got=%v", cryptokms.BackendGoogleCloudKMS, resp.Backend())
+			}
 		})
 	}
 }
@@ -276,7 +280,7 @@ func Test_Decrypter_Decrypt(t *testing.T) {
 
 	tt := []testCase{
 		{
-			Name:        "error-on-sign",
+			Name:        "error-on-decrypt",
 			KeyID:       "FORCE_ERROR_ON_ASYMMETRICDECTYPT_RSA_DECRYPT_OAEP_2048_SHA256",
 			ResponseErr: cryptokms.ErrAsymmetricDecrypt,
 		},

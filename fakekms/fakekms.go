@@ -193,6 +193,11 @@ func (s *SignerDecrypter) WithContext(ctx context.Context) *SignerDecrypter {
 	return s
 }
 
+// Returns KMS backend. This is always returns [github.com/tprasadtp/cryptokms.BackendFakeKMS].
+func (s *SignerDecrypter) Backend() cryptokms.Backend {
+	return cryptokms.BackendFakeKMS
+}
+
 // Sign is a wrapper around SignContext.
 func (s *SignerDecrypter) Sign(rand io.Reader, digest []byte, opts crypto.SignerOpts) ([]byte, error) {
 	return s.SignContext(s.context(), rand, digest, opts)

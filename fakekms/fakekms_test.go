@@ -140,6 +140,10 @@ func Test_Signer_NewSigner(t *testing.T) {
 			if !resp.CreatedAt().Equal(knownTS) {
 				t.Errorf("expected CreatedAt() to return %s, got %s", knownTS, resp.CreatedAt())
 			}
+
+			if resp.Backend() != cryptokms.BackendFakeKMS {
+				t.Errorf("expected Backend=%v, got=%v", cryptokms.BackendFakeKMS, resp.Backend())
+			}
 		})
 	}
 }
@@ -347,6 +351,10 @@ func Test_Decrypter_NewDecrypter(t *testing.T) {
 				cmpopts.IgnoreFields(SignerDecrypter{}, "mu"))
 			if diff != "" {
 				t.Errorf("did not get expected response: \n%s", diff)
+			}
+
+			if resp.Backend() != cryptokms.BackendFakeKMS {
+				t.Errorf("expected Backend=%v, got=%v", cryptokms.BackendFakeKMS, resp.Backend())
 			}
 		})
 	}

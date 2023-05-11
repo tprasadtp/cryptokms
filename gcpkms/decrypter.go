@@ -196,6 +196,11 @@ func (d *Decrypter) WithContext(ctx context.Context) *Decrypter {
 	return d
 }
 
+// Returns KMS backend. This is always [github.com/tprasadtp/cryptokms.BackendGoogleCloudKMS].
+func (d *Decrypter) Backend() cryptokms.Backend {
+	return cryptokms.BackendGoogleCloudKMS
+}
+
 // This is a wrapper around DecryptContext.
 func (d *Decrypter) Decrypt(rand io.Reader, ciphertext []byte, opts crypto.DecrypterOpts) ([]byte, error) {
 	return d.DecryptContext(d.context(), rand, ciphertext, opts)
