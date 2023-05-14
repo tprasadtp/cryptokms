@@ -10,15 +10,23 @@ on:
   workflow_dispatch:
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, ubuntu-latest, windows-latest]
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
           go-version-file: go.mod
+
       - name: Run unit tests
         run: go test -coverprofile=coverage.out -covermode=atomic ./...
+        shell: bash
+
       # - name: Upload coverage to Codecov
       #   uses: codecov/codecov-action@v3

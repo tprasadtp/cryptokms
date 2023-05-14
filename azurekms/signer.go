@@ -140,12 +140,12 @@ func (s *Signer) HashFunc() crypto.Hash {
 	return s.hash
 }
 
-// SignerOpts returns sane default [crypto.SignerOpts].
+// SignerOpts returns default [crypto.SignerOpts].
 func (s *Signer) SignerOpts() crypto.SignerOpts {
 	return s.hash
 }
 
-// CreatedAt time at which KMS key was created.
+// CreatedAt returns KMS key creation time.
 func (s *Signer) CreatedAt() time.Time {
 	return s.ctime
 }
@@ -180,8 +180,6 @@ func (s *Signer) Backend() cryptokms.Backend {
 }
 
 // Sign is a wrapper around SignContext.
-//
-// Deprecated: Use SignContext instead.
 func (s *Signer) Sign(rand io.Reader, digest []byte, opts crypto.SignerOpts) ([]byte, error) {
 	return s.SignContext(s.context(), rand, digest, opts)
 }

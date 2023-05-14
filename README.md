@@ -11,9 +11,9 @@ Currently it supports keys backed by,
 
 - [Google Cloud KMS]
 - [AWS KMS]
-- Test keys generated per run for testing.
+- Fake KMS (backed by in-memory ephemeral test keys generated per run for use in tests)
 
-Dependencies are neatly isolated. If you pull gcpkms package only google cloud dependencies should be pulled. Code has extensive unit tests and integration tests.
+Dependencies are neatly isolated. If you pull `gcpkms` package only google cloud dependencies should be pulled. Code has _extensive_ unit tests and integration tests.
 
 Uses sensible and sane defaults.
 
