@@ -1,17 +1,17 @@
 # VM Configurations. All values except VM_BOX_VERSION are required.
-VM_NAME = "protonwire"
+VM_NAME = "cryptokms"
 VM_MEMORY = 512
 VM_BOX = "debian/bullseye64"
 # VM_BOX_VERSION = "v20230501.1"
 VM_DISK_SIZE = 30
 
-# VM Provisioning script
+# VM provisioning script
 $provision = <<-SCRIPT
 echo "---------------------------------"
 echo "Installing Required Tools"
 echo "---------------------------------"
 apt-get update
-apt-get install -y curl jq podman qemu-guest-agent --install-recommends
+apt-get install -y curl jq podman --install-recommends
 
 echo "---------------------------------"
 echo "Enable restarting containers on reboot"
@@ -25,6 +25,7 @@ sudo podman run -d --publish 8080:8080 --env KMS_REGION=us-east-1 --env=KMS_ACCO
 SCRIPT
 
 # Template below is desiged to be used with libvirt and HyperV.
+# Only debian images are supported.
 # - HyperV
 #    - Only Generation 2 VM
 #    - VM integration is enabled by default
@@ -138,6 +139,18 @@ Vagrant.configure("2") do |config|
       libvirt.redirdev :type => "spicevmc"
     end
     libvirt.channel :type => 'unix', :target_name => 'org.qemu.guest_agent.0', :target_type => 'virtio'
+
+    $libvirt_provision = <<-SCRIPT
+    echo "---------------------------------"
+    echo "Installing qemu daemon"
+    echo "---------------------------------"
+    apt-get update
+    apt-get install -y qemu-guest-agent
+    SCRIPT
+
+    # Install libvirt guest agent.
+    libvirt.vm.provision "shell", inline: $libvirt_provision
+
     # override sync to use rsync if using libvirt providers
     override.vm.synced_folder ".", "/vagrant", type: "rsync", rsync__exclude: ".git/"
   end
@@ -150,14 +163,23 @@ Vagrant.configure("2") do |config|
     # Enable HyperV integration services
     hyperv.vm_integration_services = {
       guest_service_interface: true,
-      time_synchronization: true,
-      # KV-Pair exchange service is not useful for Linux, but for Windows AVMA.
-      key_value_pair_exchange: true,
-      heartbeat: true,
-      shutdown: true,
-      # Volume shadow copy service
-      vss: true
+      time_synchronization: true,    # NTP Time services
+      key_value_pair_exchange: true, # KV-Pair exchange service.
+      heartbeat: true,               # Hyper-V Heartbeat.
+      shutdown: true,                # ACPI.
+      vss: true                      # Volume shadow copy service
     }
+
+    $hyperv_provision = <<-SCRIPT
+    echo "---------------------------------"
+    echo "Installing HyperV daemons"
+    echo "---------------------------------"
+    apt-get update
+    apt-get install -y hyperv-daemons
+    SCRIPT
+
+    # Install Hyper-V tools
+    hyperv.vm.provision "shell", inline: $hyperv_provision
   end
 
   # Provision Required Tools and Software.

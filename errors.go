@@ -1,6 +1,6 @@
 package cryptokms
 
-// Compile time check to ensure [Error] implements error interface.
+// Compile time check to ensure Error implements error interface.
 var _ error = (*Error)(nil)
 
 // Error is a simple immutable sentinel error implementation.
@@ -23,10 +23,10 @@ const (
 	// ErrInvalidInput is returned when input to verifier/encrypt is invalid or nil.
 	ErrInvalidInput = Error("cryptokms: input is invalid, nil or empty")
 
-	// Unknown or unsupported ley algorithm. This can be because either key algorithm
+	// Unknown or unsupported key algorithm. This can be because either key algorithm
 	// is unsupported by this library or the KMS backend does not support specified
 	// crypto operation due to key usage restrictions or limitations.
-	// Typically occurs when wrong key is of wrong type/purpose.
+	// Typically occurs when key is of wrong type/purpose.
 	ErrKeyAlgorithm = Error("cryptokms: unknown or unsupported key algorithm")
 
 	// ErrAsymmetricSign is returned when AsymmetricSign operation fails.
@@ -37,7 +37,7 @@ const (
 
 	// ErrSignerOpts is returned when signer options are not supported by the
 	// KMS key backend. This can happen for example if you try to
-	// sign with PSS but backed only supports PKCSv1_5.
+	// sign with RSA-PSS options but backed only supports PKCSv1_5.
 	ErrSignerOpts = Error("cryptokms: unsupported signer options")
 
 	// ErrDecrypterOpts is returned when decryption options are not supported by the
@@ -50,7 +50,7 @@ const (
 	ErrPayloadTooLarge = Error("cryptokms: payload is too large")
 
 	// ErrUnsupportedMethod is returned if RPC/API method or operation is not supported by the key.
-	// For example using HMAC signing key for Asymmetric sign operations.
+	// For example using HMAC signing key for asymmetric sign operations.
 	ErrUnsupportedMethod = Error("cryptokms: method/op is not supported by this key")
 
 	// ErrUnknownURI is returned if key URI format is unknown.
