@@ -1,8 +1,8 @@
 # VM Configurations. All values except VM_BOX_VERSION are required.
 VM_NAME = "cryptokms"
 VM_MEMORY = 512
-VM_BOX = "debian/bullseye64"
-# VM_BOX_VERSION = "v20230501.1"
+VM_BOX = "debian/testing64"
+VM_BOX_VERSION = "v20230501.1"
 VM_DISK_SIZE = 30
 
 # VM provisioning script
@@ -16,12 +16,14 @@ apt-get install -y curl jq podman --install-recommends
 echo "---------------------------------"
 echo "Enable restarting containers on reboot"
 echo "---------------------------------"
-sudo systemctl enable podman-restart --now
+systemctl daemon-reload || echo "Failed  to reload systemd units"
+systemctl enable podman-restart --now && echo "Enabled podman-restart.service" || echo "Failed to enable restarting containers on reboot"
 
 echo "---------------------------------"
 echo "Run AWS KMS emulator (nsmithuk/local-kms)"
 echo "---------------------------------"
-sudo podman run -d --publish 8080:8080 --env KMS_REGION=us-east-1 --env=KMS_ACCOUNT_ID=000000000000 nsmithuk/local-kms:latest
+podman run -d --publish 8080:8080 --env KMS_REGION=us-east-1 --env=KMS_ACCOUNT_ID=000000000000 docker.io/nsmithuk/local-kms:latest
+podman run -d --publish 8200:8200 docker.io/hashicorp/vault:latest
 SCRIPT
 
 # Template below is desiged to be used with libvirt and HyperV.
@@ -148,8 +150,8 @@ Vagrant.configure("2") do |config|
     apt-get install -y qemu-guest-agent
     SCRIPT
 
-    # Install libvirt guest agent.
-    libvirt.vm.provision "shell", inline: $libvirt_provision
+    # # Install libvirt guest agent.
+    override.vm.provision "shell", inline: $libvirt_provision
 
     # override sync to use rsync if using libvirt providers
     override.vm.synced_folder ".", "/vagrant", type: "rsync", rsync__exclude: ".git/"
@@ -179,7 +181,7 @@ Vagrant.configure("2") do |config|
     SCRIPT
 
     # Install Hyper-V tools
-    hyperv.vm.provision "shell", inline: $hyperv_provision
+    override.vm.provision "shell", inline: $hyperv_provision
   end
 
   # Provision Required Tools and Software.
