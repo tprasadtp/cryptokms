@@ -1,9 +1,8 @@
 # VM Configurations. All values except VM_BOX_VERSION are required.
 VM_NAME = "cryptokms"
-VM_MEMORY = 512
 VM_BOX = "debian/testing64"
 VM_BOX_VERSION = "v20230501.1"
-VM_DISK_SIZE = 30
+VM_MEMORY = 512
 
 # VM provisioning script
 $provision = <<-SCRIPT
@@ -36,7 +35,6 @@ SCRIPT
 
 Vagrant.require_version ">= 2.2.0"
 Vagrant.configure("2") do |config|
-
   # Automatic CPU allocations and per host plugin verificataion.
   # Allocates all CPUs to VM by default.
   host = RbConfig::CONFIG['host_os']
@@ -53,11 +51,24 @@ Vagrant.configure("2") do |config|
       abort
     end
   elsif host =~ /windows/
-    cpus = `powershell.exe -command '(Get-CimInstance Win32_ComputerSystem).NumberOfLogicalProcessors'`.to_i
+    cpus = `powershell.exe -Command '(Get-CimInstance Win32_ComputerSystem).NumberOfLogicalProcessors'`.to_i
   else
-    # Other platforms will not detect number of CPU cores.
-    # Statically allocate two cores.
-    cpus = 2
+    # Other platforms will not detect number of CPU cores. Statically allocate single core.
+    cpus = 1
+  end
+
+  # Verify VM_NAME is defined and is a string.
+  if defined?(VM_NAME)
+    if ! VM_NAME.respond_to?(:to_s)
+      puts "=> VM_NAME must be an string."
+      abort
+    else
+      config.vm.define VM_NAME.to_s
+    end
+  else
+    puts "=> VM_NAME is undefined!"
+    puts "=> Please check if your Vagrantfile defines constant VM_NAME string."
+    abort
   end
 
   # Verify VM_BOX is defined and is integer.
@@ -92,20 +103,6 @@ Vagrant.configure("2") do |config|
     end
   end
 
-  # Verify VM_DISK_SIZE is defined and is string.
-  if defined?(VM_DISK_SIZE)
-    if VM_DISK_SIZE.respond_to?(:to_i)
-      disk_size = VM_DISK_SIZE
-    else
-      puts "=> VM_DISK_SIZE must be an integer"
-      abort
-    end
-  else
-    puts "=> VM_DISK_SIZE is undefined!"
-    puts "=> Please check if your Vagrantfile defines constant VM_DISK_SIZE in gigabytes."
-    abort
-  end
-
   # configure Box image name and version.
   # version is optional.
   config.vm.hostname = VM_NAME.to_s
@@ -124,9 +121,8 @@ Vagrant.configure("2") do |config|
     libvirt.cpus = cpus
     libvirt.cpu_mode = 'host-passthrough'
     libvirt.memory = VM_MEMORY.to_i
-    libvirt.machine_virtual_size = VM_DISK_SIZE.to_i
     libvirt.nic_model_type = 'virtio'
-    override.vm.network "private_network", type: "dhcp"
+    override.vm.network :private_network, :type => "dhcp", :libvirt__network_name => 'default'
 
     # - Run /usr/share/swtpm/swtpm-create-user-config-files as non-root if running with user session.
     #   See https://github.com/libvirt/libvirt/commit/c66115b6e81688649da13e00093278ce55c89cb5
