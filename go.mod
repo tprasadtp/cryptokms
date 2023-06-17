@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	cloud.google.com/go/kms v1.10.2
-	github.com/aws/aws-sdk-go-v2 v1.18.0
+	github.com/aws/aws-sdk-go-v2 v1.18.1
 	github.com/aws/aws-sdk-go-v2/service/kms v1.21.1
 	github.com/google/go-cmp v0.5.9
 	github.com/google/go-replayers/grpcreplay v1.1.0
