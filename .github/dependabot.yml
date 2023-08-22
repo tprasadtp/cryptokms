@@ -15,6 +15,8 @@ updates:
     pull-request-branch-name:
       separator: "-"
 
+  # For go, because of MVS, only security updates are relevant.
+  # Ignore version updates as this package is a library.
   - package-ecosystem: gomod
     directory: /
     labels:
@@ -29,5 +31,5 @@ updates:
       day: "saturday"
     pull-request-branch-name:
       separator: "-"
-    allow:
-      - dependency-type: direct
+    # Disable version updates and only apply security updates.
+    open-pull-requests-limit: 0
