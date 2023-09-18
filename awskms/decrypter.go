@@ -40,6 +40,7 @@ type Decrypter struct {
 	maxCiphertextLen int
 	pub              crypto.PublicKey
 	ctime            time.Time
+	algo             cryptokms.Algorithm
 	client           Client
 }
 
@@ -74,28 +75,21 @@ func NewDecrypter(ctx context.Context, client Client, keyID string) (*Decrypter,
 		},
 	)
 	if err != nil {
-		return nil, fmt.Errorf("%w: awskms: failed to describe key: %w", cryptokms.ErrGetKeyMetadata, err)
+		return nil, fmt.Errorf("%w: awskms: failed to describe key: %w",
+			cryptokms.ErrGetKeyMetadata, err)
 	}
 
 	// Ensure KeyState is valid and enabled
 	if keyInfo.KeyMetadata.KeyState != types.KeyStateEnabled {
-		return nil, fmt.Errorf("%w: awskms: key(%s) unusable key state - %s",
+		return nil, fmt.Errorf("%w: awskms: key(%s) is in unusable state - %s",
 			cryptokms.ErrUnusableKeyState,
 			*keyInfo.KeyMetadata.Arn,
 			keyInfo.KeyMetadata.KeyState)
 	}
 
-	// Ensure KeyKeyUsage is SIGN_VERIFY
-	switch keyInfo.KeyMetadata.KeyUsage {
-	case types.KeyUsageTypeEncryptDecrypt:
-	case types.KeyUsageTypeSignVerify:
-		return nil, fmt.Errorf("%w: awskms: signing key(%s) cannot be used for asymmetric decryption",
-			cryptokms.ErrUnsupportedMethod, keyID)
-	case types.KeyUsageTypeGenerateVerifyMac:
-		return nil, fmt.Errorf("%w: awskms: HMAC key(%s) cannot be used for asymmetric decryption",
-			cryptokms.ErrUnsupportedMethod, keyID)
-	default:
-		return nil, fmt.Errorf("%w: awskms: unknown usage(%s) for key(%s)",
+	// Ensure KeyKeyUsage is ENCRYPT_DECRYPT
+	if keyInfo.KeyMetadata.KeyUsage != types.KeyUsageTypeEncryptDecrypt {
+		return nil, fmt.Errorf("%w: awskms: unsupported key usage(%s) for key(%s)",
 			cryptokms.ErrKeyAlgorithm, keyInfo.KeyMetadata.KeyUsage, keyID)
 	}
 
@@ -135,10 +129,13 @@ func NewDecrypter(ctx context.Context, client Client, keyID string) (*Decrypter,
 	switch keyInfo.KeyMetadata.KeySpec {
 	case types.KeySpecRsa2048:
 		decrypter.maxCiphertextLen = 2048 / 8
+		decrypter.algo = cryptokms.AlgorithmRSA2048
 	case types.KeySpecRsa3072:
 		decrypter.maxCiphertextLen = 3072 / 8
+		decrypter.algo = cryptokms.AlgorithmRSA3072
 	case types.KeySpecRsa4096:
 		decrypter.maxCiphertextLen = 4096 / 8
+		decrypter.algo = cryptokms.AlgorithmRSA4096
 	}
 
 	return decrypter, nil
@@ -172,6 +169,11 @@ func (d *Decrypter) CreatedAt() time.Time {
 	return d.ctime
 }
 
+// Algorithm returns KMS key algorithm.
+func (d *Decrypter) Algorithm() cryptokms.Algorithm {
+	return d.algo
+}
+
 // context returns the context for this decrypter or
 // if context is nil, returns [context.Background].
 func (d *Decrypter) context() context.Context {
@@ -201,7 +203,7 @@ func (d *Decrypter) Decrypt(rand io.Reader, ciphertext []byte, opts crypto.Decry
 
 // DecryptContext decrypts the message with asymmetric key.
 // The rand parameter is ignored, and it can be nil.
-func (d *Decrypter) DecryptContext(ctx context.Context, rand io.Reader, ciphertext []byte, opts crypto.DecrypterOpts) ([]byte, error) {
+func (d *Decrypter) DecryptContext(ctx context.Context, _ io.Reader, ciphertext []byte, opts crypto.DecrypterOpts) ([]byte, error) {
 	if d.client == nil || d.keyID == "" || d.pub == nil {
 		return nil, cryptokms.ErrInvalidKMSClient
 	}
@@ -234,10 +236,12 @@ func (d *Decrypter) DecryptContext(ctx context.Context, rand io.Reader, cipherte
 		}
 	// return a helpful error if PKCS1v15DecryptOptions are specified.
 	case *rsa.PKCS1v15DecryptOptions:
-		return nil, fmt.Errorf("%w: PKCS1v15 encryption is not supported by AWS KMS use OAEP instead",
+		return nil, fmt.Errorf(
+			"%w: PKCS1v15 encryption is not supported by AWS KMS use OAEP instead",
 			cryptokms.ErrAsymmetricDecrypt)
 	default:
-		return nil, fmt.Errorf("%w: unknown decrypter opts type %T", cryptokms.ErrAsymmetricDecrypt, opts)
+		return nil, fmt.Errorf("%w: unknown decrypter opts type %T",
+			cryptokms.ErrAsymmetricDecrypt, opts)
 	}
 
 	if len(ciphertext) > d.maxCiphertextLen {

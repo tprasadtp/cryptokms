@@ -6,7 +6,6 @@ import (
 	"crypto/rsa"
 	"fmt"
 
-	kms "cloud.google.com/go/kms/apiv1"
 	"github.com/tprasadtp/cryptokms"
 	"github.com/tprasadtp/cryptokms/gcpkms"
 )
@@ -14,17 +13,11 @@ import (
 func ExampleSigner() {
 	ctx := context.Background()
 
-	// Create a New KMS client
-	client, err := kms.NewKeyManagementClient(ctx)
-	if err != nil {
-		// TODO: Handle error
-		panic(err)
-	}
 	// Key Version Resource name.
 	keyID := "projects/crypto-kms-integration-testing/locations/global/keyRings/itest-5/cryptoKeys/ec-sign-p384-sha384/cryptoKeyVersions/1"
 
 	// Create a new Signer.
-	signer, err := gcpkms.NewSigner(ctx, client, keyID)
+	signer, err := gcpkms.NewSigner(ctx, keyID)
 	if err != nil {
 		// TODO: Handle error
 		panic(err)
@@ -58,17 +51,11 @@ func ExampleSigner() {
 func ExampleDecrypter() {
 	ctx := context.Background()
 
-	// Create a New KMS client
-	client, err := kms.NewKeyManagementClient(ctx)
-	if err != nil {
-		// TODO: Handle error
-		panic(err)
-	}
 	// Key Version Resource name
 	keyID := "projects/crypto-kms-integration-testing/locations/global/keyRings/itest-5/cryptoKeys/rsa-decrypt-oaep-4096-sha256/cryptoKeyVersions/1"
 
 	// Create a new Decrypter
-	decrypter, err := gcpkms.NewDecrypter(ctx, client, keyID)
+	decrypter, err := gcpkms.NewDecrypter(ctx, keyID)
 	if err != nil {
 		// TODO: Handle error
 		panic(err)

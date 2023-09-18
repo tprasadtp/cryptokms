@@ -8,6 +8,7 @@ func _() {
 	// An "invalid array index" compiler error signifies that the constant values have changed.
 	// Re-run the stringer command to generate them again.
 	var x [1]struct{}
+	_ = x[BackendUnknown-0]
 	_ = x[BackendGoogleCloudKMS-1]
 	_ = x[BackendAWSKMS-2]
 	_ = x[BackendHashicorpVault-3]
@@ -17,14 +18,13 @@ func _() {
 	_ = x[BackendTPM-7]
 }
 
-const _Backend_name = "GoogleCloudKMSAWSKMSHashicorpVaultAzureKeyVaultFakeKMSFilesystemTPM"
+const _Backend_name = "UnknownGoogleCloudKMSAWSKMSHashicorpVaultAzureKeyVaultFakeKMSFilesystemTPM"
 
-var _Backend_index = [...]uint8{0, 14, 20, 34, 47, 54, 64, 67}
+var _Backend_index = [...]uint8{0, 7, 21, 27, 41, 54, 61, 71, 74}
 
 func (i Backend) String() string {
-	i -= 1
 	if i < 0 || i >= Backend(len(_Backend_index)-1) {
-		return "Backend(" + strconv.FormatInt(int64(i+1), 10) + ")"
+		return "Backend(" + strconv.FormatInt(int64(i), 10) + ")"
 	}
 	return _Backend_name[_Backend_index[i]:_Backend_index[i+1]]
 }

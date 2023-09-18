@@ -16,8 +16,7 @@ import (
 	"github.com/tprasadtp/cryptokms/internal/testkeys"
 )
 
-//nolint:gocognit
-func Test_VerifyDigest(t *testing.T) {
+func TestVerifyDigest(t *testing.T) {
 	type testCase struct {
 		Name      string
 		PublicKey crypto.PublicKey
@@ -397,6 +396,25 @@ func Test_VerifyDigest(t *testing.T) {
 				return signature
 			}(),
 		},
+		{
+			Name:      "rsa-pss-signature-valid-default-options",
+			PublicKey: testkeys.GetRSA2048PublicKey(),
+			Digest:    testkeys.KnownInputHash(crypto.SHA256),
+			Hash:      crypto.SHA256,
+			Signature: func() []byte {
+				signer := testkeys.GetRSA2048PrivateKey()
+				signature, err := signer.Sign(
+					rand.Reader,
+					testkeys.KnownInputHash(crypto.SHA256),
+					&rsa.PSSOptions{
+						Hash: crypto.SHA256,
+					})
+				if err != nil {
+					t.Fatalf("failed to sign: %s", err)
+				}
+				return signature
+			}(),
+		},
 		// key-mismatch-ecdsa
 		{
 			Name:      "correct-signature-wrong-ec-key",
@@ -462,7 +480,7 @@ func Test_VerifyDigest(t *testing.T) {
 type uselessReader struct{}
 
 // Always return [iotest.ErrTimeout] on Read.
-func (uselessReader) Read(p []byte) (int, error) {
+func (uselessReader) Read(_ []byte) (int, error) {
 	return 0, fmt.Errorf("%w: useless reader always returns error", iotest.ErrTimeout)
 }
 

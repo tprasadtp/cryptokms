@@ -27,6 +27,8 @@ const (
 	// is unsupported by this library or the KMS backend does not support specified
 	// crypto operation due to key usage restrictions or limitations.
 	// Typically occurs when wrong key is of wrong type/purpose.
+	//
+	// For example using HMAC signing key for Asymmetric sign operations.
 	ErrKeyAlgorithm = Error("cryptokms: unknown or unsupported key algorithm")
 
 	// ErrAsymmetricSign is returned when AsymmetricSign operation fails.
@@ -48,10 +50,6 @@ const (
 	// ErrPayloadTooLarge is returned when payload is too large.
 	// Limits depend on the KMS provider, server/IAM configuration and key types.
 	ErrPayloadTooLarge = Error("cryptokms: payload is too large")
-
-	// ErrUnsupportedMethod is returned if RPC/API method or operation is not supported by the key.
-	// For example using HMAC signing key for Asymmetric sign operations.
-	ErrUnsupportedMethod = Error("cryptokms: method/op is not supported by this key")
 
 	// ErrUnknownURI is returned if key URI format is unknown.
 	ErrUnknownURI = Error("cryptokms: Key URI format is unknown")

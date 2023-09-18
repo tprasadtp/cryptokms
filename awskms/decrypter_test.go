@@ -15,110 +15,110 @@ import (
 	"github.com/tprasadtp/cryptokms/internal/testkeys"
 )
 
-func Test_NewDecrypter(t *testing.T) {
+func TestNewDecrypter(t *testing.T) {
 	type testCase struct {
-		Name      string
-		Region    string
-		KeyState  types.KeyState
-		KeySpec   types.KeySpec
-		KeyUsage  types.KeyUsageType
-		Client    Client
-		Err       error
-		Decrypter *Decrypter
+		Name        string
+		Region      string
+		KeyState    types.KeyState
+		KeySpec     types.KeySpec
+		KeyUsage    types.KeyUsageType
+		Client      Client
+		ResponseErr error
+		Decrypter   *Decrypter
 	}
 	tt := []testCase{
 		{
-			Name:     "nil-client",
-			KeyState: types.KeyStateEnabled,
-			Client:   nil,
-			KeySpec:  types.KeySpecRsa4096,
-			KeyUsage: types.KeyUsageTypeEncryptDecrypt,
-			Region:   "us-east-1",
-			Err:      cryptokms.ErrInvalidKMSClient,
+			Name:        "nil-client",
+			KeyState:    types.KeyStateEnabled,
+			Client:      nil,
+			KeySpec:     types.KeySpecRsa4096,
+			KeyUsage:    types.KeyUsageTypeEncryptDecrypt,
+			Region:      "us-east-1",
+			ResponseErr: cryptokms.ErrInvalidKMSClient,
 		},
 		// Invalid KeyStateEnabled
 		{
-			Name:     "error-on-describe",
-			KeyState: types.KeyStateEnabled,
-			Client:   newMockKMSClient(),
-			KeySpec:  types.KeySpecRsa4096,
-			KeyUsage: types.KeyUsageTypeEncryptDecrypt,
-			Region:   "error-describe",
-			Err:      cryptokms.ErrGetKeyMetadata,
+			Name:        "error-on-describe",
+			KeyState:    types.KeyStateEnabled,
+			Client:      newMockKMSClient(),
+			KeySpec:     types.KeySpecRsa4096,
+			KeyUsage:    types.KeyUsageTypeEncryptDecrypt,
+			Region:      "error-describe",
+			ResponseErr: cryptokms.ErrGetKeyMetadata,
 		},
 		{
-			Name:     "key-still-creating",
-			KeyState: types.KeyStateCreating,
-			Client:   newMockKMSClient(),
-			KeySpec:  types.KeySpecRsa4096,
-			KeyUsage: types.KeyUsageTypeEncryptDecrypt,
-			Region:   "us-east-1",
-			Err:      cryptokms.ErrUnusableKeyState,
+			Name:        "key-still-creating",
+			KeyState:    types.KeyStateCreating,
+			Client:      newMockKMSClient(),
+			KeySpec:     types.KeySpecRsa4096,
+			KeyUsage:    types.KeyUsageTypeEncryptDecrypt,
+			Region:      "us-east-1",
+			ResponseErr: cryptokms.ErrUnusableKeyState,
 		},
 		{
-			Name:     "key-pending-deletion",
-			KeyState: types.KeyStatePendingDeletion,
-			Client:   newMockKMSClient(),
-			KeySpec:  types.KeySpecRsa4096,
-			KeyUsage: types.KeyUsageTypeEncryptDecrypt,
-			Region:   "us-east-1",
-			Err:      cryptokms.ErrUnusableKeyState,
+			Name:        "key-pending-deletion",
+			KeyState:    types.KeyStatePendingDeletion,
+			Client:      newMockKMSClient(),
+			KeySpec:     types.KeySpecRsa4096,
+			KeyUsage:    types.KeyUsageTypeEncryptDecrypt,
+			Region:      "us-east-1",
+			ResponseErr: cryptokms.ErrUnusableKeyState,
 		},
 		{
-			Name:     "key-disabled",
-			KeyState: types.KeyStateDisabled,
-			Client:   newMockKMSClient(),
-			KeySpec:  types.KeySpecRsa4096,
-			KeyUsage: types.KeyUsageTypeEncryptDecrypt,
-			Region:   "us-east-1",
-			Err:      cryptokms.ErrUnusableKeyState,
+			Name:        "key-disabled",
+			KeyState:    types.KeyStateDisabled,
+			Client:      newMockKMSClient(),
+			KeySpec:     types.KeySpecRsa4096,
+			KeyUsage:    types.KeyUsageTypeEncryptDecrypt,
+			Region:      "us-east-1",
+			ResponseErr: cryptokms.ErrUnusableKeyState,
 		},
 		// Invalid Key Usage
 		{
-			Name:     "key-usage-sign-verify",
-			KeyState: types.KeyStateEnabled,
-			Client:   newMockKMSClient(),
-			KeySpec:  types.KeySpecRsa4096,
-			KeyUsage: types.KeyUsageTypeSignVerify,
-			Region:   "us-east-1",
-			Err:      cryptokms.ErrUnsupportedMethod,
+			Name:        "key-usage-sign-verify",
+			KeyState:    types.KeyStateEnabled,
+			Client:      newMockKMSClient(),
+			KeySpec:     types.KeySpecRsa4096,
+			KeyUsage:    types.KeyUsageTypeSignVerify,
+			Region:      "us-east-1",
+			ResponseErr: cryptokms.ErrKeyAlgorithm,
 		},
 		{
-			Name:     "key-usage-hmac",
-			KeyState: types.KeyStateEnabled,
-			Client:   newMockKMSClient(),
-			KeySpec:  types.KeySpecHmac256,
-			KeyUsage: types.KeyUsageTypeGenerateVerifyMac,
-			Region:   "us-east-1",
-			Err:      cryptokms.ErrUnsupportedMethod,
+			Name:        "key-usage-hmac",
+			KeyState:    types.KeyStateEnabled,
+			Client:      newMockKMSClient(),
+			KeySpec:     types.KeySpecHmac256,
+			KeyUsage:    types.KeyUsageTypeGenerateVerifyMac,
+			Region:      "us-east-1",
+			ResponseErr: cryptokms.ErrKeyAlgorithm,
 		},
 		{
-			Name:     "key-usage-unknown",
-			KeyState: types.KeyStateEnabled,
-			Client:   newMockKMSClient(),
-			KeySpec:  types.KeySpecRsa4096,
-			KeyUsage: types.KeyUsageType("unknown"),
-			Region:   "us-east-1",
-			Err:      cryptokms.ErrKeyAlgorithm,
+			Name:        "key-usage-unknown",
+			KeyState:    types.KeyStateEnabled,
+			Client:      newMockKMSClient(),
+			KeySpec:     types.KeySpecRsa4096,
+			KeyUsage:    types.KeyUsageType("unknown"),
+			Region:      "us-east-1",
+			ResponseErr: cryptokms.ErrKeyAlgorithm,
 		},
 		// Error on GetPublicKey API call.
 		{
-			Name:     "error-on-get-public-key",
-			KeyState: types.KeyStateEnabled,
-			Client:   newMockKMSClient(),
-			KeySpec:  types.KeySpecRsa4096,
-			KeyUsage: types.KeyUsageTypeEncryptDecrypt,
-			Region:   "error-get-public-key",
-			Err:      cryptokms.ErrGetKeyMetadata,
+			Name:        "error-on-get-public-key",
+			KeyState:    types.KeyStateEnabled,
+			Client:      newMockKMSClient(),
+			KeySpec:     types.KeySpecRsa4096,
+			KeyUsage:    types.KeyUsageTypeEncryptDecrypt,
+			Region:      "error-get-public-key",
+			ResponseErr: cryptokms.ErrGetKeyMetadata,
 		},
 		{
-			Name:     "unparsable-public-key",
-			KeyState: types.KeyStateEnabled,
-			Client:   newMockKMSClient(),
-			KeySpec:  types.KeySpecRsa4096,
-			KeyUsage: types.KeyUsageTypeEncryptDecrypt,
-			Region:   "unparsable-public-key",
-			Err:      cryptokms.ErrGetKeyMetadata,
+			Name:        "unparsable-public-key",
+			KeyState:    types.KeyStateEnabled,
+			Client:      newMockKMSClient(),
+			KeySpec:     types.KeySpecRsa4096,
+			KeyUsage:    types.KeyUsageTypeEncryptDecrypt,
+			Region:      "unparsable-public-key",
+			ResponseErr: cryptokms.ErrGetKeyMetadata,
 		},
 		// Valid RSA keys
 		{
@@ -139,6 +139,7 @@ func Test_NewDecrypter(t *testing.T) {
 				pub:              testkeys.GetRSA2048PublicKey(),
 				maxCiphertextLen: 2048 / 8,
 				ctime:            knownTS,
+				algo:             cryptokms.AlgorithmRSA2048,
 			},
 		},
 		{
@@ -159,6 +160,7 @@ func Test_NewDecrypter(t *testing.T) {
 				pub:              testkeys.GetRSA3072PublicKey(),
 				maxCiphertextLen: 3072 / 8,
 				ctime:            knownTS,
+				algo:             cryptokms.AlgorithmRSA3072,
 			},
 		},
 		{
@@ -179,6 +181,7 @@ func Test_NewDecrypter(t *testing.T) {
 				pub:              testkeys.GetRSA4096PublicKey(),
 				maxCiphertextLen: 4096 / 8,
 				ctime:            knownTS,
+				algo:             cryptokms.AlgorithmRSA4096,
 			},
 		},
 	}
@@ -187,8 +190,8 @@ func Test_NewDecrypter(t *testing.T) {
 			ctx := context.Background()
 			arn := computeKMSKeyArn(tc.KeyState, tc.KeySpec, tc.KeyUsage, tc.Region)
 			resp, err := NewDecrypter(ctx, tc.Client, arn)
-			if !errors.Is(err, tc.Err) {
-				t.Errorf("expected error=%+v, but got=%+v", tc.Err, err)
+			if !errors.Is(err, tc.ResponseErr) {
+				t.Errorf("expected error=%+v, but got=%+v", tc.ResponseErr, err)
 			}
 			diff := cmp.Diff(
 				resp, tc.Decrypter,
@@ -197,11 +200,17 @@ func Test_NewDecrypter(t *testing.T) {
 			if diff != "" {
 				t.Errorf("did not get expected response: \n%s", diff)
 			}
+
+			if tc.ResponseErr == nil {
+				if resp.Algorithm() != tc.Decrypter.algo {
+					t.Errorf("expected algo=%d, got=%d", tc.Decrypter.algo, resp.Algorithm())
+				}
+			}
 		})
 	}
 }
 
-func Test_Decrypter_Decrypt_UnInitialized(t *testing.T) {
+func TestDecrypter_Decrypt_UnInitialized(t *testing.T) {
 	decrypter := &Decrypter{}
 	_, err := decrypter.Decrypt(
 		rand.Reader,
@@ -216,7 +225,7 @@ func Test_Decrypter_Decrypt_UnInitialized(t *testing.T) {
 	}
 }
 
-func Test_Decrypter_WithContext(t *testing.T) {
+func TestDecrypter_WithContext(t *testing.T) {
 	s := new(Decrypter)
 	ctx := context.Background()
 	s = s.WithContext(ctx)
@@ -226,7 +235,7 @@ func Test_Decrypter_WithContext(t *testing.T) {
 	}
 }
 
-func Test_Decrypter_Decrypt(t *testing.T) {
+func TestDecrypter_Decrypt(t *testing.T) {
 	type testCase struct {
 		Name          string
 		KeyArn        string

@@ -14,6 +14,7 @@ import (
 	kms "cloud.google.com/go/kms/apiv1"
 	"cloud.google.com/go/kms/apiv1/kmspb"
 	"github.com/tprasadtp/cryptokms"
+	"google.golang.org/api/option"
 )
 
 // Compile time check to ensure [Decrypter] implements
@@ -55,13 +56,16 @@ type Decrypter struct {
 	pub    crypto.PublicKey
 	hash   crypto.Hash
 	ctime  time.Time
+	algo   cryptokms.Algorithm
 	client *kms.KeyManagementClient
 }
 
 // Returns a new Decrypter backed by GCP KMS asymmetric key.
-func NewDecrypter(ctx context.Context, client *kms.KeyManagementClient, keyID string) (*Decrypter, error) {
-	if client == nil {
-		return nil, cryptokms.ErrInvalidKMSClient
+func NewDecrypter(ctx context.Context, keyID string, opts ...option.ClientOption) (*Decrypter, error) {
+	client, err := kms.NewKeyManagementClient(ctx, opts...)
+	if err != nil {
+		return nil, fmt.Errorf("%w: gcpkms: failed to build kms client: %w",
+			cryptokms.ErrInvalidKMSClient, err)
 	}
 
 	// Get key metadata.
@@ -77,21 +81,30 @@ func NewDecrypter(ctx context.Context, client *kms.KeyManagementClient, keyID st
 
 	// Check key compatibility and hash algorithm.
 	var hasher crypto.Hash
+	var algo cryptokms.Algorithm
+
 	switch key.Algorithm {
 	case kmspb.CryptoKeyVersion_RSA_DECRYPT_OAEP_2048_SHA1:
 		hasher = crypto.SHA1
+		algo = cryptokms.AlgorithmRSA2048
 	case kmspb.CryptoKeyVersion_RSA_DECRYPT_OAEP_3072_SHA1:
 		hasher = crypto.SHA1
+		algo = cryptokms.AlgorithmRSA3072
 	case kmspb.CryptoKeyVersion_RSA_DECRYPT_OAEP_4096_SHA1:
 		hasher = crypto.SHA1
+		algo = cryptokms.AlgorithmRSA4096
 	case kmspb.CryptoKeyVersion_RSA_DECRYPT_OAEP_2048_SHA256:
 		hasher = crypto.SHA256
+		algo = cryptokms.AlgorithmRSA2048
 	case kmspb.CryptoKeyVersion_RSA_DECRYPT_OAEP_3072_SHA256:
 		hasher = crypto.SHA256
+		algo = cryptokms.AlgorithmRSA3072
 	case kmspb.CryptoKeyVersion_RSA_DECRYPT_OAEP_4096_SHA256:
 		hasher = crypto.SHA256
+		algo = cryptokms.AlgorithmRSA4096
 	case kmspb.CryptoKeyVersion_RSA_DECRYPT_OAEP_4096_SHA512:
 		hasher = crypto.SHA512
+		algo = cryptokms.AlgorithmRSA4096
 	// Unsupported Methods
 	case kmspb.CryptoKeyVersion_GOOGLE_SYMMETRIC_ENCRYPTION,
 		kmspb.CryptoKeyVersion_HMAC_SHA1,
@@ -109,7 +122,7 @@ func NewDecrypter(ctx context.Context, client *kms.KeyManagementClient, keyID st
 		kmspb.CryptoKeyVersion_RSA_SIGN_PKCS1_4096_SHA512,
 		kmspb.CryptoKeyVersion_EC_SIGN_P256_SHA256,
 		kmspb.CryptoKeyVersion_EC_SIGN_P384_SHA384:
-		return nil, fmt.Errorf("%w : %s", cryptokms.ErrUnsupportedMethod, key.Algorithm.String())
+		return nil, fmt.Errorf("%w : %s", cryptokms.ErrKeyAlgorithm, key.Algorithm.String())
 	default:
 		return nil, fmt.Errorf("%w : %s", cryptokms.ErrKeyAlgorithm, key.Algorithm.String())
 	}
@@ -117,14 +130,15 @@ func NewDecrypter(ctx context.Context, client *kms.KeyManagementClient, keyID st
 	// Retrieve the public key from KMS.
 	pbPublicKey, err := client.GetPublicKey(ctx, &kmspb.GetPublicKeyRequest{Name: keyID})
 	if err != nil {
-		return nil, fmt.Errorf("gcpkms: failed to get public key: %w", err)
+		return nil, fmt.Errorf("%w: gcpkms: failed to get public key: %w",
+			cryptokms.ErrGetKeyMetadata, err)
 	}
 
 	// Verify response integrity.
 	crcHash := ComputeCRC32([]byte(pbPublicKey.Pem))
 	if crcHash.Value != pbPublicKey.PemCrc32C.Value {
 		return nil, fmt.Errorf(
-			"%w: expected CRC32=%x got=%x",
+			"%w: gcpkms: expected CRC32=%x got=%x",
 			ErrResponseIntegrity, pbPublicKey.PemCrc32C, crcHash.Value)
 	}
 
@@ -147,6 +161,7 @@ func NewDecrypter(ctx context.Context, client *kms.KeyManagementClient, keyID st
 		client: client,
 		hash:   hasher,
 		pub:    pub,
+		algo:   algo,
 		ctime:  key.CreateTime.AsTime(),
 	}, nil
 }
@@ -166,6 +181,11 @@ func (d *Decrypter) DecrypterOpts() crypto.DecrypterOpts {
 	return &rsa.OAEPOptions{
 		Hash: d.hash,
 	}
+}
+
+// Algorithm returns KMS key algorithm. This only returns key algorithm.
+func (d *Decrypter) Algorithm() cryptokms.Algorithm {
+	return d.algo
 }
 
 // CreatedAt time at which key/key material was created.

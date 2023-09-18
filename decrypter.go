@@ -37,4 +37,7 @@ type Decrypter interface {
 	// supported by the KMS key. If KMS key supports multiple decryption algorithms,
 	// this returns sane default, typically RSA OAEP with SHA256..
 	DecrypterOpts() crypto.DecrypterOpts
+
+	// Algorithm returns KMS key algorithm.
+	Algorithm() Algorithm
 }

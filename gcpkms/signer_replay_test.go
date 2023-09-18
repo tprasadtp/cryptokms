@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	kms "cloud.google.com/go/kms/apiv1"
 	"github.com/google/go-replayers/grpcreplay"
 	"github.com/tprasadtp/cryptokms"
 	"github.com/tprasadtp/cryptokms/gcpkms"
@@ -64,16 +63,12 @@ func Test_Signer_GRPCReplay(t *testing.T) {
 
 			// setup client
 			ctx := context.Background()
-			client, err := kms.NewKeyManagementClient(ctx, option.WithGRPCConn(connection))
-			if err != nil {
-				t.Fatalf("failed to setup KMSClient: %s", err)
-			}
 
 			// setup signer
 			signer, err := gcpkms.NewSigner(
 				ctx,
-				client,
 				testdata.KeyVersionResourceName(tc.Name),
+				option.WithGRPCConn(connection),
 			)
 			if err != nil {
 				t.Fatalf("failed to setup signer: %s", err)

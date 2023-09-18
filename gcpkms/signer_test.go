@@ -7,7 +7,6 @@ import (
 	"errors"
 	"testing"
 
-	kms "cloud.google.com/go/kms/apiv1"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/tprasadtp/cryptokms"
@@ -16,270 +15,230 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func Test_NewSigner(t *testing.T) {
+func TestNewSigner(t *testing.T) {
 	type testCase struct {
 		Name        string
 		KeyID       string
-		Client      *kms.KeyManagementClient
 		Response    *Signer
 		ResponseErr error
 	}
 
 	server := newFakeServer(t)
 	server.Serve(t)
-	client := server.Client(t)
+	clientOptions := server.Options(t)
 
 	tt := []testCase{
 		{
-			Name:        "nil-client",
-			KeyID:       "IGNORED_VALUE",
-			ResponseErr: cryptokms.ErrInvalidKMSClient,
-		},
-		{
 			Name:        "force-error-response-on-GetCryptoKeyVersion",
-			Client:      client,
 			KeyID:       "ERROR_GET_CRYPTOKEY_VERSION",
 			ResponseErr: cryptokms.ErrGetKeyMetadata,
 		},
 		{
 			Name:        "destroyed-key",
-			Client:      client,
 			KeyID:       "DESTROYED_RSA_SIGN_PKCS1_2048_SHA256",
 			ResponseErr: cryptokms.ErrUnusableKeyState,
 		},
 		{
 			Name:        "unsupported-key-secp256k1",
-			Client:      client,
 			KeyID:       "EC_SIGN_SECP256K1_SHA256",
 			ResponseErr: cryptokms.ErrKeyAlgorithm,
 		},
 		// HMAC Keys
 		{
 			Name:        "unsupported-key-hmac-sha1",
-			Client:      client,
 			KeyID:       "HMAC_SHA1",
-			ResponseErr: cryptokms.ErrUnsupportedMethod,
+			ResponseErr: cryptokms.ErrKeyAlgorithm,
 		},
 		{
 			Name:        "unsupported-key-hmac-sha224",
-			Client:      client,
 			KeyID:       "HMAC_SHA224",
-			ResponseErr: cryptokms.ErrUnsupportedMethod,
+			ResponseErr: cryptokms.ErrKeyAlgorithm,
 		},
 		{
 			Name:        "unsupported-key-hmac-sha256",
-			Client:      client,
 			KeyID:       "HMAC_SHA256",
-			ResponseErr: cryptokms.ErrUnsupportedMethod,
+			ResponseErr: cryptokms.ErrKeyAlgorithm,
 		},
 		{
 			Name:        "unsupported-key-hmac-sha384",
-			Client:      client,
 			KeyID:       "HMAC_SHA384",
-			ResponseErr: cryptokms.ErrUnsupportedMethod,
+			ResponseErr: cryptokms.ErrKeyAlgorithm,
 		},
 		{
 			Name:        "unsupported-key-hmac-sha512",
-			Client:      client,
 			KeyID:       "HMAC_SHA512",
-			ResponseErr: cryptokms.ErrUnsupportedMethod,
+			ResponseErr: cryptokms.ErrKeyAlgorithm,
 		},
 		// symmetric keys
 		{
 			Name:        "unsupported-key-google-symmetric",
-			Client:      client,
 			KeyID:       "GOOGLE_SYMMETRIC_ENCRYPTION",
-			ResponseErr: cryptokms.ErrUnsupportedMethod,
+			ResponseErr: cryptokms.ErrKeyAlgorithm,
 		},
 		{
 			Name:        "unsupported-key-encryption-rsa2048-sha1",
-			Client:      client,
 			KeyID:       "RSA_DECRYPT_OAEP_2048_SHA1",
-			ResponseErr: cryptokms.ErrUnsupportedMethod,
+			ResponseErr: cryptokms.ErrKeyAlgorithm,
 		},
 		{
 			Name:        "unsupported-key-encryption-rsa3072-sha1",
-			Client:      client,
 			KeyID:       "RSA_DECRYPT_OAEP_3072_SHA1",
-			ResponseErr: cryptokms.ErrUnsupportedMethod,
+			ResponseErr: cryptokms.ErrKeyAlgorithm,
 		},
 		{
 			Name:        "unsupported-key-encryption-rsa4096-sha1",
-			Client:      client,
 			KeyID:       "RSA_DECRYPT_OAEP_4096_SHA1",
-			ResponseErr: cryptokms.ErrUnsupportedMethod,
+			ResponseErr: cryptokms.ErrKeyAlgorithm,
 		},
 		// SHA256
 		{
 			Name:        "unsupported-key-encryption-rsa2048-sha256",
-			Client:      client,
 			KeyID:       "RSA_DECRYPT_OAEP_2048_SHA256",
-			ResponseErr: cryptokms.ErrUnsupportedMethod,
+			ResponseErr: cryptokms.ErrKeyAlgorithm,
 		},
 		{
 			Name:        "unsupported-key-encryption-rsa3072-sha256",
-			Client:      client,
 			KeyID:       "RSA_DECRYPT_OAEP_3072_SHA256",
-			ResponseErr: cryptokms.ErrUnsupportedMethod,
+			ResponseErr: cryptokms.ErrKeyAlgorithm,
 		},
 		{
 			Name:        "unsupported-key-encryption-rsa4096-sha256",
-			Client:      client,
 			KeyID:       "RSA_DECRYPT_OAEP_4096_SHA256",
-			ResponseErr: cryptokms.ErrUnsupportedMethod,
+			ResponseErr: cryptokms.ErrKeyAlgorithm,
 		},
 		{
 			Name:        "unsupported-key-encryption-rsa4096-sha512",
-			Client:      client,
 			KeyID:       "RSA_DECRYPT_OAEP_4096_SHA512",
-			ResponseErr: cryptokms.ErrUnsupportedMethod,
+			ResponseErr: cryptokms.ErrKeyAlgorithm,
 		},
 		// unknown key
 		{
 			Name:        "unsupported-key-external-symmetric-encryption",
-			Client:      client,
 			KeyID:       "EXTERNAL_SYMMETRIC_ENCRYPTION",
 			ResponseErr: cryptokms.ErrKeyAlgorithm,
 		},
 		{
 			Name:        "error-srv-rsa-pss-2048-sha256",
-			Client:      client,
 			KeyID:       "RSA_SIGN_PSS_2048_SHA256",
 			ResponseErr: cryptokms.ErrKeyAlgorithm,
 		},
 		{
 			Name:        "error-srv-rsa-pss-3072-sha256",
-			Client:      client,
 			KeyID:       "RSA_SIGN_PSS_3072_SHA256",
 			ResponseErr: cryptokms.ErrKeyAlgorithm,
 		},
 		{
 			Name:        "error-srv-rsa-pss-4096-sha256",
-			Client:      client,
 			KeyID:       "RSA_SIGN_PSS_4096_SHA256",
 			ResponseErr: cryptokms.ErrKeyAlgorithm,
 		},
 		{
 			Name:        "error-srv-rsa-pss-4096-sha512",
-			Client:      client,
 			KeyID:       "RSA_SIGN_PSS_4096_SHA512",
 			ResponseErr: cryptokms.ErrKeyAlgorithm,
 		},
 		// get key corrupted response
 		{
 			Name:        "integrity-invalid-rsa-sign-pkcs1-2048-sha256",
-			Client:      client,
 			KeyID:       "ERROR_SRV_INTEGRITY_RSA_SIGN_PKCS1_2048_SHA256",
 			ResponseErr: ErrResponseIntegrity,
 		},
 		{
 			Name:        "integrity-invalid-rsa-sign-pkcs1-3072-sha256",
-			Client:      client,
 			KeyID:       "ERROR_SRV_INTEGRITY_RSA_SIGN_PKCS1_3072_SHA256",
 			ResponseErr: ErrResponseIntegrity,
 		},
 		{
 			Name:        "integrity-invalid-rsa-sign-pkcs1-4096-sha256",
-			Client:      client,
 			KeyID:       "ERROR_SRV_INTEGRITY_RSA_SIGN_PKCS1_4096_SHA256",
 			ResponseErr: ErrResponseIntegrity,
 		},
 		{
 			Name:        "integrity-invalid-rsa-sign-pkcs1-4096-sha512",
-			Client:      client,
 			KeyID:       "ERROR_SRV_INTEGRITY_RSA_SIGN_PKCS1_4096_SHA512",
 			ResponseErr: ErrResponseIntegrity,
 		},
 		{
 			Name:        "integrity-invalid-ec-sign-p256-sha256",
-			Client:      client,
 			KeyID:       "ERROR_SRV_INTEGRITY_EC_SIGN_P256_SHA256",
 			ResponseErr: ErrResponseIntegrity,
 		},
 		{
 			Name:        "integrity-invalid-ec-sign-p384-sha384",
-			Client:      client,
 			KeyID:       "ERROR_SRV_INTEGRITY_EC_SIGN_P384_SHA384",
 			ResponseErr: ErrResponseIntegrity,
 		},
 		// GetPublicKey returns an error.
 		{
 			Name:        "error-on-GetPublicKey",
-			Client:      client,
 			KeyID:       "ERROR_ON_GET_PUBLICKEY_EC_SIGN_P256_SHA256",
 			ResponseErr: status.Error(codes.Internal, "fake service error"),
 		},
 		// Returns RSA Signer
 		{
-			Name:   "valid-RSA_SIGN_PKCS1_2048_SHA256",
-			Client: client,
-			KeyID:  "RSA_SIGN_PKCS1_2048_SHA256",
+			Name:  "valid-RSA_SIGN_PKCS1_2048_SHA256",
+			KeyID: "RSA_SIGN_PKCS1_2048_SHA256",
 			Response: &Signer{
-				name:   "RSA_SIGN_PKCS1_2048_SHA256",
-				hash:   crypto.SHA256,
-				ctime:  knownTS,
-				client: client,
-				pub:    &testkeys.GetRSA2048PrivateKey().PublicKey,
+				name:  "RSA_SIGN_PKCS1_2048_SHA256",
+				hash:  crypto.SHA256,
+				ctime: knownTS,
+				pub:   &testkeys.GetRSA2048PrivateKey().PublicKey,
+				algo:  cryptokms.AlgorithmRSA2048,
 			},
 		},
 		{
-			Name:   "valid-RSA_SIGN_PKCS1_3072_SHA256",
-			Client: client,
-			KeyID:  "RSA_SIGN_PKCS1_3072_SHA256",
+			Name:  "valid-RSA_SIGN_PKCS1_3072_SHA256",
+			KeyID: "RSA_SIGN_PKCS1_3072_SHA256",
 			Response: &Signer{
-				name:   "RSA_SIGN_PKCS1_3072_SHA256",
-				hash:   crypto.SHA256,
-				ctime:  knownTS,
-				client: client,
-				pub:    &testkeys.GetRSA3072PrivateKey().PublicKey,
+				name:  "RSA_SIGN_PKCS1_3072_SHA256",
+				hash:  crypto.SHA256,
+				ctime: knownTS,
+				pub:   &testkeys.GetRSA3072PrivateKey().PublicKey,
+				algo:  cryptokms.AlgorithmRSA3072,
 			},
 		},
 		{
-			Name:   "valid-RSA_SIGN_PKCS1_4096_SHA256",
-			Client: client,
-			KeyID:  "RSA_SIGN_PKCS1_4096_SHA256",
+			Name:  "valid-RSA_SIGN_PKCS1_4096_SHA256",
+			KeyID: "RSA_SIGN_PKCS1_4096_SHA256",
 			Response: &Signer{
-				name:   "RSA_SIGN_PKCS1_4096_SHA256",
-				hash:   crypto.SHA256,
-				ctime:  knownTS,
-				client: client,
-				pub:    &testkeys.GetRSA4096PrivateKey().PublicKey,
+				name:  "RSA_SIGN_PKCS1_4096_SHA256",
+				hash:  crypto.SHA256,
+				ctime: knownTS,
+				pub:   &testkeys.GetRSA4096PrivateKey().PublicKey,
+				algo:  cryptokms.AlgorithmRSA4096,
 			},
 		},
 		{
-			Name:   "valid-RSA_SIGN_PKCS1_4096_SHA512",
-			Client: client,
-			KeyID:  "RSA_SIGN_PKCS1_4096_SHA512",
+			Name:  "valid-RSA_SIGN_PKCS1_4096_SHA512",
+			KeyID: "RSA_SIGN_PKCS1_4096_SHA512",
 			Response: &Signer{
-				name:   "RSA_SIGN_PKCS1_4096_SHA512",
-				hash:   crypto.SHA512,
-				ctime:  knownTS,
-				client: client,
-				pub:    &testkeys.GetRSA4096PrivateKey().PublicKey,
+				name:  "RSA_SIGN_PKCS1_4096_SHA512",
+				hash:  crypto.SHA512,
+				ctime: knownTS,
+				pub:   &testkeys.GetRSA4096PrivateKey().PublicKey,
+				algo:  cryptokms.AlgorithmRSA4096,
 			},
 		},
 		{
-			Name:   "valid-EC_SIGN_P256_SHA256",
-			Client: client,
-			KeyID:  "EC_SIGN_P256_SHA256",
+			Name:  "valid-EC_SIGN_P256_SHA256",
+			KeyID: "EC_SIGN_P256_SHA256",
 			Response: &Signer{
-				name:   "EC_SIGN_P256_SHA256",
-				hash:   crypto.SHA256,
-				ctime:  knownTS,
-				client: client,
-				pub:    &testkeys.GetECP256PrivateKey().PublicKey,
+				name:  "EC_SIGN_P256_SHA256",
+				hash:  crypto.SHA256,
+				ctime: knownTS,
+				pub:   &testkeys.GetECP256PrivateKey().PublicKey,
+				algo:  cryptokms.AlgorithmECP256,
 			},
 		},
 		{
-			Name:   "valid-EC_SIGN_P384_SHA384",
-			Client: client,
-			KeyID:  "EC_SIGN_P384_SHA384",
+			Name:  "valid-EC_SIGN_P384_SHA384",
+			KeyID: "EC_SIGN_P384_SHA384",
 			Response: &Signer{
-				name:   "EC_SIGN_P384_SHA384",
-				hash:   crypto.SHA384,
-				ctime:  knownTS,
-				client: client,
-				pub:    &testkeys.GetECP384PrivateKey().PublicKey,
+				name:  "EC_SIGN_P384_SHA384",
+				hash:  crypto.SHA384,
+				ctime: knownTS,
+				pub:   &testkeys.GetECP384PrivateKey().PublicKey,
+				algo:  cryptokms.AlgorithmECP384,
 			},
 		},
 	}
@@ -287,9 +246,9 @@ func Test_NewSigner(t *testing.T) {
 	for _, tc := range tt {
 		t.Run(tc.Name, func(t *testing.T) {
 			ctx := context.Background()
-			resp, err := NewSigner(ctx, tc.Client, tc.KeyID)
+			resp, err := NewSigner(ctx, tc.KeyID, clientOptions...)
 			if !errors.Is(err, tc.ResponseErr) {
-				t.Errorf("expected error=%+v, but got=%+v", tc.ResponseErr, err)
+				t.Errorf("expected error=%#v, but got=%#v", tc.ResponseErr, err)
 			}
 			diff := cmp.Diff(
 				resp, tc.Response,
@@ -298,7 +257,22 @@ func Test_NewSigner(t *testing.T) {
 			if diff != "" {
 				t.Errorf("did not get expected response: \n%s", diff)
 			}
+
+			if tc.ResponseErr == nil {
+				if resp.Algorithm() != tc.Response.algo {
+					t.Errorf("expected algo=%d, got=%d", tc.Response.algo, resp.Algorithm())
+				}
+			}
 		})
+	}
+}
+
+func TestNewSigner_ClientBuildError(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	_, err := NewSigner(ctx, "IGNORED_VALUE")
+	if !errors.Is(err, cryptokms.ErrInvalidKMSClient) {
+		t.Errorf("expected error(ErrInvalidKMSClient) when ctx is already cancelled")
 	}
 }
 
@@ -336,7 +310,7 @@ func Test_Signer_Sign(t *testing.T) {
 
 	server := newFakeServer(t)
 	server.Serve(t)
-	client := server.Client(t)
+	clientOptions := server.Options(t)
 
 	tt := []testCase{
 		{
@@ -448,7 +422,7 @@ func Test_Signer_Sign(t *testing.T) {
 	for _, tc := range tt {
 		t.Run(tc.Name, func(t *testing.T) {
 			ctx := context.Background()
-			signer, err := NewSigner(ctx, client, tc.KeyID)
+			signer, err := NewSigner(ctx, tc.KeyID, clientOptions...)
 			if err != nil {
 				t.Fatalf("failed to build signer - %s: %s", tc.KeyID, err)
 			}

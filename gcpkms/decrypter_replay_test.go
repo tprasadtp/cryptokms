@@ -6,7 +6,6 @@ import (
 	"os"
 	"testing"
 
-	kms "cloud.google.com/go/kms/apiv1"
 	"github.com/google/go-replayers/grpcreplay"
 	"github.com/tprasadtp/cryptokms/gcpkms"
 	"github.com/tprasadtp/cryptokms/gcpkms/internal/testdata"
@@ -56,18 +55,12 @@ func Test_Decrypter_GRPCReplay(t *testing.T) {
 				t.Fatalf("failed to setup replayer connection: %s", err)
 			}
 
-			// setup client
-			ctx := context.Background()
-			client, err := kms.NewKeyManagementClient(ctx, option.WithGRPCConn(connection))
-			if err != nil {
-				t.Fatalf("failed to setup KMSClient: %s", err)
-			}
-
 			// setup decrypter
+			ctx := context.Background()
 			decrypter, err := gcpkms.NewDecrypter(
 				ctx,
-				client,
 				testdata.KeyVersionResourceName(tc.Name),
+				option.WithGRPCConn(connection),
 			)
 			if err != nil {
 				t.Fatalf("failed to setup decrypter: %s", err)
