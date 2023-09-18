@@ -22,10 +22,10 @@ const KeyringLocation = "global"
 
 // KeyVersionResourceName Uses ProjectName, KeyringName, KeyringLocation
 // and given key name to build qualified crypto key version GCP resource name.
-//  - Only single version keys are supported.
-//  - This must not to be used outside of testing gcpkms package.
+//   - Only single version keys are supported.
+//   - This must not to be used outside of testing gcpkms package.
 func KeyVersionResourceName(name string) string {
-    return fmt.Sprintf(
+	return fmt.Sprintf(
 		"projects/%s/locations/%s/keyRings/%s/cryptoKeys/%s/cryptoKeyVersions/1",
 		ProjectName, KeyringLocation, KeyringName, name)
 }
