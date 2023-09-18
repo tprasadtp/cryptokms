@@ -1,0 +1,95 @@
+# SPDX-FileCopyrightText: Copyright 2023 Prasad Tengse
+# SPDX-License-Identifier: MIT
+
+version: "3"
+
+tasks:
+  default:
+    desc: "Show a list of available tasks"
+    cmds:
+      - cmd: task --list
+        silent: true
+  bench-internal:
+    desc: "Benchmark Items"
+    internal: true
+    requires:
+      vars:
+        - GO_BENCH_COUNT
+        - GO_BENCH_PKG
+        - GO_BENCH_NAME
+        - GO_BENCH_OUTPUT_FIE
+        - GO_BENCH_TIMEOUT
+    cmds:
+      - cmd: |
+          go test -benchmem \
+            -run=^$ -count={{.GO_BENCH_COUNT}} \
+            -timeout={{.GO_BENCH_TIMEOUT}} \
+            -bench="{{.GO_BENCH_NAME}}" \
+            {{.GO_BENCH_PKG}} | tee "{{.GO_BENCH_OUTPUT_FIE}}"
+        platforms:
+          - linux
+          - darwin
+          - freebsd
+          - netbsd
+          - dragonfly
+          - openbsd
+      - cmd: |
+          powershell.exe -NonInteractive -NoProfile -NoLogo -Command 'go test -benchmem -run="^$" -count={{.GO_BENCH_COUNT}} -timeout={{.GO_BENCH_TIMEOUT}} -bench="{{.GO_BENCH_NAME}}" {{.GO_BENCH_PKG}} | Tee-Object "{{.GO_BENCH_OUTPUT_FIE}}"'
+        platforms:
+          - windows
+  test-all:
+    desc: "Test all packages"
+    cmds:
+      - task: test-pkg
+        vars:
+          GO_TEST_PKG: "./..."
+          GO_TEST_TIMEOUT: 2m
+  test-cryptokms:
+    desc: "Test cryptokms package"
+    cmds:
+      - task: test-pkg
+        vars:
+          GO_TEST_PKG: "github.com/tprasadtp/cryptokms"
+          GO_TEST_TIMEOUT: 30s
+  test-gcpkms:
+    desc: "Test gcpkms package"
+    cmds:
+      - task: test-pkg
+        vars:
+          GO_TEST_PKG: "github.com/tprasadtp/cryptokms/gcpkms"
+          GO_TEST_TIMEOUT: 30s
+  test-awskms:
+    desc: "Test awskms package"
+    cmds:
+      - task: test-pkg
+        vars:
+          GO_TEST_PKG: "github.com/tprasadtp/cryptokms/awskms"
+          GO_TEST_TIMEOUT: 30s
+  test-fakekms:
+    desc: "Test fakekms package"
+    cmds:
+      - task: test-pkg
+        vars:
+          GO_TEST_PKG: "github.com/tprasadtp/cryptokms/fakekms"
+          GO_TEST_TIMEOUT: 30s
+  test-filekms:
+    desc: "Test filekms package"
+    cmds:
+      - task: test-pkg
+        vars:
+          GO_TEST_PKG: "github.com/tprasadtp/cryptokms/filekms"
+          GO_TEST_TIMEOUT: 30s
+  test-pkg:
+    desc: "Test single package"
+    internal: true
+    requires:
+      vars:
+        - GO_TEST_PKG
+        - GO_TEST_TIMEOUT
+    cmds:
+      - cmd: go test -cover -timeout={{.GO_TEST_TIMEOUT}} {{.GO_TEST_PKG}}
+  lint:
+    desc: "Run golangci-lint"
+    prefix: "lint"
+    cmd: |
+      golangci-lint run
