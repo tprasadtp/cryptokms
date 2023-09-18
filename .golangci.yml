@@ -41,7 +41,7 @@ linters-settings:
     # Checks the number of statements in a function.
     # If lower than 0, disable the check.
     # Default: 40
-    statements: 50
+    statements: 90
 
   gocognit:
     # Minimal code complexity to report
@@ -101,6 +101,9 @@ linters-settings:
     # Make an issue if func has more lines of code than this setting, and it has naked returns.
     # Default: 30
     max-func-lines: 0
+
+  nestif:
+    min-complexity: 20
 
   nolintlint:
     # Exclude following linters from requiring an explanation.
@@ -250,20 +253,27 @@ issues:
       linters: [ godot ]
     - source: "//noinspection"
       linters: [ gocritic ]
-    - source: "^\\s+if _, ok := err\\.\\([^.]+\\.InternalError\\); ok {"
-      linters: [ errorlint ]
-    - path: '(.+)_test\.go'
+    # Ignore some linter checks for testing code.
+    - path: _test\.go
       linters:
         - funlen
         - goconst
-        - funlen
         - noctx
         - wrapcheck
         - gocyclo
-    - path: '(.+)testdata\.go'
+        - gocognit
+    # testdata.go contains test data, usually generated externally or via go generate.
+    - path: testdata\.go'
       linters:
         - funlen
         - goconst
+        - wrapcheck
+        - gocyclo
+    # generate.go is typically used to generate test data.
+    - path: generate\.go
+      linters:
         - funlen
+        - goconst
+        - noctx
         - wrapcheck
         - gocyclo
