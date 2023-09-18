@@ -75,21 +75,21 @@ Uses sensible and sane defaults.
 
 > **Warning**
 >
-> Use in-memory non swappable file system (like ramfs).
-> This can be used together with systemd-credentials(8) as keys can be encrypted,
-> bound to TPM and are only present in memory. In other cases this is insecure.
+> Use in-memory non swap-able file system (like ramfs).
+> This can be used together with [systemd-credentials](https://www.freedesktop.org/software/systemd/man/systemd-creds.html) as keys can be encrypted,
+> bound to TPM and are only present in memory. In other cases this may be insecure.
 
 - Keys on disk must be not encrypted with a passphrase and in PEM encoded PKCS8 format.
 
-| Key Algorithm | Supported Algorithm | Interfaces |
+| Key Algorithm | Supported Hashes | Interfaces |
 |---|---|---
-| `RSA_2048` | [crypto.Decrypter], [crypto.Signer]
-| `RSA_3072` | [crypto.Decrypter], [crypto.Signer]
-| `RSA_4096` | [crypto.Decrypter], [crypto.Signer]
-| `ECC-P256` | [crypto.Signer]
-| `ECC-P384` | [crypto.Signer]
-| `ECC-P521` | [crypto.Signer]
-| `ED-25519` | [crypto.Signer]
+| `RSA_2048` | [SHA1][sha1], [SHA256][sha256], [SHA512][sha512] | [crypto.Decrypter], [crypto.Signer]
+| `RSA_3072` | [SHA1][sha1], [SHA256][sha256], [SHA512][sha512] | [crypto.Decrypter], [crypto.Signer]
+| `RSA_4096` | [SHA1][sha1], [SHA256][sha256], [SHA512][sha512] | [crypto.Decrypter], [crypto.Signer]
+| `ECC-P256` | [SHA256][sha256] | [crypto.Signer]
+| `ECC-P384` | [SHA384][sha384] | [crypto.Signer]
+| `ECC-P521` | [SHA512][sha512] | [crypto.Signer]
+| `ED-25519` | [SHA512][sha512] (ed25519ph only) | [crypto.Signer]
 
 
 ## Fake KMS
