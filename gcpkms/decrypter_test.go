@@ -28,193 +28,166 @@ func Test_Decrypter(t *testing.T) {
 
 	server := newFakeServer(t)
 	server.Serve(t)
-	client := server.Client(t)
+	clientOptions := server.Options(t)
 
 	tt := []testCase{
 		{
-			Name:        "nil-client",
-			KeyID:       "IGNORED_VALUE",
-			ResponseErr: cryptokms.ErrInvalidKMSClient,
-		},
-		{
 			Name:        "force-error-response-on-GetCryptoKeyVersion",
-			Client:      client,
 			KeyID:       "ERROR_GET_CRYPTOKEY_VERSION",
 			ResponseErr: cryptokms.ErrGetKeyMetadata,
 		},
 		{
 			Name:        "destroyed-key",
-			Client:      client,
 			KeyID:       "DESTROYED_RSA_DECRYPT_OAEP_4096_SHA1",
 			ResponseErr: cryptokms.ErrUnusableKeyState,
 		},
 		{
 			Name:        "unsupported-key-secp256k1",
-			Client:      client,
 			KeyID:       "EC_SIGN_SECP256K1_SHA256",
 			ResponseErr: cryptokms.ErrKeyAlgorithm,
 		},
 		// HMAC Keys are unsupported for decryption.
 		{
 			Name:        "unsupported-key-hmac-sha1",
-			Client:      client,
 			KeyID:       "HMAC_SHA1",
-			ResponseErr: cryptokms.ErrUnsupportedMethod,
+			ResponseErr: cryptokms.ErrKeyAlgorithm,
 		},
 		{
 			Name:        "unsupported-key-hmac-sha224",
-			Client:      client,
 			KeyID:       "HMAC_SHA224",
-			ResponseErr: cryptokms.ErrUnsupportedMethod,
+			ResponseErr: cryptokms.ErrKeyAlgorithm,
 		},
 		{
 			Name:        "unsupported-key-hmac-sha256",
-			Client:      client,
 			KeyID:       "HMAC_SHA256",
-			ResponseErr: cryptokms.ErrUnsupportedMethod,
+			ResponseErr: cryptokms.ErrKeyAlgorithm,
 		},
 		{
 			Name:        "unsupported-key-hmac-sha384",
-			Client:      client,
 			KeyID:       "HMAC_SHA384",
-			ResponseErr: cryptokms.ErrUnsupportedMethod,
+			ResponseErr: cryptokms.ErrKeyAlgorithm,
 		},
 		{
 			Name:        "unsupported-key-hmac-sha512",
-			Client:      client,
 			KeyID:       "HMAC_SHA512",
-			ResponseErr: cryptokms.ErrUnsupportedMethod,
+			ResponseErr: cryptokms.ErrKeyAlgorithm,
 		},
 		// symmetric keys are unsupported for asymmetric decryption.
 		{
 			Name:        "unsupported-key-google-symmetric",
-			Client:      client,
 			KeyID:       "GOOGLE_SYMMETRIC_ENCRYPTION",
-			ResponseErr: cryptokms.ErrUnsupportedMethod,
+			ResponseErr: cryptokms.ErrKeyAlgorithm,
 		},
 		// PSS Signing Keys are unsupported for asymmetric decryption.
 		{
 			Name:        "unsupported-RSA_SIGN_PSS_2048_SHA256",
-			Client:      client,
 			KeyID:       "RSA_SIGN_PSS_2048_SHA256",
-			ResponseErr: cryptokms.ErrUnsupportedMethod,
+			ResponseErr: cryptokms.ErrKeyAlgorithm,
 		},
 		{
 			Name:        "unsupported-RSA_SIGN_PSS_3072_SHA256",
-			Client:      client,
 			KeyID:       "RSA_SIGN_PSS_3072_SHA256",
-			ResponseErr: cryptokms.ErrUnsupportedMethod,
+			ResponseErr: cryptokms.ErrKeyAlgorithm,
 		},
 		{
 			Name:        "unsupported-RSA_SIGN_PSS_4096_SHA256",
-			Client:      client,
 			KeyID:       "RSA_SIGN_PSS_4096_SHA256",
-			ResponseErr: cryptokms.ErrUnsupportedMethod,
+			ResponseErr: cryptokms.ErrKeyAlgorithm,
 		},
 		{
 			Name:        "unsupported-RSA_SIGN_PSS_4096_SHA512",
-			Client:      client,
 			KeyID:       "RSA_SIGN_PSS_4096_SHA512",
-			ResponseErr: cryptokms.ErrUnsupportedMethod,
+			ResponseErr: cryptokms.ErrKeyAlgorithm,
 		},
 		// get public key returns corrupted response
 		{
 			Name:        "integrity-invalid-RSA_DECRYPT_OAEP_2048_SHA1",
-			Client:      client,
 			KeyID:       "ERROR_SRV_INTEGRITY_RSA_DECRYPT_OAEP_2048_SHA1",
 			ResponseErr: ErrResponseIntegrity,
 		},
 		// GetPublicKey returns an error.
 		{
 			Name:        "error-on-GetPublicKey",
-			Client:      client,
 			KeyID:       "ERROR_ON_GET_PUBLICKEY_RSA_DECRYPT_OAEP_2048_SHA1",
 			ResponseErr: status.Error(codes.Internal, "fake service error"),
 		},
 		// Returns RSA Decrypter
 		{
-			Name:   "valid-RSA_DECRYPT_OAEP_2048_SHA1",
-			Client: client,
-			KeyID:  "RSA_DECRYPT_OAEP_2048_SHA1",
+			Name:  "valid-RSA_DECRYPT_OAEP_2048_SHA1",
+			KeyID: "RSA_DECRYPT_OAEP_2048_SHA1",
 			Response: &Decrypter{
-				name:   "RSA_DECRYPT_OAEP_2048_SHA1",
-				hash:   crypto.SHA1,
-				ctime:  knownTS,
-				client: client,
-				pub:    &testkeys.GetRSA2048PrivateKey().PublicKey,
+				name:  "RSA_DECRYPT_OAEP_2048_SHA1",
+				hash:  crypto.SHA1,
+				ctime: knownTS,
+				algo:  cryptokms.AlgorithmRSA2048,
+				pub:   &testkeys.GetRSA2048PrivateKey().PublicKey,
 			},
 		},
 		{
-			Name:   "valid-RSA_DECRYPT_OAEP_3072_SHA1",
-			Client: client,
-			KeyID:  "RSA_DECRYPT_OAEP_3072_SHA1",
+			Name:  "valid-RSA_DECRYPT_OAEP_3072_SHA1",
+			KeyID: "RSA_DECRYPT_OAEP_3072_SHA1",
 			Response: &Decrypter{
-				name:   "RSA_DECRYPT_OAEP_3072_SHA1",
-				hash:   crypto.SHA1,
-				ctime:  knownTS,
-				client: client,
-				pub:    &testkeys.GetRSA3072PrivateKey().PublicKey,
+				name:  "RSA_DECRYPT_OAEP_3072_SHA1",
+				hash:  crypto.SHA1,
+				ctime: knownTS,
+				pub:   &testkeys.GetRSA3072PrivateKey().PublicKey,
+				algo:  cryptokms.AlgorithmRSA3072,
 			},
 		},
 		{
-			Name:   "valid-RSA_DECRYPT_OAEP_4096_SHA1",
-			Client: client,
-			KeyID:  "RSA_DECRYPT_OAEP_4096_SHA1",
+			Name:  "valid-RSA_DECRYPT_OAEP_4096_SHA1",
+			KeyID: "RSA_DECRYPT_OAEP_4096_SHA1",
 			Response: &Decrypter{
-				name:   "RSA_DECRYPT_OAEP_4096_SHA1",
-				hash:   crypto.SHA1,
-				ctime:  knownTS,
-				client: client,
-				pub:    &testkeys.GetRSA4096PrivateKey().PublicKey,
+				name:  "RSA_DECRYPT_OAEP_4096_SHA1",
+				hash:  crypto.SHA1,
+				ctime: knownTS,
+				algo:  cryptokms.AlgorithmRSA4096,
+				pub:   &testkeys.GetRSA4096PrivateKey().PublicKey,
 			},
 		},
 		// SHA256
 		{
-			Name:   "valid-RSA_DECRYPT_OAEP_2048_SHA256",
-			Client: client,
-			KeyID:  "RSA_DECRYPT_OAEP_2048_SHA256",
+			Name:  "valid-RSA_DECRYPT_OAEP_2048_SHA256",
+			KeyID: "RSA_DECRYPT_OAEP_2048_SHA256",
 			Response: &Decrypter{
-				name:   "RSA_DECRYPT_OAEP_2048_SHA256",
-				hash:   crypto.SHA256,
-				ctime:  knownTS,
-				client: client,
-				pub:    &testkeys.GetRSA2048PrivateKey().PublicKey,
+				name:  "RSA_DECRYPT_OAEP_2048_SHA256",
+				hash:  crypto.SHA256,
+				ctime: knownTS,
+				algo:  cryptokms.AlgorithmRSA2048,
+				pub:   &testkeys.GetRSA2048PrivateKey().PublicKey,
 			},
 		},
 		{
-			Name:   "valid-RSA_DECRYPT_OAEP_3072_SHA256",
-			Client: client,
-			KeyID:  "RSA_DECRYPT_OAEP_3072_SHA256",
+			Name:  "valid-RSA_DECRYPT_OAEP_3072_SHA256",
+			KeyID: "RSA_DECRYPT_OAEP_3072_SHA256",
 			Response: &Decrypter{
-				name:   "RSA_DECRYPT_OAEP_3072_SHA256",
-				hash:   crypto.SHA256,
-				ctime:  knownTS,
-				client: client,
-				pub:    &testkeys.GetRSA3072PrivateKey().PublicKey,
+				name:  "RSA_DECRYPT_OAEP_3072_SHA256",
+				hash:  crypto.SHA256,
+				ctime: knownTS,
+				algo:  cryptokms.AlgorithmRSA3072,
+				pub:   &testkeys.GetRSA3072PrivateKey().PublicKey,
 			},
 		},
 		{
-			Name:   "valid-RSA_DECRYPT_OAEP_4096_SHA256",
-			Client: client,
-			KeyID:  "RSA_DECRYPT_OAEP_4096_SHA256",
+			Name:  "valid-RSA_DECRYPT_OAEP_4096_SHA256",
+			KeyID: "RSA_DECRYPT_OAEP_4096_SHA256",
 			Response: &Decrypter{
-				name:   "RSA_DECRYPT_OAEP_4096_SHA256",
-				hash:   crypto.SHA256,
-				ctime:  knownTS,
-				client: client,
-				pub:    &testkeys.GetRSA4096PrivateKey().PublicKey,
+				name:  "RSA_DECRYPT_OAEP_4096_SHA256",
+				hash:  crypto.SHA256,
+				ctime: knownTS,
+				algo:  cryptokms.AlgorithmRSA4096,
+				pub:   &testkeys.GetRSA4096PrivateKey().PublicKey,
 			},
 		},
 		{
-			Name:   "valid-RSA_DECRYPT_OAEP_4096_SHA512",
-			Client: client,
-			KeyID:  "RSA_DECRYPT_OAEP_4096_SHA512",
+			Name:  "valid-RSA_DECRYPT_OAEP_4096_SHA512",
+			KeyID: "RSA_DECRYPT_OAEP_4096_SHA512",
 			Response: &Decrypter{
-				name:   "RSA_DECRYPT_OAEP_4096_SHA512",
-				hash:   crypto.SHA512,
-				ctime:  knownTS,
-				client: client,
-				pub:    &testkeys.GetRSA4096PrivateKey().PublicKey,
+				name:  "RSA_DECRYPT_OAEP_4096_SHA512",
+				hash:  crypto.SHA512,
+				ctime: knownTS,
+				algo:  cryptokms.AlgorithmRSA4096,
+				pub:   &testkeys.GetRSA4096PrivateKey().PublicKey,
 			},
 		},
 	}
@@ -222,7 +195,7 @@ func Test_Decrypter(t *testing.T) {
 	for _, tc := range tt {
 		t.Run(tc.Name, func(t *testing.T) {
 			ctx := context.Background()
-			resp, err := NewDecrypter(ctx, tc.Client, tc.KeyID)
+			resp, err := NewDecrypter(ctx, tc.KeyID, clientOptions...)
 			if !errors.Is(err, tc.ResponseErr) {
 				t.Errorf("expected error=%v, but got=%v", tc.ResponseErr, err)
 			}
@@ -233,7 +206,22 @@ func Test_Decrypter(t *testing.T) {
 			if diff != "" {
 				t.Errorf("did not get expected response: \n%s", diff)
 			}
+
+			if tc.ResponseErr == nil {
+				if resp.Algorithm() != tc.Response.algo {
+					t.Errorf("expected algo=%d, got=%d", tc.Response.algo, resp.Algorithm())
+				}
+			}
 		})
+	}
+}
+
+func TestNewDecrypter_ClientBuildError(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	_, err := NewDecrypter(ctx, "IGNORED_VALUE")
+	if !errors.Is(err, cryptokms.ErrInvalidKMSClient) {
+		t.Errorf("expected error(ErrInvalidKMSClient) when ctx is already cancelled")
 	}
 }
 
@@ -272,7 +260,7 @@ func Test_Decrypter_Decrypt(t *testing.T) {
 
 	server := newFakeServer(t)
 	server.Serve(t)
-	client := server.Client(t)
+	clientOptions := server.Options(t)
 
 	tt := []testCase{
 		{
@@ -315,7 +303,7 @@ func Test_Decrypter_Decrypt(t *testing.T) {
 	for _, tc := range tt {
 		t.Run(tc.Name, func(t *testing.T) {
 			ctx := context.Background()
-			decrypter, err := NewDecrypter(ctx, client, tc.KeyID)
+			decrypter, err := NewDecrypter(ctx, tc.KeyID, clientOptions...)
 			if err != nil {
 				t.Fatalf("failed to build decrypter: %s", err)
 			}

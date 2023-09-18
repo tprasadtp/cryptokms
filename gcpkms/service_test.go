@@ -86,7 +86,7 @@ func (svc *fakeService) GetCryptoKeyVersion(ctx context.Context, req *kmspb.GetC
 	case strings.Contains(req.Name, "RSA_DECRYPT_OAEP_2048_SHA256"):
 		resp.Algorithm = kmspb.CryptoKeyVersion_RSA_DECRYPT_OAEP_2048_SHA256
 	case strings.Contains(req.Name, "RSA_DECRYPT_OAEP_3072_SHA1"):
-		resp.Algorithm = kmspb.CryptoKeyVersion_RSA_DECRYPT_OAEP_2048_SHA1
+		resp.Algorithm = kmspb.CryptoKeyVersion_RSA_DECRYPT_OAEP_3072_SHA1
 	case strings.Contains(req.Name, "RSA_DECRYPT_OAEP_3072_SHA256"):
 		resp.Algorithm = kmspb.CryptoKeyVersion_RSA_DECRYPT_OAEP_3072_SHA256
 	case strings.Contains(req.Name, "RSA_DECRYPT_OAEP_4096_SHA1"):
@@ -192,7 +192,7 @@ func (svc *fakeService) GetPublicKey(ctx context.Context, req *kmspb.GetPublicKe
 	case strings.Contains(req.Name, "EC_SIGN_SECP256K1_SHA256"):
 		return nil, cryptokms.ErrKeyAlgorithm
 	default:
-		return nil, fmt.Errorf("%w: GetPublicKey", cryptokms.ErrUnsupportedMethod)
+		return nil, fmt.Errorf("%w: GetPublicKey", cryptokms.ErrKeyAlgorithm)
 	}
 
 	// forces response to be corrupt.
@@ -254,7 +254,7 @@ func (svc *fakeService) AsymmetricSign(ctx context.Context, req *kmspb.Asymmetri
 			rand.Reader, req.Digest.GetSha384(), crypto.SHA384,
 		)
 	default:
-		return nil, fmt.Errorf("%w: AsymmetricSign with %s", cryptokms.ErrUnsupportedMethod, req.Name)
+		return nil, fmt.Errorf("%w: AsymmetricSign with %s", cryptokms.ErrKeyAlgorithm, req.Name)
 	}
 
 	if strings.Contains(req.Name, "ERROR_RESP_INTEGRITY") {
@@ -325,7 +325,7 @@ func (svc *fakeService) AsymmetricDecrypt(ctx context.Context, req *kmspb.Asymme
 				Hash: crypto.SHA512,
 			})
 	default:
-		return nil, fmt.Errorf("%w: AsymmetricSign with %s", cryptokms.ErrUnsupportedMethod, req.Name)
+		return nil, fmt.Errorf("%w: AsymmetricSign with %s", cryptokms.ErrKeyAlgorithm, req.Name)
 	}
 
 	if strings.Contains(req.Name, "ERROR_RESP_INTEGRITY") {

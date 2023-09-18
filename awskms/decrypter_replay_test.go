@@ -14,7 +14,7 @@ import (
 	"github.com/tprasadtp/cryptokms/internal/testkeys"
 )
 
-func Test_Decrypter_Replay(t *testing.T) {
+func TestDecrypter_Replay(t *testing.T) {
 	type testCase struct {
 		Name    string
 		KeySpec string

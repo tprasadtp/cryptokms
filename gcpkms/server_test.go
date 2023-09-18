@@ -1,12 +1,10 @@
 package gcpkms
 
 import (
-	"context"
 	"fmt"
 	"net"
 	"testing"
 
-	kms "cloud.google.com/go/kms/apiv1"
 	"cloud.google.com/go/kms/apiv1/kmspb"
 	"google.golang.org/api/option"
 	"google.golang.org/grpc"
@@ -56,22 +54,18 @@ func (f *fakeServer) Close(t *testing.T) {
 	f.srv.Stop()
 }
 
-// Get KeyManagementClient which is suitable for use with fake server.
-func (f *fakeServer) Client(t *testing.T) *kms.KeyManagementClient {
+// Options returns KeyManagementClient options which include overriding endpoint and credentials
+// to be used with fake server.
+func (f *fakeServer) Options(t *testing.T) []option.ClientOption {
 	if f.listener == nil {
 		t.Fatalf("Client() called before Start")
 	}
 
-	ctx := context.Background()
-	client, err := kms.NewKeyManagementClient(
-		ctx,
+	return []option.ClientOption{
 		option.WithEndpoint(f.listener.Addr().String()),
-		option.WithGRPCDialOption(grpc.WithTransportCredentials(insecure.NewCredentials())),
+		option.WithGRPCDialOption(
+			grpc.WithTransportCredentials(insecure.NewCredentials())),
 		option.WithTelemetryDisabled(),
 		option.WithoutAuthentication(),
-	)
-	if err != nil {
-		t.Fatalf("cannot get KeyManagementClient: %s", err)
 	}
-	return client
 }

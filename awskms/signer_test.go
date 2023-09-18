@@ -14,119 +14,119 @@ import (
 	"github.com/tprasadtp/cryptokms/internal/testkeys"
 )
 
-func Test_NewSigner(t *testing.T) {
+func TestNewSigner(t *testing.T) {
 	type testCase struct {
-		Name     string
-		Region   string
-		KeyState types.KeyState
-		KeySpec  types.KeySpec
-		KeyUsage types.KeyUsageType
-		Client   Client
-		Err      error
-		Signer   *Signer
+		Name        string
+		Region      string
+		KeyState    types.KeyState
+		KeySpec     types.KeySpec
+		KeyUsage    types.KeyUsageType
+		Client      Client
+		ResponseErr error
+		Signer      *Signer
 	}
 	tt := []testCase{
 		{
-			Name:     "nil-client",
-			KeyState: types.KeyStateEnabled,
-			Client:   nil,
-			KeySpec:  types.KeySpecEccNistP256,
-			KeyUsage: types.KeyUsageTypeSignVerify,
-			Region:   "us-east-1",
-			Err:      cryptokms.ErrInvalidKMSClient,
+			Name:        "nil-client",
+			KeyState:    types.KeyStateEnabled,
+			Client:      nil,
+			KeySpec:     types.KeySpecEccNistP256,
+			KeyUsage:    types.KeyUsageTypeSignVerify,
+			Region:      "us-east-1",
+			ResponseErr: cryptokms.ErrInvalidKMSClient,
 		},
 		// Invalid KeyStateEnabled
 		{
-			Name:     "error-on-describe",
-			KeyState: types.KeyStateEnabled,
-			Client:   newMockKMSClient(),
-			KeySpec:  types.KeySpecEccNistP256,
-			KeyUsage: types.KeyUsageTypeSignVerify,
-			Region:   "error-describe",
-			Err:      cryptokms.ErrGetKeyMetadata,
+			Name:        "error-on-describe",
+			KeyState:    types.KeyStateEnabled,
+			Client:      newMockKMSClient(),
+			KeySpec:     types.KeySpecEccNistP256,
+			KeyUsage:    types.KeyUsageTypeSignVerify,
+			Region:      "error-describe",
+			ResponseErr: cryptokms.ErrGetKeyMetadata,
 		},
 		{
-			Name:     "key-still-creating",
-			KeyState: types.KeyStateCreating,
-			Client:   newMockKMSClient(),
-			KeySpec:  types.KeySpecEccNistP256,
-			KeyUsage: types.KeyUsageTypeSignVerify,
-			Region:   "us-east-1",
-			Err:      cryptokms.ErrUnusableKeyState,
+			Name:        "key-still-creating",
+			KeyState:    types.KeyStateCreating,
+			Client:      newMockKMSClient(),
+			KeySpec:     types.KeySpecEccNistP256,
+			KeyUsage:    types.KeyUsageTypeSignVerify,
+			Region:      "us-east-1",
+			ResponseErr: cryptokms.ErrUnusableKeyState,
 		},
 		{
-			Name:     "key-pending-deletion",
-			KeyState: types.KeyStatePendingDeletion,
-			Client:   newMockKMSClient(),
-			KeySpec:  types.KeySpecEccNistP256,
-			KeyUsage: types.KeyUsageTypeSignVerify,
-			Region:   "us-east-1",
-			Err:      cryptokms.ErrUnusableKeyState,
+			Name:        "key-pending-deletion",
+			KeyState:    types.KeyStatePendingDeletion,
+			Client:      newMockKMSClient(),
+			KeySpec:     types.KeySpecEccNistP256,
+			KeyUsage:    types.KeyUsageTypeSignVerify,
+			Region:      "us-east-1",
+			ResponseErr: cryptokms.ErrUnusableKeyState,
 		},
 		{
-			Name:     "key-disabled",
-			KeyState: types.KeyStateDisabled,
-			Client:   newMockKMSClient(),
-			KeySpec:  types.KeySpecEccNistP256,
-			KeyUsage: types.KeyUsageTypeSignVerify,
-			Region:   "us-east-1",
-			Err:      cryptokms.ErrUnusableKeyState,
+			Name:        "key-disabled",
+			KeyState:    types.KeyStateDisabled,
+			Client:      newMockKMSClient(),
+			KeySpec:     types.KeySpecEccNistP256,
+			KeyUsage:    types.KeyUsageTypeSignVerify,
+			Region:      "us-east-1",
+			ResponseErr: cryptokms.ErrUnusableKeyState,
 		},
 		// Invalid Key Usage
 		{
-			Name:     "key-usage-encrypt-decrypt",
-			KeyState: types.KeyStateEnabled,
-			Client:   newMockKMSClient(),
-			KeySpec:  types.KeySpecRsa4096,
-			KeyUsage: types.KeyUsageTypeEncryptDecrypt,
-			Region:   "us-east-1",
-			Err:      cryptokms.ErrUnsupportedMethod,
+			Name:        "key-usage-encrypt-decrypt",
+			KeyState:    types.KeyStateEnabled,
+			Client:      newMockKMSClient(),
+			KeySpec:     types.KeySpecRsa4096,
+			KeyUsage:    types.KeyUsageTypeEncryptDecrypt,
+			Region:      "us-east-1",
+			ResponseErr: cryptokms.ErrKeyAlgorithm,
 		},
 		{
-			Name:     "key-usage-hmac",
-			KeyState: types.KeyStateEnabled,
-			Client:   newMockKMSClient(),
-			KeySpec:  types.KeySpecHmac256,
-			KeyUsage: types.KeyUsageTypeGenerateVerifyMac,
-			Region:   "us-east-1",
-			Err:      cryptokms.ErrUnsupportedMethod,
+			Name:        "key-usage-hmac",
+			KeyState:    types.KeyStateEnabled,
+			Client:      newMockKMSClient(),
+			KeySpec:     types.KeySpecHmac256,
+			KeyUsage:    types.KeyUsageTypeGenerateVerifyMac,
+			Region:      "us-east-1",
+			ResponseErr: cryptokms.ErrKeyAlgorithm,
 		},
 		{
-			Name:     "key-usage-unknown",
-			KeyState: types.KeyStateEnabled,
-			Client:   newMockKMSClient(),
-			KeySpec:  types.KeySpecRsa4096,
-			KeyUsage: types.KeyUsageType("unknown"),
-			Region:   "us-east-1",
-			Err:      cryptokms.ErrKeyAlgorithm,
+			Name:        "key-usage-unknown",
+			KeyState:    types.KeyStateEnabled,
+			Client:      newMockKMSClient(),
+			KeySpec:     types.KeySpecRsa4096,
+			KeyUsage:    types.KeyUsageType("unknown"),
+			Region:      "us-east-1",
+			ResponseErr: cryptokms.ErrKeyAlgorithm,
 		},
 		// Error on GetPublicKey API call.
 		{
-			Name:     "error-on-get-public-key",
-			KeyState: types.KeyStateEnabled,
-			Client:   newMockKMSClient(),
-			KeySpec:  types.KeySpecEccNistP256,
-			KeyUsage: types.KeyUsageTypeSignVerify,
-			Region:   "error-get-public-key",
-			Err:      cryptokms.ErrGetKeyMetadata,
+			Name:        "error-on-get-public-key",
+			KeyState:    types.KeyStateEnabled,
+			Client:      newMockKMSClient(),
+			KeySpec:     types.KeySpecEccNistP256,
+			KeyUsage:    types.KeyUsageTypeSignVerify,
+			Region:      "error-get-public-key",
+			ResponseErr: cryptokms.ErrGetKeyMetadata,
 		},
 		{
-			Name:     "unparsable-public-key",
-			KeyState: types.KeyStateEnabled,
-			Client:   newMockKMSClient(),
-			KeySpec:  types.KeySpecRsa4096,
-			KeyUsage: types.KeyUsageTypeSignVerify,
-			Region:   "unparsable-public-key",
-			Err:      cryptokms.ErrGetKeyMetadata,
+			Name:        "unparsable-public-key",
+			KeyState:    types.KeyStateEnabled,
+			Client:      newMockKMSClient(),
+			KeySpec:     types.KeySpecRsa4096,
+			KeyUsage:    types.KeyUsageTypeSignVerify,
+			Region:      "unparsable-public-key",
+			ResponseErr: cryptokms.ErrGetKeyMetadata,
 		},
 		{
-			Name:     "ecc-secg-p256k1-has-no-supported-signing-algorithms",
-			KeyState: types.KeyStateEnabled,
-			Client:   newMockKMSClient(),
-			KeySpec:  types.KeySpecEccSecgP256k1,
-			KeyUsage: types.KeyUsageTypeSignVerify,
-			Region:   "us-east-1",
-			Err:      cryptokms.ErrDigestAlgorithm,
+			Name:        "ecc-secg-p256k1",
+			KeyState:    types.KeyStateEnabled,
+			Client:      newMockKMSClient(),
+			KeySpec:     types.KeySpecEccSecgP256k1,
+			KeyUsage:    types.KeyUsageTypeSignVerify,
+			Region:      "us-east-1",
+			ResponseErr: cryptokms.ErrKeyAlgorithm,
 		},
 		// Supported EC Signing algorithms
 		{
@@ -139,11 +139,12 @@ func Test_NewSigner(t *testing.T) {
 			Signer: &Signer{
 				keySpec: types.KeySpecEccNistP256,
 				//nolint:exhaustive // invalid linter error.
-				hashToSigningAlgoMap: map[crypto.Hash]types.SigningAlgorithmSpec{
+				signingSpecMap: map[crypto.Hash]types.SigningAlgorithmSpec{
 					crypto.SHA256: types.SigningAlgorithmSpecEcdsaSha256,
 				},
 				defaultHasher: crypto.SHA256,
 				pub:           testkeys.GetECP256PublicKey(),
+				algo:          cryptokms.AlgorithmECP256,
 				ctime:         knownTS,
 			},
 		},
@@ -157,12 +158,13 @@ func Test_NewSigner(t *testing.T) {
 			Signer: &Signer{
 				keySpec: types.KeySpecEccNistP384,
 				//nolint:exhaustive // invalid linter error.
-				hashToSigningAlgoMap: map[crypto.Hash]types.SigningAlgorithmSpec{
+				signingSpecMap: map[crypto.Hash]types.SigningAlgorithmSpec{
 					crypto.SHA384: types.SigningAlgorithmSpecEcdsaSha384,
 				},
 				defaultHasher: crypto.SHA384,
 				pub:           testkeys.GetECP384PublicKey(),
 				ctime:         knownTS,
+				algo:          cryptokms.AlgorithmECP384,
 			},
 		},
 		{
@@ -175,12 +177,13 @@ func Test_NewSigner(t *testing.T) {
 			Signer: &Signer{
 				keySpec: types.KeySpecEccNistP521,
 				//nolint:exhaustive // invalid linter error.
-				hashToSigningAlgoMap: map[crypto.Hash]types.SigningAlgorithmSpec{
+				signingSpecMap: map[crypto.Hash]types.SigningAlgorithmSpec{
 					crypto.SHA512: types.SigningAlgorithmSpecEcdsaSha512,
 				},
 				defaultHasher: crypto.SHA512,
 				pub:           testkeys.GetECP521PublicKey(),
 				ctime:         knownTS,
+				algo:          cryptokms.AlgorithmECP521,
 			},
 		},
 		// Valid RSA Signing keys
@@ -194,7 +197,7 @@ func Test_NewSigner(t *testing.T) {
 			Signer: &Signer{
 				keySpec: types.KeySpecRsa2048,
 				//nolint:exhaustive // invalid linter error.
-				hashToSigningAlgoMap: map[crypto.Hash]types.SigningAlgorithmSpec{
+				signingSpecMap: map[crypto.Hash]types.SigningAlgorithmSpec{
 					crypto.SHA256: types.SigningAlgorithmSpecRsassaPkcs1V15Sha256,
 					crypto.SHA384: types.SigningAlgorithmSpecRsassaPkcs1V15Sha384,
 					crypto.SHA512: types.SigningAlgorithmSpecRsassaPkcs1V15Sha512,
@@ -202,6 +205,7 @@ func Test_NewSigner(t *testing.T) {
 				defaultHasher: crypto.SHA256,
 				pub:           testkeys.GetRSA2048PublicKey(),
 				ctime:         knownTS,
+				algo:          cryptokms.AlgorithmRSA2048,
 			},
 		},
 		{
@@ -214,7 +218,7 @@ func Test_NewSigner(t *testing.T) {
 			Signer: &Signer{
 				keySpec: types.KeySpecRsa3072,
 				//nolint:exhaustive // invalid linter error.
-				hashToSigningAlgoMap: map[crypto.Hash]types.SigningAlgorithmSpec{
+				signingSpecMap: map[crypto.Hash]types.SigningAlgorithmSpec{
 					crypto.SHA256: types.SigningAlgorithmSpecRsassaPkcs1V15Sha256,
 					crypto.SHA384: types.SigningAlgorithmSpecRsassaPkcs1V15Sha384,
 					crypto.SHA512: types.SigningAlgorithmSpecRsassaPkcs1V15Sha512,
@@ -222,6 +226,7 @@ func Test_NewSigner(t *testing.T) {
 				defaultHasher: crypto.SHA256,
 				pub:           testkeys.GetRSA3072PublicKey(),
 				ctime:         knownTS,
+				algo:          cryptokms.AlgorithmRSA3072,
 			},
 		},
 		{
@@ -234,7 +239,7 @@ func Test_NewSigner(t *testing.T) {
 			Signer: &Signer{
 				keySpec: types.KeySpecRsa4096,
 				//nolint:exhaustive // invalid linter error.
-				hashToSigningAlgoMap: map[crypto.Hash]types.SigningAlgorithmSpec{
+				signingSpecMap: map[crypto.Hash]types.SigningAlgorithmSpec{
 					crypto.SHA256: types.SigningAlgorithmSpecRsassaPkcs1V15Sha256,
 					crypto.SHA384: types.SigningAlgorithmSpecRsassaPkcs1V15Sha384,
 					crypto.SHA512: types.SigningAlgorithmSpecRsassaPkcs1V15Sha512,
@@ -242,6 +247,7 @@ func Test_NewSigner(t *testing.T) {
 				defaultHasher: crypto.SHA256,
 				pub:           testkeys.GetRSA4096PublicKey(),
 				ctime:         knownTS,
+				algo:          cryptokms.AlgorithmRSA4096,
 			},
 		},
 	}
@@ -250,8 +256,8 @@ func Test_NewSigner(t *testing.T) {
 			ctx := context.Background()
 			arn := computeKMSKeyArn(tc.KeyState, tc.KeySpec, tc.KeyUsage, tc.Region)
 			resp, err := NewSigner(ctx, tc.Client, arn)
-			if !errors.Is(err, tc.Err) {
-				t.Errorf("expected error=%+v, but got=%+v", tc.Err, err)
+			if !errors.Is(err, tc.ResponseErr) {
+				t.Errorf("expected error=%+v, but got=%+v", tc.ResponseErr, err)
 			}
 			diff := cmp.Diff(
 				resp, tc.Signer,
@@ -259,6 +265,12 @@ func Test_NewSigner(t *testing.T) {
 				cmpopts.IgnoreFields(Signer{}, "client", "keyID", "mu"))
 			if diff != "" {
 				t.Errorf("did not get expected response: \n%s", diff)
+			}
+
+			if tc.ResponseErr == nil {
+				if resp.Algorithm() != tc.Signer.algo {
+					t.Errorf("expected algo=%d, got=%d", tc.Signer.algo, resp.Algorithm())
+				}
 			}
 		})
 	}

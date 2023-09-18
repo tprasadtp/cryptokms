@@ -15,6 +15,7 @@ import (
 	kms "cloud.google.com/go/kms/apiv1"
 	"cloud.google.com/go/kms/apiv1/kmspb"
 	"github.com/tprasadtp/cryptokms"
+	"google.golang.org/api/option"
 )
 
 // Compile time check to ensure [Signer] implements
@@ -36,6 +37,7 @@ type Signer struct {
 	hash   crypto.Hash
 	ctime  time.Time
 	client *kms.KeyManagementClient
+	algo   cryptokms.Algorithm
 }
 
 // Returns a new signer backed by GCP KMS asymmetric key.
@@ -62,9 +64,14 @@ type Signer struct {
 //
 // [cloudkms.viewer]: https://cloud.google.com/kms/docs/reference/permissions-and-roles#cloudkms.viewer
 // [cloudkms.cryptoOperator]: https://cloud.google.com/kms/docs/reference/permissions-and-roles#cloudkms.cryptoOperator
-func NewSigner(ctx context.Context, client *kms.KeyManagementClient, keyID string) (*Signer, error) {
-	if client == nil {
-		return nil, cryptokms.ErrInvalidKMSClient
+//
+//nolint:funlen
+func NewSigner(ctx context.Context, keyID string, opts ...option.ClientOption) (*Signer, error) {
+	// Create a new client
+	client, err := kms.NewKeyManagementClient(ctx, opts...)
+	if err != nil {
+		return nil, fmt.Errorf("%w: gcpkms: failed to build kms client: %w",
+			cryptokms.ErrInvalidKMSClient, err)
 	}
 
 	// Get key metadata.
@@ -80,22 +87,31 @@ func NewSigner(ctx context.Context, client *kms.KeyManagementClient, keyID strin
 
 	// Check key compatibility and hash algorithm.
 	var hasher crypto.Hash
+	var algo cryptokms.Algorithm
 
 	switch key.Algorithm {
-	// RSS PKCS1 SHA256
-	case kmspb.CryptoKeyVersion_RSA_SIGN_PKCS1_2048_SHA256,
-		kmspb.CryptoKeyVersion_RSA_SIGN_PKCS1_3072_SHA256,
-		kmspb.CryptoKeyVersion_RSA_SIGN_PKCS1_4096_SHA256:
+	// RSA PKCS1 SHA256
+	case kmspb.CryptoKeyVersion_RSA_SIGN_PKCS1_2048_SHA256:
 		hasher = crypto.SHA256
+		algo = cryptokms.AlgorithmRSA2048
+	case kmspb.CryptoKeyVersion_RSA_SIGN_PKCS1_3072_SHA256:
+		hasher = crypto.SHA256
+		algo = cryptokms.AlgorithmRSA3072
+	case kmspb.CryptoKeyVersion_RSA_SIGN_PKCS1_4096_SHA256:
+		hasher = crypto.SHA256
+		algo = cryptokms.AlgorithmRSA4096
 	// RSA SHA512 PKCS1
 	case kmspb.CryptoKeyVersion_RSA_SIGN_PKCS1_4096_SHA512:
 		hasher = crypto.SHA512
+		algo = cryptokms.AlgorithmRSA4096
 	// EC P256 with SHA256
 	case kmspb.CryptoKeyVersion_EC_SIGN_P256_SHA256:
 		hasher = crypto.SHA256
+		algo = cryptokms.AlgorithmECP256
 	// EC P256 with SHA384
 	case kmspb.CryptoKeyVersion_EC_SIGN_P384_SHA384:
 		hasher = crypto.SHA384
+		algo = cryptokms.AlgorithmECP384
 	// Unsupported Keys
 	// -----------------------------------------------------------------------
 	// RSS PSS keys are unsupported for signing operations for now
@@ -117,10 +133,10 @@ func NewSigner(ctx context.Context, client *kms.KeyManagementClient, keyID strin
 		kmspb.CryptoKeyVersion_HMAC_SHA384,
 		kmspb.CryptoKeyVersion_HMAC_SHA512:
 		return nil, fmt.Errorf("%w: hmac key(%s) cannot be used for asymmetric signing",
-			cryptokms.ErrUnsupportedMethod, keyID)
+			cryptokms.ErrKeyAlgorithm, keyID)
 	case kmspb.CryptoKeyVersion_GOOGLE_SYMMETRIC_ENCRYPTION:
 		return nil, fmt.Errorf("%w: symmetric key(%s) cannot be used for asymmetric signing",
-			cryptokms.ErrUnsupportedMethod, keyID)
+			cryptokms.ErrKeyAlgorithm, keyID)
 	case kmspb.CryptoKeyVersion_RSA_DECRYPT_OAEP_2048_SHA1,
 		kmspb.CryptoKeyVersion_RSA_DECRYPT_OAEP_3072_SHA1,
 		kmspb.CryptoKeyVersion_RSA_DECRYPT_OAEP_4096_SHA1,
@@ -129,7 +145,7 @@ func NewSigner(ctx context.Context, client *kms.KeyManagementClient, keyID strin
 		kmspb.CryptoKeyVersion_RSA_DECRYPT_OAEP_4096_SHA256,
 		kmspb.CryptoKeyVersion_RSA_DECRYPT_OAEP_4096_SHA512:
 		return nil, fmt.Errorf("%w: decryption key(%s) cannot be used for asymmetric signing",
-			cryptokms.ErrUnsupportedMethod, keyID)
+			cryptokms.ErrKeyAlgorithm, keyID)
 	default:
 		return nil, fmt.Errorf("%w: %s", cryptokms.ErrKeyAlgorithm, key.Algorithm)
 	}
@@ -171,6 +187,7 @@ func NewSigner(ctx context.Context, client *kms.KeyManagementClient, keyID strin
 		hash:   hasher,
 		pub:    pub,
 		ctime:  key.CreateTime.AsTime(),
+		algo:   algo,
 	}, nil
 }
 
@@ -193,6 +210,11 @@ func (s *Signer) CreatedAt() time.Time {
 // SignerOpts Returns a valid signer option suitable for using with Sign.
 func (s *Signer) SignerOpts() crypto.SignerOpts {
 	return s.hash
+}
+
+// Algorithm returns KMS key algorithm. This only returns key algorithm.
+func (s *Signer) Algorithm() cryptokms.Algorithm {
+	return s.algo
 }
 
 // context returns the context for this signer or
@@ -231,12 +253,12 @@ func (s *Signer) SignContext(ctx context.Context, _ io.Reader, digest []byte, op
 
 	if opts != nil {
 		if opts.HashFunc() != s.hash {
-			return nil, fmt.Errorf("%w: algorithm is %s, but want %s", cryptokms.ErrDigestAlgorithm, opts.HashFunc(), s.hash)
+			return nil, fmt.Errorf("%w: gcpkms: algorithm is %s, but want %s", cryptokms.ErrDigestAlgorithm, opts.HashFunc(), s.hash)
 		}
 	}
 
 	if len(digest) != s.hash.Size() {
-		return nil, fmt.Errorf("%w: length is %d, want %d", cryptokms.ErrDigestLength, len(digest), s.hash.Size())
+		return nil, fmt.Errorf("%w: gcpkms: length is %d, want %d", cryptokms.ErrDigestLength, len(digest), s.hash.Size())
 	}
 
 	// Set the correct digest based on the key's digest algorithm
@@ -271,7 +293,7 @@ func (s *Signer) SignContext(ctx context.Context, _ io.Reader, digest []byte, op
 	respCrc32Hash := ComputeCRC32(resp.Signature)
 	if respCrc32Hash.Value != resp.SignatureCrc32C.Value {
 		return nil, fmt.Errorf(
-			"%w: expected CRC32=%x got=%x",
+			"%w: gcpkms: expected CRC32=%x got=%x",
 			ErrResponseIntegrity, resp.SignatureCrc32C.Value, respCrc32Hash.Value)
 	}
 
