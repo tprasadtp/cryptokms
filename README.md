@@ -6,11 +6,12 @@
 ![GitHub](https://img.shields.io/github/license/tprasadtp/cryptokms)
 ![GitHub tag (latest SemVer)](https://img.shields.io/github/v/tag/tprasadtp/cryptokms?color=7f50a6&label=release&logo=semver&sort=semver)
 
-Implements [crypto.Signer] and [crypto.Decrypter] for keys backed by KMS service.
+Implements [crypto.Signer] and [crypto.Decrypter] for keys typically backed by KMS service.
 Currently it supports keys backed by,
 
 - [Google Cloud KMS]
 - [AWS KMS]
+- Filesystem
 - Test keys generated per run for testing.
 
 Dependencies are neatly isolated. If you pull gcpkms package only google cloud dependencies should be pulled. Code has extensive unit tests and integration tests.
@@ -70,11 +71,21 @@ Uses sensible and sane defaults.
 | [`RSA_4096`][awskms_keyspec] | `ENCRYPT_DECRYPT` | `RSAES_OAEP_SHA_1`,`RSAES_OAEP_SHA_256` | [crypto.Decrypter]
 
 
+## Keys from filesystem
+
+> **Warning**
+>
+> Use in-memory non swappable file system (like ramfs).
+> This can be used together with systemd-credentials(8) as keys can be encrypted,
+> bound to TPM and are only present in memory. In other cases this is insecure.
+
+- Keys on disk must be not encrypted with a passphrase and in PEM encoded PKCS8 format.
+
 ## Fake KMS
 
-Library also provides a fake KMS provider backed by ephemeral in-memory keys for test usage.
-**DO NOT** use them for in non-test code. Keys are generated on `init()` and are used during the lifecycle of the binary.
-
+Library also provides a fake KMS provider backed by _ephemeral in-memory keys_ **ONLY** for test usage.
+**DO NOT** use them for in non-test code. Keys are generated on demand and are used during the
+lifecycle of the binary.
 
 [Google Cloud KMS]: https://cloud.google.com/kms/docs
 [AWS KMS]: https://aws.amazon.com/kms/
