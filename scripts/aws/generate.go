@@ -23,10 +23,10 @@ import (
 	"github.com/tprasadtp/cryptokms/internal/testkeys"
 )
 
-// metadata.go code template.
+// testdata.go code template.
 //
-//go:embed metadata.go.tpl
-var metadataGoTpl string
+//go:embed testdata.go.tpl
+var testdataGoTpl string
 
 type opts struct {
 	AccessKeyID     string
@@ -56,7 +56,7 @@ type Key struct {
 }
 
 // Implements [github.com/aws/aws-sdk-go-v2/aws.CredentialsProvider].
-func (o *opts) Retrieve(ctx context.Context) (aws.Credentials, error) {
+func (o *opts) Retrieve(_ context.Context) (aws.Credentials, error) {
 	return aws.Credentials{
 		AccessKeyID:     o.AccessKeyID,
 		SecretAccessKey: o.SecretAccessKey,
@@ -72,8 +72,6 @@ func (o *opts) ResolveEndpoint(region string, options kms.EndpointResolverOption
 }
 
 // generate testdata for a single key.
-//
-//nolint:funlen // test code
 func (o *opts) GenerateTestData(ctx context.Context, keyID, keyUsage, keyAlgorithm string) error {
 	var err error
 	log.Printf("Key ARN=%s, usage=%s algo=%s", keyID, keyUsage, keyAlgorithm)
@@ -188,7 +186,6 @@ func (o *opts) RunE(ctx context.Context) error {
 		return fmt.Errorf("output directory not specified")
 	}
 
-	//nolint:nestif // flag fallback to env vars.
 	if !o.TemplatesOnly {
 		if o.AccessKeyID == "" {
 			o.AccessKeyID = os.Getenv("AWS_ACCESS_KEY_ID")
@@ -246,11 +243,11 @@ func (o *opts) RunE(ctx context.Context) error {
 
 	// generate keyring and key arn info.
 	// key resource name includes location and arn data.
-	metadataFileName := filepath.Join(o.Output, "metadata.go")
-	log.Printf("Writing: %s", metadataFileName)
-	err = ioutils.RenderGoTemplate(metadataFileName, metadataGoTpl, o)
+	testdataFileName := filepath.Join(o.Output, "testdata.go")
+	log.Printf("Writing: %s", testdataFileName)
+	err = ioutils.RenderGoTemplate(testdataFileName, testdataGoTpl, o)
 	if err != nil {
-		log.Fatalf("failed to create file - %s: %s", metadataFileName, err)
+		log.Fatalf("failed to create file - %s: %s", testdataFileName, err)
 	}
 
 	// Write content file

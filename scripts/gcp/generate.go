@@ -15,7 +15,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	kms "cloud.google.com/go/kms/apiv1"
 	"github.com/google/go-replayers/grpcreplay"
 	"github.com/tprasadtp/cryptokms/gcpkms"
 	"github.com/tprasadtp/cryptokms/internal/ioutils"
@@ -23,10 +22,10 @@ import (
 	"google.golang.org/api/option"
 )
 
-// metadata.go code template.
+// testdata.go code template.
 //
-//go:embed metadata.go.tpl
-var metadataGoTpl string
+//go:embed testdata.go.tpl
+var testdataGoTpl string
 
 type opts struct {
 	ConfigFile      string
@@ -76,10 +75,6 @@ func (o *opts) GenerateTestData(ctx context.Context, keyID, keyUsage, keyAlgorit
 	}
 
 	log.Printf("Creating KMS client - %s", fileNameBase)
-	client, err := kms.NewKeyManagementClient(ctx, opts...)
-	if err != nil {
-		return fmt.Errorf("failed to create KMS client: %w", err)
-	}
 
 	var pub crypto.PublicKey
 	switch keyUsage {
@@ -88,7 +83,7 @@ func (o *opts) GenerateTestData(ctx context.Context, keyID, keyUsage, keyAlgorit
 		var signer *gcpkms.Signer
 		var signature []byte
 
-		signer, err = gcpkms.NewSigner(ctx, client, fmt.Sprintf("%s/cryptoKeyVersions/1", keyID))
+		signer, err = gcpkms.NewSigner(ctx, fmt.Sprintf("%s/cryptoKeyVersions/1", keyID), opts...)
 		if err != nil {
 			return fmt.Errorf("failed to create signer: %w", err)
 		}
@@ -110,7 +105,7 @@ func (o *opts) GenerateTestData(ctx context.Context, keyID, keyUsage, keyAlgorit
 		var decrypter *gcpkms.Decrypter
 		var encrypted []byte
 		decrypter, err = gcpkms.NewDecrypter(
-			ctx, client, fmt.Sprintf("%s/cryptoKeyVersions/1", keyID))
+			ctx, fmt.Sprintf("%s/cryptoKeyVersions/1", keyID), opts...)
 		if err != nil {
 			return fmt.Errorf("failed to create decrypter: %w", err)
 		}
@@ -179,11 +174,11 @@ func (o *opts) RunE(ctx context.Context) error {
 	// key resource name includes keyring, location and project.
 	// this we export them as constants in testdata package
 	// to be used by test code.
-	metadataFileName := filepath.Join(o.Output, "metadata.go")
-	log.Printf("Writing: %s", metadataFileName)
-	err = ioutils.RenderGoTemplate(metadataFileName, metadataGoTpl, o)
+	testdataFileName := filepath.Join(o.Output, "testdata.go")
+	log.Printf("Writing: %s", testdataFileName)
+	err = ioutils.RenderGoTemplate(testdataFileName, testdataGoTpl, o)
 	if err != nil {
-		log.Fatalf("failed to create file - %s: %s", metadataFileName, err)
+		log.Fatalf("failed to create file - %s: %s", testdataFileName, err)
 	}
 
 	// Write content file

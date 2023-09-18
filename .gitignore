@@ -149,5 +149,4 @@ $RECYCLE.BIN/
 *.box
 
 ### Project Specific
-keys.json
 .terraform.lock.hcl
