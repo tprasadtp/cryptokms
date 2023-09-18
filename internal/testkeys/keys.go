@@ -8,6 +8,7 @@ import (
 	"crypto/elliptic"
 	"crypto/rand"
 	"crypto/rsa"
+	"sync"
 )
 
 // Keys are generated on package import
@@ -17,27 +18,59 @@ var (
 	rsa3072PrivateKey *rsa.PrivateKey
 	rsa4096PrivateKey *rsa.PrivateKey
 
-	ecdsaP256PrivateKey *ecdsa.PrivateKey
-	ecdsaP384PrivateKey *ecdsa.PrivateKey
-	ecdsaP521PrivateKey *ecdsa.PrivateKey
+	ecP256PrivateKey *ecdsa.PrivateKey
+	ecP384PrivateKey *ecdsa.PrivateKey
+	ecP521PrivateKey *ecdsa.PrivateKey
 
 	ed25519PrivateKey ed25519.PrivateKey
 	ed25519PublicKey  ed25519.PublicKey
 )
 
-// Generate Keys.
-//
-//nolint:gochecknoinits // seed test keys
-func init() {
+// Ensure keys are only generated if required.
+var (
+	rsa2048PrivateKeyOnce sync.Once
+	rsa3072PrivateKeyOnce sync.Once
+	rsa4096PrivateKeyOnce sync.Once
 
+	ecP256PrivateKeyOnce sync.Once
+	ecP384PrivateKeyOnce sync.Once
+	ecP521PrivateKeyOnce sync.Once
+
+	ed25519PrivateKeyOnce sync.Once
+)
+
+// Generate RSA-2048 key.
+func initOnceRSA2048() {
 	rsa2048PrivateKey, _ = rsa.GenerateKey(rand.Reader, 2048)
-	rsa3072PrivateKey, _ = rsa.GenerateKey(rand.Reader, 2048)
-	rsa4096PrivateKey, _ = rsa.GenerateKey(rand.Reader, 2048)
+}
 
-	ecdsaP256PrivateKey, _ = ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
-	ecdsaP384PrivateKey, _ = ecdsa.GenerateKey(elliptic.P384(), rand.Reader)
-	ecdsaP521PrivateKey, _ = ecdsa.GenerateKey(elliptic.P521(), rand.Reader)
+// Generate RSA-3072 key.
+func initOnceRSA3072() {
+	rsa3072PrivateKey, _ = rsa.GenerateKey(rand.Reader, 3072)
+}
 
+// Generate RSA-4096 key.
+func initOnceRSA4096() {
+	rsa4096PrivateKey, _ = rsa.GenerateKey(rand.Reader, 4096)
+}
+
+// Generate EC-256 key.
+func initOnceECP256() {
+	ecP256PrivateKey, _ = ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+}
+
+// Generate EC-384 key.
+func initOnceECP384() {
+	ecP384PrivateKey, _ = ecdsa.GenerateKey(elliptic.P384(), rand.Reader)
+}
+
+// Generate EC-521 key.
+func initOnceECP521() {
+	ecP521PrivateKey, _ = ecdsa.GenerateKey(elliptic.P521(), rand.Reader)
+}
+
+// Generate ED25519 key.
+func initOnceEd25519Key() {
 	ed25519PublicKey, ed25519PrivateKey, _ = ed25519.GenerateKey(rand.Reader)
 }
 
@@ -45,6 +78,7 @@ func init() {
 // This private key is unique per execution of the binary and corresponds
 // to public key returned by [GetRSA2048PublicKey].
 func GetRSA2048PrivateKey() *rsa.PrivateKey {
+	rsa2048PrivateKeyOnce.Do(initOnceRSA2048)
 	return rsa2048PrivateKey
 }
 
@@ -52,6 +86,7 @@ func GetRSA2048PrivateKey() *rsa.PrivateKey {
 // This pub key is unique per execution of the binary and corresponds
 // to private key returned by [GetRSA2048PrivateKey].
 func GetRSA2048PublicKey() *rsa.PublicKey {
+	rsa2048PrivateKeyOnce.Do(initOnceRSA2048)
 	return &rsa2048PrivateKey.PublicKey
 }
 
@@ -59,6 +94,7 @@ func GetRSA2048PublicKey() *rsa.PublicKey {
 // This pub key is unique per execution of the binary and corresponds
 // to private key returned by [GetRSA2048PrivateKey].
 func GetRSA2048PublicKeyPEM() []byte {
+	rsa2048PrivateKeyOnce.Do(initOnceRSA2048)
 	return MustMarshalPublicKey(&rsa2048PrivateKey.PublicKey)
 }
 
@@ -66,6 +102,7 @@ func GetRSA2048PublicKeyPEM() []byte {
 // This private key is unique per execution of the binary and corresponds
 // to public key returned by [GetRSA3072PublicKey].
 func GetRSA3072PrivateKey() *rsa.PrivateKey {
+	rsa3072PrivateKeyOnce.Do(initOnceRSA3072)
 	return rsa3072PrivateKey
 }
 
@@ -73,6 +110,7 @@ func GetRSA3072PrivateKey() *rsa.PrivateKey {
 // This pub key is unique per execution of the binary and corresponds
 // to private key returned by [GetRSA3072PrivateKey].
 func GetRSA3072PublicKey() *rsa.PublicKey {
+	rsa3072PrivateKeyOnce.Do(initOnceRSA3072)
 	return &rsa3072PrivateKey.PublicKey
 }
 
@@ -80,6 +118,7 @@ func GetRSA3072PublicKey() *rsa.PublicKey {
 // This pub key is unique per execution of the binary and corresponds
 // to private key returned by [GetRSA3072PrivateKey].
 func GetRSA3072PublicKeyPEM() []byte {
+	rsa3072PrivateKeyOnce.Do(initOnceRSA3072)
 	return MustMarshalPublicKey(&rsa3072PrivateKey.PublicKey)
 }
 
@@ -87,6 +126,7 @@ func GetRSA3072PublicKeyPEM() []byte {
 // This private key is unique per execution of the binary and corresponds
 // to public key returned by [GetRSA4096PublicKey].
 func GetRSA4096PrivateKey() *rsa.PrivateKey {
+	rsa4096PrivateKeyOnce.Do(initOnceRSA4096)
 	return rsa4096PrivateKey
 }
 
@@ -94,6 +134,7 @@ func GetRSA4096PrivateKey() *rsa.PrivateKey {
 // This pub key is unique per execution of the binary and corresponds
 // to private key returned by [GetRSA4096PrivateKey].
 func GetRSA4096PublicKey() *rsa.PublicKey {
+	rsa4096PrivateKeyOnce.Do(initOnceRSA4096)
 	return &rsa4096PrivateKey.PublicKey
 }
 
@@ -101,6 +142,7 @@ func GetRSA4096PublicKey() *rsa.PublicKey {
 // This pub key is unique per execution of the binary and corresponds
 // to private key returned by [GetRSA4096PrivateKey].
 func GetRSA4096PublicKeyPEM() []byte {
+	rsa4096PrivateKeyOnce.Do(initOnceRSA4096)
 	return MustMarshalPublicKey(&rsa4096PrivateKey.PublicKey)
 }
 
@@ -108,69 +150,79 @@ func GetRSA4096PublicKeyPEM() []byte {
 // This private key is unique per execution of the binary and corresponds
 // to public key returned by [GetECP256PublicKey].
 func GetECP256PrivateKey() *ecdsa.PrivateKey {
-	return ecdsaP256PrivateKey
+	ecP256PrivateKeyOnce.Do(initOnceECP256)
+	return ecP256PrivateKey
 }
 
 // GetECP256PublicKey returns a EC P-256 bit public key.
 // This pub key is unique per execution of the binary and corresponds
 // to private key returned by [GetECP256PrivateKey].
 func GetECP256PublicKey() *ecdsa.PublicKey {
-	return &ecdsaP256PrivateKey.PublicKey
+	ecP256PrivateKeyOnce.Do(initOnceECP256)
+	return &ecP256PrivateKey.PublicKey
 }
 
 // GetECP256PublicKey returns EC P-256 public key in PEM format.
 // This pub key is unique per execution of the binary and corresponds
 // to private key returned by [GetECP256PrivateKey].
 func GetECP256PublicKeyPEM() []byte {
-	return MustMarshalPublicKey(&ecdsaP256PrivateKey.PublicKey)
+	ecP256PrivateKeyOnce.Do(initOnceECP256)
+	return MustMarshalPublicKey(&ecP256PrivateKey.PublicKey)
 }
 
 // GetECP384PrivateKey returns a EC P-384 bit private key.
 // This private key is unique per execution of the binary and corresponds
 // to public key returned by [GetECP384PublicKey].
 func GetECP384PrivateKey() *ecdsa.PrivateKey {
-	return ecdsaP384PrivateKey
+	ecP384PrivateKeyOnce.Do(initOnceECP384)
+	return ecP384PrivateKey
 }
 
 // GetECP384PublicKey returns a EC P-384 bit public key.
 // This pub key is unique per execution of the binary and corresponds
 // to private key returned by [GetECP384PrivateKey].
 func GetECP384PublicKey() *ecdsa.PublicKey {
-	return &ecdsaP384PrivateKey.PublicKey
+	ecP384PrivateKeyOnce.Do(initOnceECP384)
+	return &ecP384PrivateKey.PublicKey
 }
 
 // GetECP384PublicKey returns EC P-384 public key in PEM format.
 // This pub key is unique per execution of the binary and corresponds
 // to private key returned by [GetECP384PrivateKey].
 func GetECP384PublicKeyPEM() []byte {
-	return MustMarshalPublicKey(&ecdsaP384PrivateKey.PublicKey)
+	ecP384PrivateKeyOnce.Do(initOnceECP384)
+	return MustMarshalPublicKey(&ecP384PrivateKey.PublicKey)
 }
 
 // GetECP521PrivateKey returns a EC P-521 bit private key.
 // This private key is unique per execution of the binary and corresponds
 // to public key returned by [GetECP521PublicKey].
 func GetECP521PrivateKey() *ecdsa.PrivateKey {
-	return ecdsaP521PrivateKey
+	ecP521PrivateKeyOnce.Do(initOnceECP521)
+	return ecP521PrivateKey
 }
 
 // GetECP521PublicKey returns a EC P-521 bit public key.
 // This pub key is unique per execution of the binary and corresponds
 // to private key returned by [GetECP521PrivateKey].
 func GetECP521PublicKey() *ecdsa.PublicKey {
-	return &ecdsaP521PrivateKey.PublicKey
+	ecP521PrivateKeyOnce.Do(initOnceECP521)
+	return &ecP521PrivateKey.PublicKey
 }
 
 // GetECP521PublicKey returns EC P-521 public key in PEM format.
 // This pub key is unique per execution of the binary and corresponds
 // to private key returned by [GetECP521PrivateKey].
 func GetECP521PublicKeyPEM() []byte {
-	return MustMarshalPublicKey(&ecdsaP521PrivateKey.PublicKey)
+	ecP521PrivateKeyOnce.Do(initOnceECP521)
+	return MustMarshalPublicKey(&ecP521PrivateKey.PublicKey)
 }
 
 // GetED25519PrivateKey returns ED-25519 private key.
 // This private key is unique per execution of the binary
 // and corresponds to public key returned by [GetED25519PublicKey].
 func GetED25519PrivateKey() ed25519.PrivateKey {
+	ed25519PrivateKeyOnce.Do(initOnceEd25519Key)
 	return ed25519PrivateKey
 }
 
@@ -178,10 +230,12 @@ func GetED25519PrivateKey() ed25519.PrivateKey {
 // This public key is unique per execution of the binary
 // and corresponds to private key returned by [GetED25519PrivateKey].
 func GetED25519PublicKey() ed25519.PublicKey {
+	ed25519PrivateKeyOnce.Do(initOnceEd25519Key)
 	return ed25519PublicKey
 }
 
 // GetED25519PublicKeyPEM returns ED-25519 public key in PEM format.
 func GetED25519PublicKeyPEM() []byte {
+	ed25519PrivateKeyOnce.Do(initOnceEd25519Key)
 	return MustMarshalPublicKey(ed25519PublicKey)
 }
