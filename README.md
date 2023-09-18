@@ -81,6 +81,17 @@ Uses sensible and sane defaults.
 
 - Keys on disk must be not encrypted with a passphrase and in PEM encoded PKCS8 format.
 
+| Key Algorithm | Supported Algorithm | Interfaces |
+|---|---|---
+| `RSA_2048` | [crypto.Decrypter], [crypto.Signer]
+| `RSA_3072` | [crypto.Decrypter], [crypto.Signer]
+| `RSA_4096` | [crypto.Decrypter], [crypto.Signer]
+| `ECC-P256` | [crypto.Signer]
+| `ECC-P384` | [crypto.Signer]
+| `ECC-P521` | [crypto.Signer]
+| `ED-25519` | [crypto.Signer]
+
+
 ## Fake KMS
 
 Library also provides a fake KMS provider backed by _ephemeral in-memory keys_ **ONLY** for test usage.

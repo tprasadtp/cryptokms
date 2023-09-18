@@ -15,9 +15,9 @@ type Decrypter interface {
 	// Same as [crypto.Decrypter], but [context.Context] aware.
 	//  - KMS libraries are already context aware and should help with tracing, and cancellation.
 	//  - Do note however decryption payload limits set by the kms provider apply.
-	//  - Unlike [crypto.Decrypter], rand is ignored, as decryption happens remotely.
+	//  - Unlike [crypto.Decrypter], rand is ignored, as decryption may happen remotely.
 	//    so it can be nil.
-	DecryptContext(ctx context.Context, rand io.Reader, msg []byte, opts crypto.DecrypterOpts) (plaintext []byte, err error)
+	DecryptContext(ctx context.Context, _ io.Reader, msg []byte, opts crypto.DecrypterOpts) (plaintext []byte, err error)
 
 	// KMS key creation time.
 	//  - This can be used to calculate age of the key to help with periodic key rotation.
@@ -31,12 +31,6 @@ type Decrypter interface {
 	//  - If KMS key supports multiple signers, this
 	//    returns sane default, typically [crypto.SHA256].
 	HashFunc() crypto.Hash
-
-	// Some KMS providers restrict hashing algorithm. This
-	// enures Decrypter can return valid, supported [crypto.DecrypterOpts],
-	// supported by the KMS key. If KMS key supports multiple decryption algorithms,
-	// this returns sane default, typically RSA OAEP with SHA256..
-	DecrypterOpts() crypto.DecrypterOpts
 
 	// Algorithm returns KMS key algorithm.
 	Algorithm() Algorithm

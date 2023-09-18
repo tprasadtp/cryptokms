@@ -131,13 +131,6 @@ func (d *Decrypter) HashFunc() crypto.Hash {
 	return d.hash
 }
 
-// SignerOpts returns a default decrypter option.
-func (d *Decrypter) DecrypterOpts() crypto.DecrypterOpts {
-	return &rsa.OAEPOptions{
-		Hash: d.hash,
-	}
-}
-
 // Algorithm returns key algorithm.
 func (d *Decrypter) Algorithm() cryptokms.Algorithm {
 	return d.algo
@@ -178,7 +171,9 @@ func (d *Decrypter) DecryptContext(ctx context.Context, _ io.Reader, ciphertext 
 	}
 
 	if opts == nil {
-		opts = d.DecrypterOpts()
+		opts = &rsa.OAEPOptions{
+			Hash: d.hash,
+		}
 	}
 
 	switch v := opts.(type) {

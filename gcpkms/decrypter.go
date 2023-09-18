@@ -176,13 +176,6 @@ func (d *Decrypter) HashFunc() crypto.Hash {
 	return d.hash
 }
 
-// DecrypterOpts returns supported DecrypterOpts options.
-func (d *Decrypter) DecrypterOpts() crypto.DecrypterOpts {
-	return &rsa.OAEPOptions{
-		Hash: d.hash,
-	}
-}
-
 // Algorithm returns KMS key algorithm. This only returns key algorithm.
 func (d *Decrypter) Algorithm() cryptokms.Algorithm {
 	return d.algo

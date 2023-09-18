@@ -154,16 +154,6 @@ func (d *Decrypter) HashFunc() crypto.Hash {
 	return d.defaultHasher
 }
 
-// DecrypterOpts Returns a valid decrypter option suitable for using with Decrypt/[rsa.EncryptOAEP].
-// If KMS key supports multiple hashes, defaults uses best suitable hash.
-// In most AWSKMS cases when multiple decryption algorithms are supported,
-// this is [crypto.SHA256].
-func (d *Decrypter) DecrypterOpts() crypto.DecrypterOpts {
-	return &rsa.OAEPOptions{
-		Hash: d.defaultHasher,
-	}
-}
-
 // CreatedAt time at which KMS key was created.
 func (d *Decrypter) CreatedAt() time.Time {
 	return d.ctime
@@ -212,7 +202,9 @@ func (d *Decrypter) DecryptContext(ctx context.Context, _ io.Reader, ciphertext 
 	// This is decrypter so, this fallback option is fine.
 	// Exported Encrypt methods do not and should not support fallback.
 	if opts == nil {
-		opts = d.DecrypterOpts()
+		opts = &rsa.OAEPOptions{
+			Hash: d.defaultHasher,
+		}
 	}
 
 	// Hash Options for looking up EncryptionAlgorithm.

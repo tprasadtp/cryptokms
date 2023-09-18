@@ -51,9 +51,6 @@ const (
 	// Limits depend on the KMS provider, server/IAM configuration and key types.
 	ErrPayloadTooLarge = Error("cryptokms: payload is too large")
 
-	// ErrUnknownURI is returned if key URI format is unknown.
-	ErrUnknownURI = Error("cryptokms: Key URI format is unknown")
-
 	// ErrDigestAlgorithmMismatch is returned when specified hash algorithm is
 	// incompatible with KMS key or is not supported.
 	ErrDigestAlgorithm = Error("cryptokms: digest algorithm cannot be used with the key")

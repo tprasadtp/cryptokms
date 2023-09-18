@@ -42,7 +42,8 @@ type Signer struct {
 //   - ec-p384
 //   - ec-p521
 //
-// Do note that keys are generated during init and are unique per invocation of the binary.
+// Do note that keys are generated on demand, stored in memory and are unique
+// per invocation of the binary.
 func NewSigner(key string) (*Signer, error) {
 	s := Signer{}
 	switch strings.ToLower(strings.ReplaceAll(key, "_", "-")) {
@@ -104,18 +105,6 @@ func (s *Signer) HashFunc() crypto.Hash {
 	return s.hash
 }
 
-// SignerOpts returns sane default [crypto.SignerOpts].
-func (s *Signer) SignerOpts() crypto.SignerOpts {
-	return s.hash
-}
-
-// Default decrypter options.
-func (s *Signer) DecrypterOpts() crypto.DecrypterOpts {
-	return &rsa.OAEPOptions{
-		Hash: s.hash,
-	}
-}
-
 // CreatedAt always returns known timestamp.
 func (s *Signer) CreatedAt() time.Time {
 	return knownTS
@@ -165,7 +154,7 @@ func (s *Signer) SignContext(ctx context.Context, random io.Reader, digest []byt
 	}
 
 	if opts == nil {
-		opts = s.SignerOpts()
+		opts = s.hash
 	}
 
 	if pss, ok := opts.(*rsa.PSSOptions); ok {

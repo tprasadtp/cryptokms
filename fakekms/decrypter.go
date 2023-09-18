@@ -1,11 +1,3 @@
-// Package fakekms implements crypto.Signer and crypto.Decrypter
-// with ephemeral keys which are unique per execution of the binary.
-//
-//   - This package also provides a way to force returning errors on
-//     sign/decrypt operation for use in integration or unit tests.
-//   - This package should only be used in tests as keys are only
-//     generated during init and are not rotated nor saved to any
-//     persistent store.
 package fakekms
 
 import (
@@ -47,7 +39,8 @@ type Decrypter struct {
 //   - rsa-3072
 //   - rsa-4096
 //
-// Do note that keys are generated during init and are unique per invocation of the binary.
+// Do note that keys are generated on demand, stored in memory and are unique
+// per invocation of the binary.
 func NewDecrypter(key string) (*Decrypter, error) {
 	s := Decrypter{}
 	switch strings.ToLower(strings.ReplaceAll(key, "_", "-")) {
@@ -95,18 +88,6 @@ func (s *Decrypter) WithAlwaysError() *Decrypter {
 // This ensures that signer also implements [crypto.SignerOptions].
 func (s *Decrypter) HashFunc() crypto.Hash {
 	return s.hash
-}
-
-// SignerOpts returns sane default [crypto.SignerOpts].
-func (s *Decrypter) SignerOpts() crypto.SignerOpts {
-	return s.hash
-}
-
-// Default decrypter options.
-func (s *Decrypter) DecrypterOpts() crypto.DecrypterOpts {
-	return &rsa.OAEPOptions{
-		Hash: s.hash,
-	}
 }
 
 // CreatedAt always returns known timestamp.
@@ -158,7 +139,9 @@ func (s *Decrypter) DecryptContext(ctx context.Context, rand io.Reader, cipherte
 	}
 
 	if opts == nil {
-		opts = s.DecrypterOpts()
+		opts = &rsa.OAEPOptions{
+			Hash: s.hash,
+		}
 	}
 
 	switch v := opts.(type) {

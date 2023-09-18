@@ -149,11 +149,6 @@ func (s *Signer) HashFunc() crypto.Hash {
 	return s.hash
 }
 
-// SignerOpts Returns a valid signer option suitable for using with Sign.
-func (s *Signer) SignerOpts() crypto.SignerOpts {
-	return s.hash
-}
-
 // Algorithm returns key algorithm.
 func (s *Signer) Algorithm() cryptokms.Algorithm {
 	return s.algo

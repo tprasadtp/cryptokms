@@ -146,7 +146,8 @@ func TestNewDecrypter(t *testing.T) {
 			if !tc.Valid {
 				if tc.ResponseErr != nil {
 					if !errors.Is(err, tc.ResponseErr) {
-						t.Errorf("expected error=%#v, but got=%#v", tc.ResponseErr, err)
+						t.Errorf("expected error=%#v, but got=%#v",
+							tc.ResponseErr, err)
 					}
 				} else {
 					if err == nil {
@@ -155,16 +156,16 @@ func TestNewDecrypter(t *testing.T) {
 				}
 			} else {
 				if resp.Algorithm() != tc.Response.algo {
-					t.Errorf("expected algo=%d, got=%d", tc.Response.algo, resp.Algorithm())
+					t.Errorf("expected algo=%d, got=%d",
+						tc.Response.algo, resp.Algorithm())
 				}
 				if resp.CreatedAt().IsZero() {
-					t.Errorf("expected CreatedAt() to return non zero, got %s", resp.CreatedAt())
+					t.Errorf("expected CreatedAt() to return non zero, got %s",
+						resp.CreatedAt())
 				}
 				if resp.HashFunc() != tc.Response.hash {
-					t.Errorf("expected HashFunc()=%s, got %s", tc.Response.hash, resp.HashFunc())
-				}
-				if v, _ := resp.DecrypterOpts().(*rsa.OAEPOptions); v.Hash != tc.Response.hash {
-					t.Errorf("expected DecrypterOpts()=%#v, got %#v", tc.Response.hash, v)
+					t.Errorf("expected HashFunc()=%s, got %s",
+						tc.Response.hash, resp.HashFunc())
 				}
 			}
 		})

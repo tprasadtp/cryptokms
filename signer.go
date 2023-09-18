@@ -9,10 +9,6 @@ import (
 
 // Context aware KMS backed [crypto.Signer].
 // This extends [crypto.Signer] with additional methods for usage with KMS keys.
-//
-// This will be changed to use SignContext from Go Proposal [#56508], when its implemented.
-//
-// [#56508]: https://github.com/golang/go/issues/56508
 type Signer interface {
 	crypto.Signer
 
@@ -35,12 +31,6 @@ type Signer interface {
 	//  - If KMS key supports multiple signers, this
 	//    returns sane default, typically [crypto.SHA256].
 	HashFunc() crypto.Hash
-
-	// Some KMS providers restrict signing algorithm. This
-	// enures Signer can return valid, supported [crypto.SignerOpts],
-	// supported by the KMS key. If KMS key supports multiple decryption algorithms,
-	// this returns sane default, typically RSA PKCS1v5 with SHA256.
-	SignerOpts() crypto.SignerOpts
 
 	// Algorithm returns KMS key algorithm.
 	Algorithm() Algorithm

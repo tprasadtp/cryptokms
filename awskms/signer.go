@@ -192,13 +192,6 @@ func (s *Signer) HashFunc() crypto.Hash {
 	return s.defaultHasher
 }
 
-// DecrypterOpts Returns a valid signer option suitable for using with Sign interface.
-// If multiple signing algorithms are supported, this returns sane default,
-// typically RSA PKCS1v5 with [crypto.SHA256].
-func (s *Signer) SignerOpts() crypto.SignerOpts {
-	return s.defaultHasher
-}
-
 // CreatedAt time at which KMS key was created.
 func (s *Signer) CreatedAt() time.Time {
 	return s.ctime
@@ -245,7 +238,7 @@ func (s *Signer) SignContext(ctx context.Context, _ io.Reader, digest []byte, op
 
 	// When no options are specified, use default provided by signer.
 	if opts == nil {
-		opts = s.SignerOpts()
+		opts = s.HashFunc()
 	}
 
 	// Check if given hash function is supported by KMS key
