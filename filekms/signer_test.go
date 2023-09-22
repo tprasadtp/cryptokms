@@ -36,8 +36,22 @@ func TestNewSigner(t *testing.T) {
 			ResponseErr: cryptokms.ErrKeyAlgorithm,
 		},
 		{
+			Name:        "rsa-1024-pkcs1",
+			Path:        "internal/testdata/rsa-1024.pkcs1.pem",
+			ResponseErr: cryptokms.ErrKeyAlgorithm,
+		},
+		{
 			Name: "rsa-2048",
 			Path: "internal/testdata/rsa-2048.pem",
+			Response: &Signer{
+				hash: crypto.SHA256,
+				algo: cryptokms.AlgorithmRSA2048,
+			},
+			Valid: true,
+		},
+		{
+			Name: "rsa-2048-pkcs1",
+			Path: "internal/testdata/rsa-2048.pkcs1.pem",
 			Response: &Signer{
 				hash: crypto.SHA256,
 				algo: cryptokms.AlgorithmRSA2048,
@@ -54,8 +68,26 @@ func TestNewSigner(t *testing.T) {
 			Valid: true,
 		},
 		{
+			Name: "rsa-3072-pkcs1",
+			Path: "internal/testdata/rsa-3072.pkcs1.pem",
+			Response: &Signer{
+				hash: crypto.SHA256,
+				algo: cryptokms.AlgorithmRSA3072,
+			},
+			Valid: true,
+		},
+		{
 			Name: "rsa-4096",
 			Path: "internal/testdata/rsa-4096.pem",
+			Response: &Signer{
+				hash: crypto.SHA256,
+				algo: cryptokms.AlgorithmRSA4096,
+			},
+			Valid: true,
+		},
+		{
+			Name: "rsa-4096-pkcs1",
+			Path: "internal/testdata/rsa-4096.pkcs1.pem",
 			Response: &Signer{
 				hash: crypto.SHA256,
 				algo: cryptokms.AlgorithmRSA4096,
@@ -72,6 +104,15 @@ func TestNewSigner(t *testing.T) {
 			Valid: true,
 		},
 		{
+			Name: "ec-p256.ec",
+			Path: "internal/testdata/ec-p256.ec.pem",
+			Response: &Signer{
+				hash: crypto.SHA256,
+				algo: cryptokms.AlgorithmECP256,
+			},
+			Valid: true,
+		},
+		{
 			Name: "ec-p384",
 			Path: "internal/testdata/ec-p384.pem",
 			Response: &Signer{
@@ -81,8 +122,26 @@ func TestNewSigner(t *testing.T) {
 			Valid: true,
 		},
 		{
+			Name: "ec-p384.ec",
+			Path: "internal/testdata/ec-p384.ec.pem",
+			Response: &Signer{
+				hash: crypto.SHA384,
+				algo: cryptokms.AlgorithmECP384,
+			},
+			Valid: true,
+		},
+		{
 			Name: "ec-p521",
 			Path: "internal/testdata/ec-p521.pem",
+			Response: &Signer{
+				hash: crypto.SHA512,
+				algo: cryptokms.AlgorithmECP521,
+			},
+			Valid: true,
+		},
+		{
+			Name: "ec-p521.ec",
+			Path: "internal/testdata/ec-p521.ec.pem",
 			Response: &Signer{
 				hash: crypto.SHA512,
 				algo: cryptokms.AlgorithmECP521,

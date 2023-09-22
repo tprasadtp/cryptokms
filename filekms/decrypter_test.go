@@ -43,8 +43,23 @@ func TestNewDecrypter(t *testing.T) {
 			ResponseErr: cryptokms.ErrKeyAlgorithm,
 		},
 		{
+			Name:        "rsa-1024.pkcs1",
+			Path:        "internal/testdata/rsa-1024.pkcs1.pem",
+			ResponseErr: cryptokms.ErrKeyAlgorithm,
+		},
+		{
 			Name: "rsa-2048",
 			Path: "internal/testdata/rsa-2048.pem",
+			Response: &Decrypter{
+				hash:             crypto.SHA256,
+				maxCiphertextLen: 2048 / 8,
+				algo:             cryptokms.AlgorithmRSA2048,
+			},
+			Valid: true,
+		},
+		{
+			Name: "rsa-2048=pkcs1",
+			Path: "internal/testdata/rsa-2048.pkcs1.pem",
 			Response: &Decrypter{
 				hash:             crypto.SHA256,
 				maxCiphertextLen: 2048 / 8,
@@ -63,8 +78,28 @@ func TestNewDecrypter(t *testing.T) {
 			Valid: true,
 		},
 		{
+			Name: "rsa-3072-pkcs1",
+			Path: "internal/testdata/rsa-3072.pkcs1.pem",
+			Response: &Decrypter{
+				hash:             crypto.SHA256,
+				maxCiphertextLen: 3072 / 8,
+				algo:             cryptokms.AlgorithmRSA3072,
+			},
+			Valid: true,
+		},
+		{
 			Name: "rsa-4096",
 			Path: "internal/testdata/rsa-4096.pem",
+			Response: &Decrypter{
+				hash:             crypto.SHA256,
+				maxCiphertextLen: 4096 / 8,
+				algo:             cryptokms.AlgorithmRSA4096,
+			},
+			Valid: true,
+		},
+		{
+			Name: "rsa-4096-pkcs1",
+			Path: "internal/testdata/rsa-4096.pkcs1.pem",
 			Response: &Decrypter{
 				hash:             crypto.SHA256,
 				maxCiphertextLen: 4096 / 8,
@@ -78,13 +113,28 @@ func TestNewDecrypter(t *testing.T) {
 			ResponseErr: cryptokms.ErrKeyAlgorithm,
 		},
 		{
+			Name:        "ec-p256.ec",
+			Path:        "internal/testdata/ec-p256.ec.pem",
+			ResponseErr: cryptokms.ErrKeyAlgorithm,
+		},
+		{
 			Name:        "ec-p384",
 			Path:        "internal/testdata/ec-p384.pem",
 			ResponseErr: cryptokms.ErrKeyAlgorithm,
 		},
 		{
+			Name:        "ec-p384.ec",
+			Path:        "internal/testdata/ec-p384.ec.pem",
+			ResponseErr: cryptokms.ErrKeyAlgorithm,
+		},
+		{
 			Name:        "ec-p521",
 			Path:        "internal/testdata/ec-p521.pem",
+			ResponseErr: cryptokms.ErrKeyAlgorithm,
+		},
+		{
+			Name:        "ec-p521.ec",
+			Path:        "internal/testdata/ec-p521.ec.pem",
 			ResponseErr: cryptokms.ErrKeyAlgorithm,
 		},
 		{

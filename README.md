@@ -79,7 +79,7 @@ Uses sensible and sane defaults.
 > This can be used together with [systemd-credentials](https://www.freedesktop.org/software/systemd/man/systemd-creds.html) as keys can be encrypted,
 > bound to TPM and are only present in memory. In other cases this may be insecure.
 
-- Keys on disk must be not encrypted with a passphrase and in PEM encoded PKCS8 format.
+Keys on disk must be not encrypted with a passphrase. Private key in PKCS #8, ASN.1 DER form(`PRIVATE KEY`), RSA private key in PKCS #1, ASN.1 DER form(`RSA PRIVATE KEY`) and EC private key in SEC 1, ASN.1 DER form (`EC PRIVATE KEY`) are supported.
 
 | Key Algorithm | Supported Hashes | Interfaces |
 |---|---|---
