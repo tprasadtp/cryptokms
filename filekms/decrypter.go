@@ -7,7 +7,6 @@ import (
 	"crypto/ed25519"
 	"crypto/rand"
 	"crypto/rsa"
-	"crypto/x509"
 	"encoding/pem"
 	"fmt"
 	"io"
@@ -74,7 +73,7 @@ func NewDecrypter(path string) (*Decrypter, error) {
 	}
 
 	// Try to parse key as private key.
-	priv, err := x509.ParsePKCS8PrivateKey(block.Bytes)
+	priv, err := parsePrivateKey(block.Bytes)
 	if err != nil {
 		return nil, fmt.Errorf(
 			"filekms: cannot parse PEM encoded bytes as private key: %w", err)

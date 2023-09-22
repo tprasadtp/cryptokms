@@ -5,7 +5,7 @@ package main
 
 import (
 	"crypto"
-	"crypto/ed25519"
+	"crypto/ecdsa"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
@@ -13,7 +13,6 @@ import (
 	"flag"
 	"log"
 	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/tprasadtp/cryptokms/internal/testkeys"
@@ -58,20 +57,13 @@ func main() {
 		},
 		{
 			name: "ED-25519",
-			priv: func() crypto.PrivateKey {
-				log.Printf("Generating ED25519 key....")
-				_, priv, err := ed25519.GenerateKey(rand.Reader)
-				if err != nil {
-					log.Fatalf("failed to generate ED25519 key: %s", err)
-				}
-				return priv
-			}(),
+			priv: testkeys.GetED25519PrivateKey(),
 		},
 		{
 			name: "RSA-1024",
 			priv: func() crypto.PrivateKey {
 				log.Printf("Generating RSA-1024 key....")
-				//nolint:gosec // test to ensure 1024 bit keys is rejected.
+				//nolint:gosec // keys are used to ensure 1024 bit keys is rejected.
 				priv, err := rsa.GenerateKey(rand.Reader, 1024)
 				if err != nil {
 					log.Fatalf("failed to generate RSA-1024 key: %s", err)
@@ -81,22 +73,27 @@ func main() {
 		},
 	}
 	for _, item := range gs {
-		err := CreatePrivateKeyFile(item.name, item.priv)
+		err := CreatePKCS8File(strings.ToLower(item.name)+".pem", item.priv)
 		if err != nil {
 			log.Fatalf("failed to generate: %s: %s", item.name, err)
+		}
+
+		switch v := item.priv.(type) {
+		case *rsa.PrivateKey:
+			err = CreatePKCS1File(strings.ToLower(item.name)+".pkcs1.pem", v)
+			if err != nil {
+				log.Fatalf("failed to generate: %s: %s", item.name, err)
+			}
+		case *ecdsa.PrivateKey:
+			err = CreateECPrivateKey(strings.ToLower(item.name)+".ec.pem", v)
+			if err != nil {
+				log.Fatalf("failed to generate: %s: %s", item.name, err)
+			}
 		}
 	}
 }
 
-//nolint:wrapcheck // ignore
-func CreatePrivateKeyFile(name string, priv crypto.PrivateKey) error {
-	log.Printf("Creating file - %s", strings.ToLower(name)+".pub")
-	file, err := os.Create(filepath.Join(output, strings.ToLower(name)+".pem"))
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-
+func CreatePKCS8File(name string, priv crypto.PrivateKey) error {
 	b, err := x509.MarshalPKCS8PrivateKey(priv)
 	if err != nil {
 		return err
@@ -107,7 +104,54 @@ func CreatePrivateKeyFile(name string, priv crypto.PrivateKey) error {
 		Bytes: b,
 	})
 
-	_, err = file.Write(pem)
+	err = CreateFileWithData(name, pem)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func CreatePKCS1File(name string, priv *rsa.PrivateKey) error {
+	b := x509.MarshalPKCS1PrivateKey(priv)
+	pem := pem.EncodeToMemory(&pem.Block{
+		Type:  "RSA PRIVATE KEY",
+		Bytes: b,
+	})
+
+	err := CreateFileWithData(name, pem)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func CreateECPrivateKey(name string, priv *ecdsa.PrivateKey) error {
+	b, err := x509.MarshalECPrivateKey(priv)
+	if err != nil {
+		return err
+	}
+
+	pem := pem.EncodeToMemory(&pem.Block{
+		Type:  "EC PRIVATE KEY",
+		Bytes: b,
+	})
+
+	err = CreateFileWithData(name, pem)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func CreateFileWithData(name string, data []byte) error {
+	log.Printf("Creating file - %s", name)
+	file, err := os.OpenFile(name, os.O_CREATE|os.O_TRUNC|os.O_TRUNC|os.O_WRONLY, 0o640)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	_, err = file.Write(data)
 	if err != nil {
 		return err
 	}
