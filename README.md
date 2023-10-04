@@ -3,7 +3,7 @@
 [![Go Reference](https://pkg.go.dev/badge/github.com/tprasadtp/cryptokmssvg)](https://pkg.go.dev/github.com/tprasadtp/cryptokms)
 ![GitHub go.mod Go version](https://img.shields.io/github/go-mod/go-version/tprasadtp/cryptokms?label=go&logo=go&logoColor=white)
 [![test](https://github.com/tprasadtp/cryptokms/actions/workflows/test.yml/badge.svg)](https://github.com/tprasadtp/cryptokms/actions/workflows/test.yml)
-![GitHub](https://img.shields.io/github/license/tprasadtp/cryptokms)
+[![License](https://img.shields.io/github/license/tprasadtp/cryptokms)](https://github.com/tprasadtp/cryptokms/blob/master/LICENSE)
 ![GitHub tag (latest SemVer)](https://img.shields.io/github/v/tag/tprasadtp/cryptokms?color=7f50a6&label=release&logo=semver&sort=semver)
 
 Implements [crypto.Signer] and [crypto.Decrypter] for keys typically backed by KMS service.
@@ -12,7 +12,7 @@ Currently it supports keys backed by,
 - [Google Cloud KMS]
 - [AWS KMS]
 - Filesystem
-- Test keys generated per run for testing.
+- From memory.
 
 Dependencies are neatly isolated. If you pull gcpkms package only google cloud dependencies should be pulled. Code has extensive unit tests and integration tests.
 
@@ -20,7 +20,7 @@ Uses sensible and sane defaults.
 
 - RSA keys of size less than 2048 are not supported.
 - ECC Keys of size less than 256 are not supported.
-- Signing algorithms with insecure hashes (SHA1, MD5) are not supported.
+- Signing algorithms with insecure hashes (SHA1, MD5 etc) are not supported.
 
 ## Google KMS (Signing Keys)
 
@@ -75,8 +75,8 @@ Uses sensible and sane defaults.
 
 > **Warning**
 >
-> Use in-memory non swap-able file system (like ramfs).
-> This can be used together with [systemd-credentials](https://www.freedesktop.org/software/systemd/man/systemd-creds.html) as keys can be encrypted,
+> Use in-memory non swap-able file system (like ramfs) or from kubernetes secret store CSI.
+> For systems using systemd, [systemd-credentials] can be used as keys can be encrypted,
 > bound to TPM and are only present in memory. In other cases this may be insecure.
 
 Keys on disk must be not encrypted with a passphrase. Private key in PKCS #8, ASN.1 DER form(`PRIVATE KEY`), RSA private key in PKCS #1, ASN.1 DER form(`RSA PRIVATE KEY`) and EC private key in SEC 1, ASN.1 DER form (`EC PRIVATE KEY`) are supported.
@@ -91,12 +91,10 @@ Keys on disk must be not encrypted with a passphrase. Private key in PKCS #8, AS
 | `ECC-P521` | [SHA512][sha512] | [crypto.Signer]
 | `ED-25519` | [SHA512][sha512] (ed25519ph only) | [crypto.Signer]
 
+## From memory
 
-## Fake KMS
-
-Library also provides a fake KMS provider backed by _ephemeral in-memory keys_ **ONLY** for test usage.
-**DO NOT** use them for in non-test code. Keys are generated on demand and are used during the
-lifecycle of the binary.
+If keys are stored in memory or environment variables, use `memkms`. It is identical to
+filekms except keys are in-process and are provided directly. Key must be PEM encoded.
 
 [Google Cloud KMS]: https://cloud.google.com/kms/docs
 [AWS KMS]: https://aws.amazon.com/kms/
@@ -114,3 +112,4 @@ lifecycle of the binary.
 [crypto.Signer]: https://pkg.go.dev/crypto#Signer
 [crypto.SignerOpts]: https://pkg.go.dev/crypto#SignerOpts
 [crypto.Decrypter]: https://pkg.go.dev/crypto#Decrypter
+[systemd-credentials]: https://www.freedesktop.org/software/systemd/man/systemd-creds.html

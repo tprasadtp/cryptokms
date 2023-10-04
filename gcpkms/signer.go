@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: Copyright 2023 Prasad Tengse
+// SPDX-License-Identifier: MIT
+
 package gcpkms
 
 import (
@@ -29,6 +32,8 @@ var (
 
 // Signer is backed by supported Google cloud KMS asymmetric key.
 // RSA_SIGN_PSS_* and RSA_SIGN_RAW_* keys are not supported.
+//
+//nolint:containedctx // ignore
 type Signer struct {
 	name   string
 	ctx    context.Context
@@ -64,25 +69,21 @@ type Signer struct {
 //
 // [cloudkms.viewer]: https://cloud.google.com/kms/docs/reference/permissions-and-roles#cloudkms.viewer
 // [cloudkms.cryptoOperator]: https://cloud.google.com/kms/docs/reference/permissions-and-roles#cloudkms.cryptoOperator
-//
-//nolint:funlen
 func NewSigner(ctx context.Context, keyID string, opts ...option.ClientOption) (*Signer, error) {
 	// Create a new client
 	client, err := kms.NewKeyManagementClient(ctx, opts...)
 	if err != nil {
-		return nil, fmt.Errorf("%w: gcpkms: failed to build kms client: %w",
-			cryptokms.ErrInvalidKMSClient, err)
+		return nil, fmt.Errorf("gcpkms: failed to build kms client: %w", err)
 	}
 
 	// Get key metadata.
 	key, err := client.GetCryptoKeyVersion(ctx, &kmspb.GetCryptoKeyVersionRequest{Name: keyID})
 	if err != nil {
-		return nil, fmt.Errorf("%w: gcpkms: failed to get key version: %w", cryptokms.ErrGetKeyMetadata, err)
+		return nil, fmt.Errorf("gcpkms: failed to get key version: %w", err)
 	}
 
 	if key.State != kmspb.CryptoKeyVersion_ENABLED {
-		return nil, fmt.Errorf("%w: gcpkms: key(%s) is in unusable sate - %s",
-			cryptokms.ErrUnusableKeyState, keyID, key.State)
+		return nil, fmt.Errorf("gcpkms: key(%s) is in unusable sate - %s", keyID, key.State)
 	}
 
 	// Check key compatibility and hash algorithm.
@@ -119,24 +120,20 @@ func NewSigner(ctx context.Context, keyID string, opts ...option.ClientOption) (
 		kmspb.CryptoKeyVersion_RSA_SIGN_PSS_3072_SHA256,
 		kmspb.CryptoKeyVersion_RSA_SIGN_PSS_4096_SHA256,
 		kmspb.CryptoKeyVersion_RSA_SIGN_PSS_4096_SHA512:
-		return nil, fmt.Errorf("%w: gcpkms: pss key(%s) is not supported",
-			cryptokms.ErrKeyAlgorithm, keyID)
+		return nil, fmt.Errorf("gcpkms: pss key(%s) is not supported", keyID)
 	// EC_SIGN_SECP256K1_SHA256 is not supported.
 	// This is due to golang's crypto libraries not implementing secp256k1.
 	case kmspb.CryptoKeyVersion_EC_SIGN_SECP256K1_SHA256:
-		return nil, fmt.Errorf("%w: gcpkms: secp256k1 key(%s) is not supported",
-			cryptokms.ErrKeyAlgorithm, keyID)
+		return nil, fmt.Errorf("gcpkms: secp256k1 key(%s) is not supported", keyID)
 	// Unsupported keys.
 	case kmspb.CryptoKeyVersion_HMAC_SHA1,
 		kmspb.CryptoKeyVersion_HMAC_SHA224,
 		kmspb.CryptoKeyVersion_HMAC_SHA256,
 		kmspb.CryptoKeyVersion_HMAC_SHA384,
 		kmspb.CryptoKeyVersion_HMAC_SHA512:
-		return nil, fmt.Errorf("%w: hmac key(%s) cannot be used for asymmetric signing",
-			cryptokms.ErrKeyAlgorithm, keyID)
+		return nil, fmt.Errorf("gcpkms: hmac key(%s) cannot be used for asymmetric signing", keyID)
 	case kmspb.CryptoKeyVersion_GOOGLE_SYMMETRIC_ENCRYPTION:
-		return nil, fmt.Errorf("%w: symmetric key(%s) cannot be used for asymmetric signing",
-			cryptokms.ErrKeyAlgorithm, keyID)
+		return nil, fmt.Errorf("gcpkms: symmetric key(%s) cannot be used for asymmetric signing", keyID)
 	case kmspb.CryptoKeyVersion_RSA_DECRYPT_OAEP_2048_SHA1,
 		kmspb.CryptoKeyVersion_RSA_DECRYPT_OAEP_3072_SHA1,
 		kmspb.CryptoKeyVersion_RSA_DECRYPT_OAEP_4096_SHA1,
@@ -144,25 +141,21 @@ func NewSigner(ctx context.Context, keyID string, opts ...option.ClientOption) (
 		kmspb.CryptoKeyVersion_RSA_DECRYPT_OAEP_3072_SHA256,
 		kmspb.CryptoKeyVersion_RSA_DECRYPT_OAEP_4096_SHA256,
 		kmspb.CryptoKeyVersion_RSA_DECRYPT_OAEP_4096_SHA512:
-		return nil, fmt.Errorf("%w: decryption key(%s) cannot be used for asymmetric signing",
-			cryptokms.ErrKeyAlgorithm, keyID)
+		return nil, fmt.Errorf("gcpkms: decryption key(%s) cannot be used for asymmetric signing", keyID)
 	default:
-		return nil, fmt.Errorf("%w: %s", cryptokms.ErrKeyAlgorithm, key.Algorithm)
+		return nil, fmt.Errorf("gcpkms: unknown or unsupported key algorithm - %s", key.Algorithm)
 	}
 
 	// Retrieve the public key from KMS.
 	pbPublicKey, err := client.GetPublicKey(ctx, &kmspb.GetPublicKeyRequest{Name: keyID})
 	if err != nil {
-		return nil, fmt.Errorf("%w: gcpkms: failed to get public key: %w",
-			cryptokms.ErrGetKeyMetadata, err)
+		return nil, fmt.Errorf("gcpkms: failed to get public key: %w", err)
 	}
 
 	// Verify response integrity.
 	crcHash := ComputeCRC32([]byte(pbPublicKey.Pem))
 	if crcHash.Value != pbPublicKey.PemCrc32C.Value {
-		return nil, fmt.Errorf(
-			"%w: %w: expected CRC32=%x got=%x",
-			cryptokms.ErrGetKeyMetadata, ErrResponseIntegrity,
+		return nil, fmt.Errorf("gcpkms: public key data integrity is invalid, expected CRC32=%x got=%x",
 			pbPublicKey.PemCrc32C, crcHash.Value)
 	}
 
@@ -170,7 +163,7 @@ func NewSigner(ctx context.Context, keyID string, opts ...option.ClientOption) (
 	block, _ := pem.Decode([]byte(pbPublicKey.GetPem()))
 	pub, err := x509.ParsePKIXPublicKey(block.Bytes)
 	if err != nil {
-		return nil, fmt.Errorf("gcpkms: failed to parse public key: %w", err)
+		return nil, fmt.Errorf("gcpkms: failed to decode public key: %w", err)
 	}
 
 	// https://cloud.google.com/kms/docs/reference/rpc/google.cloud.kms.v1#cryptokeyversionalgorithm
@@ -178,7 +171,7 @@ func NewSigner(ctx context.Context, keyID string, opts ...option.ClientOption) (
 	case *rsa.PublicKey:
 	case *ecdsa.PublicKey:
 	default:
-		return nil, fmt.Errorf("%w: %T", cryptokms.ErrKeyAlgorithm, t)
+		return nil, fmt.Errorf("gcpkms: unknown key type: %T", t)
 	}
 
 	return &Signer{
@@ -243,17 +236,17 @@ func (s *Signer) Sign(rand io.Reader, digest []byte, opts crypto.SignerOpts) ([]
 // Due to nature of GCP KMS, [crypto.SignerOpts] must match key's algorithm or it must be nil.
 func (s *Signer) SignContext(ctx context.Context, _ io.Reader, digest []byte, opts crypto.SignerOpts) ([]byte, error) {
 	if s.client == nil || s.name == "" || s.pub == nil {
-		return nil, cryptokms.ErrInvalidKMSClient
+		return nil, fmt.Errorf("gcpkms: client not initialized")
 	}
 
 	if opts != nil {
 		if opts.HashFunc() != s.hash {
-			return nil, fmt.Errorf("%w: gcpkms: algorithm is %s, but want %s", cryptokms.ErrDigestAlgorithm, opts.HashFunc(), s.hash)
+			return nil, fmt.Errorf("gcpkms: digest algorithm is %s, but want %s", opts.HashFunc(), s.hash)
 		}
 	}
 
 	if len(digest) != s.hash.Size() {
-		return nil, fmt.Errorf("%w: gcpkms: length is %d, want %d", cryptokms.ErrDigestLength, len(digest), s.hash.Size())
+		return nil, fmt.Errorf("gcpkms: digest length is %d, want %d", len(digest), s.hash.Size())
 	}
 
 	// Set the correct digest based on the key's digest algorithm
@@ -266,7 +259,7 @@ func (s *Signer) SignContext(ctx context.Context, _ io.Reader, digest []byte, op
 	case crypto.SHA512:
 		digestpb = &kmspb.Digest{Digest: &kmspb.Digest_Sha512{Sha512: digest}}
 	default:
-		return nil, fmt.Errorf("%w: %s", cryptokms.ErrDigestAlgorithm, s.hash)
+		return nil, fmt.Errorf("gcpkms: digest algorithm %s is not supported by key %s", s.hash, s.name)
 	}
 
 	// Sign the digest
@@ -276,20 +269,19 @@ func (s *Signer) SignContext(ctx context.Context, _ io.Reader, digest []byte, op
 		DigestCrc32C: ComputeCRC32(digest),
 	})
 	if err != nil {
-		return nil, fmt.Errorf("%w: %w", cryptokms.ErrAsymmetricSign, err)
+		return nil, fmt.Errorf("gcpkms: failed to sign: %w", err)
 	}
 
 	// Perform integrity verification (server side)
 	if !resp.VerifiedDigestCrc32C {
-		return nil, ErrRequestIntegrity
+		return nil, fmt.Errorf("gcpkms: failed to sign, request corrupted in transit")
 	}
 
 	// Perform integrity verification (server response)
 	respCrc32Hash := ComputeCRC32(resp.Signature)
 	if respCrc32Hash.Value != resp.SignatureCrc32C.Value {
-		return nil, fmt.Errorf(
-			"%w: gcpkms: expected CRC32=%x got=%x",
-			ErrResponseIntegrity, resp.SignatureCrc32C.Value, respCrc32Hash.Value)
+		return nil, fmt.Errorf("gcpkms: signed data integrity error, expected CRC32=%x got=%x",
+			resp.SignatureCrc32C.Value, respCrc32Hash.Value)
 	}
 
 	return resp.Signature, nil

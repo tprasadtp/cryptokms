@@ -65,12 +65,12 @@ tasks:
         vars:
           GO_TEST_PKG: "github.com/tprasadtp/cryptokms/awskms"
           GO_TEST_TIMEOUT: 30s
-  test-fakekms:
-    desc: "Test fakekms package"
+  test-memkms:
+    desc: "Test memkms package"
     cmds:
       - task: test-pkg
         vars:
-          GO_TEST_PKG: "github.com/tprasadtp/cryptokms/fakekms"
+          GO_TEST_PKG: "github.com/tprasadtp/cryptokms/memkms"
           GO_TEST_TIMEOUT: 30s
   test-filekms:
     desc: "Test filekms package"

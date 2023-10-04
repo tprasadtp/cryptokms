@@ -1,8 +1,10 @@
+# SPDX-FileCopyrightText: Copyright 2023 Prasad Tengse.
+# SPDX-License-Identifier: MIT
+
 run:
   # Timeout for analysis, e.g. 30s, 5m.
   # Default: 1m
   timeout: 3m
-
 
 # This file contains only configs which differ from defaults.
 # All possible options can be found here
@@ -11,17 +13,38 @@ linters-settings:
   cyclop:
     # The maximal code complexity to report.
     # Default: 10
-    max-complexity: 30
+    max-complexity: 35
     # The maximal average package complexity.
     # If it's higher than 0.0 (float) the check is enabled
     # Default: 0.0
     package-average: 30.0
+
+  gocyclo:
+    min-complexity: 35
+
+  dupl:
+    threshold: 200
 
   errcheck:
     # Report about not checking of errors in type assertions: `a := b.(MyStruct)`.
     # Such cases aren't reported by default.
     # Default: false
     check-type-assertions: true
+    # Lint about assignment of errors to blank identifier: `num, _ := strconv.Atoi(numStr)`.
+    # Such cases aren't reported by default.
+    # Default: false
+    check-blank: false
+    exclude-functions:
+      - bytes/Buffer.Write
+      - bytes/Buffer.WriteByte
+      - bytes/Buffer.WriteString
+      - strings/Builder.WriteString
+      - strings/Builder.Write
+      - strings/Builder.WriteRune
+      - crypto/Hash.Write
+      - io/Discard.Write
+      - os/Stderr.Write
+      - os/Stdout.Write
 
   exhaustive:
     # Program elements to check for exhaustiveness.
@@ -41,7 +64,7 @@ linters-settings:
     # Checks the number of statements in a function.
     # If lower than 0, disable the check.
     # Default: 40
-    statements: 90
+    statements: 100
 
   gocognit:
     # Minimal code complexity to report
@@ -50,12 +73,10 @@ linters-settings:
   goconst:
     match-constant: true
     min-len: 3
-    min-occurrences: 4
+    min-occurrences: 5
     ignore-tests: true
     ignore-calls: true
     numbers: false
-    min: 4
-    max: 4
 
   gocritic:
     # Settings passed to gocritic.
@@ -71,6 +92,20 @@ linters-settings:
         # Default: true
         skipRecvDeref: false
 
+  goheader:
+    # Supports two types 'const` and `regexp`.
+    # Values can be used recursively.
+    # Default: {}
+    values:
+      regexp:
+        # Define here regexp type values.
+        # for example:
+        license: "(BSD\\-3\\-Clause|GPL\\-3\\.0\\-only|GPL\\-2.0\\-only|AGPL\\-3\\.0\\-only|Apache\\-2\\.0|MIT|MPL\\-2.0)"
+        copyright: "([Cc]opyright\\s+((\\(c\\)|©)\\s+)?[0-9]{4}(.*))"
+    template: |-
+      SPDX-FileCopyrightText: {{ copyright }}
+      SPDX-License-Identifier: {{ license }}
+
   gomodguard:
     blocked:
       # List of blocked modules.
@@ -79,7 +114,118 @@ linters-settings:
         - github.com/golang/protobuf:
             recommendations:
               - google.golang.org/protobuf
-            reason: "see https://developers.google.com/protocol-buffers/docs/reference/go/faq#modules"
+            reason: "See https://developers.google.com/protocol-buffers/docs/reference/go/faq#modules"
+
+        # Use stdlib replacements.
+        - github.com/mitchellh/go-homedir:
+            reason: "Use stdlib provided os.UserHomeDir()."
+        - github.com/hashicorp/go-multierror:
+            reason: "Use stdlib provided errors.Join() available in go 1.20."
+        - go.uber.org/multierr:
+            reason: "Use stdlib provided errors.Join() available in go 1.20."
+        - github.com/hashicorp/go-hclog:
+            reason: "Use log/slog or github.com/tprasadtp/log package."
+        - github.com/rs/zerolog:
+            reason: "Use log/slog or github.com/tprasadtp/log package."
+        - github.com/sirupsen/logrus:
+            reason: "Use log/slog or github.com/tprasadtp/log package."
+        - go.uber.org/zap:
+            reason: "Use log/slog or github.com/tprasadtp/log package."
+        - github.com/pkg/errors:
+            reason: "Use error wrapping available in stdlib"
+
+        # Hashicorp has changed their license to BSL for
+        # most products. Avoid them. Libraries may not be under BSL,
+        # but they directly or indirectly depend on BSL licensed product.
+        # --------------------------------------------------------------------
+
+        # Hashicorp Terraform
+        - github.com/hashicorp/terraform-plugin-sdk:
+            reason: "Hashicorp terraform is no longer open source."
+        - github.com/hashicorp/terraform-cdk-go/cdktf:
+            reason: "Hashicorp terraform is no longer open source."
+        - github.com/hashicorp/go-tfe:
+            reason: "Hashicorp terraform is no longer open source."
+        - hashicorp/terraform-plugin-log:
+            reason: "Hashicorp terraform is no longer open source."
+
+        # Hashicorp Vault
+        - github.com/hashicorp/vault-client-go:
+            reason: "hashicorp vault is no longer open source."
+        - github.com/hashicorp/vault/sdk:
+            reason: "Hashicorp vault is no longer open source."
+        - github.com/hashicorp/vault/api:
+            reason: "hashicorp vault is no longer open source."
+        - github.com/hashicorp/vault:
+            reason: "hashicorp vault is no longer open source."
+
+        # Hashicorp Consul
+        - github.com/hashicorp/consul/api:
+            reason: "Hashicorp consul is no longer open source."
+
+        # Hashicorp Nomad
+        - github.com/hashicorp/nomad/api:
+            reason: "Hashicorp nomad is no longer open source."
+
+        # Hashicorp Boundary
+        - github.com/hashicorp/boundary/api:
+            reason: "Hashicorp boundary is no longer open source."
+        - github.com/hashicorp/boundary/sdk:
+            reason: "Hashicorp boundary is no longer open source."
+        - github.com/hashicorp/boundary/plugins:
+            reason: "Hashicorp boundary is no longer open source."
+
+        # Hashicorp Packer
+        - github.com/hashicorp/packer-plugin-sdk:
+            reason: "Hashicorp packer is no longer open source."
+
+        # Elastic has changed their license to SSPL/ELv2 which is not
+        # open source for most of their products. Avoid them. Libraries
+        # may be under open source license, but they directly or indirectly
+        # depend on SSPL licensed product.
+        # --------------------------------------------------------------------
+
+        # Elastic libbeat/beats
+        - github.com/elastic/beats/libbeat:
+            reason: "Elastic beats is not open source."
+        - github.com/elastic/beats/v7/libbeat:
+            reason: "Elastic beats is not open source."
+
+  gomoddirectives:
+    # Allow to retract without comment. This is mostly useful
+    # for internal repos.
+    retract-allow-no-explanation: true
+
+  forbidigo:
+    # Forbid the following identifiers (list of regexp).
+    # Default: ["^(fmt\\.Print(|f|ln)|print|println)$"]
+    forbid:
+      # Builtin function:
+      - p: ^print.*$
+        msg: "Do not commit print builtin statements."
+
+      # fmt.Prinf|Println
+      - p: ^fmt\.Print.*$
+        msg: "Do not commit print statements."
+
+      - p: ^fmt\.Fprintf\(os.Std(out|err)*$
+        msg: "Do not commit print statements."
+
+      - p: time.Sleep
+        msg: "Avoid using time.Sleep in you code."
+
+      - p: ^log\.KV\(log\.ErrorKey*$
+        msg: "Use log.E(error) instead"
+
+    # Exclude godoc examples from forbidigo checks.
+    # Default: true
+    exclude-godoc-examples: true
+    # Instead of matching the literal source code,
+    # use type information to replace expressions with strings that contain the package name
+    # and (for methods and fields) the type name.
+    # This makes it possible to handle import renaming and forbid struct fields and methods.
+    # Default: false
+    analyze-types: true
 
   govet:
     # Enable all analyzers.
@@ -97,28 +243,53 @@ linters-settings:
         # Default: false
         strict: true
 
+  ireturn:
+    # Only allow error, stdlib, empty and generic interfaces.
+    # Default: [errors, empty, stdlib, anon]
+    allowed:
+      - error # error interface
+      - empty # interface{} or any
+      - stdlib # interfaces in stdlib
+      - generic # generic interfaces added in go 1.18 (type constraints)
+
+  loggercheck:
+    # Require printf-like format specifier (%s, %d for example) not present.
+    # Default: false
+    no-printf-like: true
+    rules:
+      - "(*github.com/tprasadtp/log.Logger).Log"
+
   nakedret:
     # Make an issue if func has more lines of code than this setting, and it has naked returns.
     # Default: 30
     max-func-lines: 0
 
   nestif:
-    min-complexity: 20
+    # [Default: 5]
+    min-complexity: 9
 
   nolintlint:
     # Exclude following linters from requiring an explanation.
     # Default: []
     allow-no-explanation:
+      - cyclop
+      - errcheck
       - funlen
-      - gocognit
-      - lll
       - gochecknoglobals
+      - gocognit
+      - gocyclo
+      - lll
     # Enable to require an explanation of nonzero length after each nolint directive.
     # Default: false
     require-explanation: true
     # Enable to require nolint directives to mention the specific linter being suppressed.
     # Default: false
     require-specific: true
+
+  paralleltest:
+    # Ignore missing calls to `t.Parallel()` and only report incorrect uses of it.
+    # Default: false
+    ignore-missing: true
 
   tenv:
     # The option `all` will run against whole test files
@@ -174,7 +345,8 @@ linters:
     - noctx # finds sending http request without context.Context
     - nolintlint # reports ill-formed or insufficient nolint directives
     - nonamedreturns # reports all named returns
-    - nosprintfhostport # checks for misuse of Sprintf to construct a host with port in a URL
+    - nosprintfhostport # checks for misuse of Sprintf to construct a host with port in a URL.
+    - paralleltest # checks for misuse of t.Parallel usage.
     - predeclared # finds code that shadows one of Go's predeclared identifiers
     - promlinter # checks Prometheus metrics naming via promlint
     - reassign # checks that package variables are not reassigned
@@ -189,28 +361,26 @@ linters:
     - usestdlibvars # detects the possibility to use variables/constants from the Go standard library
     - wastedassign # finds wasted assignment statements
     - whitespace # detects leading and trailing whitespace
-    - gci # controls golang package import order and makes it always deterministic
     - decorder # checks declaration order and count of types, constants, variables and functions
     - prealloc #  finds slice declarations that could potentially be preallocated
     - interfacebloat # checks the number of methods inside an interface
     - wrapcheck # checks that errors returned from external packages are wrapped
     - loggercheck # checks key value pairs for common logger libraries (kitlog,klog,logr,zap)
     - importas # enforces consistent import aliases
-
+    - testableexamples # checks if examples are testable (have an expected output)
+    - goheader # checks for headers
+    - containedctx # detects struct contained context.Context field
+    - thelper # detects golang test helpers without t.Helper() call and checks the consistency of test helpers
 
     ## you may want to enable
     #- godox # detects FIXME, TODO and other comment keywords
-    #- goheader # checks is file header matches to pattern
-    #- varnamelen # checks that the length of a variable's name matches its scope
 
     ## disabled
-    #- testableexamples # [disabled as most end to end examples require external resources] checks if examples are testable (have an expected output)
+    #- gci # [conflicts with vscode gofumpt] controls golang package import order and makes it always deterministic
     #- gomnd # [too noisy] detects magic numbers
     #- lll # [mostly useless] reports long lines
-    #- ireturn # accept interfaces, return concrete types
     #- exhaustruct # [mostly useless] checks if all structure fields are initialized
     #- gochecknoglobals # [useless, unless you are a beginner] checks that no global variables exist
-    #- containedctx # detects struct contained context.Context field
     #- contextcheck # [too many false positives] checks the function whether use a non-inherited context
     #- depguard # [replaced by gomodguard] checks if package imports are in a list of acceptable packages
     #- dogsled # checks assignments with too many blank identifiers (e.g. x, _, _, _, := f())
@@ -223,10 +393,10 @@ linters:
     #- maintidx # measures the maintainability index of each function
     #- misspell # [useless] finds commonly misspelled English words in comments
     #- nlreturn # [too strict and mostly code is not more readable] checks for a new line before return and branch statements to increase code clarity
-    #- paralleltest # [too many false positives] detects missing usage of t.Parallel() method in your Go test
     #- tagliatelle # checks the struct tags
-    #- thelper # detects golang test helpers without t.Helper() call and checks the consistency of test helpers
     #- wsl # [too strict and mostly code is not more readable] whitespace linter forces you to use empty lines
+    #- varnamelen [too noisy] # checks that the length of a variable's name matches its scope
+    #- ireturn # [useless as we use functional options with interfaces a lot] accept interfaces, return concrete types (with stdlib interfaces ignored)
 
     ## deprecated
     #- deadcode # [deprecated, replaced by unused] finds unused code
@@ -240,7 +410,6 @@ linters:
     #- structcheck # [deprecated, replaced by unused] finds unused struct fields
     #- varcheck # [deprecated, replaced by unused] finds unused global variables and constants
 
-
 issues:
   # Maximum count of issues with the same text.
   # Set to 0 to disable.
@@ -248,32 +417,40 @@ issues:
   max-same-issues: 50
   exclude-rules:
     - source: "^//\\s*go:generate\\s"
-      linters: [ lll ]
+      linters:
+        - lll
+
     - source: "(noinspection|TODO)"
-      linters: [ godot ]
+      linters:
+        - godot
+
     - source: "//noinspection"
-      linters: [ gocritic ]
-    # Ignore some linter checks for testing code.
-    - path: _test\.go
       linters:
+        - gocritic
+
+    - path: test\.go
+      linters:
+        - dupl
         - funlen
         - goconst
-        - noctx
-        - wrapcheck
-        - gocyclo
         - gocognit
-    # testdata.go contains test data, usually generated externally or via go generate.
-    - path: testdata\.go'
-      linters:
+        - gocyclo
         - funlen
-        - goconst
+        - wrapcheck
+        - containedctx
+        - forbidigo
+        - loggercheck
+
+    - path: testdata\.go
+      linters:
+        - loggerchecks
+        - funlen
         - wrapcheck
         - gocyclo
-    # generate.go is typically used to generate test data.
-    - path: generate\.go
-      linters:
-        - funlen
         - goconst
-        - noctx
-        - wrapcheck
+        - gocognit
         - gocyclo
+
+    - path: '(.+)generate\.go'
+      linters:
+        - wrapcheck

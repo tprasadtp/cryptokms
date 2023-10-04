@@ -5,7 +5,7 @@ privately. **Do not disclose it as a public issue.** This gives us time to work 
 to fix the issue before public exposure, reducing the chance that the exploit will be
 used before a patch is released.
 
-You may submit the report via  [private vulnerability report](https://github.com/tprasadtp/cryptokms/security/advisories/new)
+You may submit the report via  [private vulnerability report].
 
 Please provide the following information in your report:
 
@@ -14,3 +14,5 @@ Please provide the following information in your report:
 - Proof of Concept (if any)
 
 We ask that you give us 90 days to work on a fix before public exposure.
+
+[private vulnerability report]: https://github.com/tprasadtp/cryptokms/security/advisories/new

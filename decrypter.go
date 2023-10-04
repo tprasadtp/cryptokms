@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: Copyright 2023 Prasad Tengse
+// SPDX-License-Identifier: MIT
+
 package cryptokms
 
 import (
@@ -25,9 +28,7 @@ type Decrypter interface {
 	CreatedAt() time.Time
 
 	// Returns default hashing algorithm.
-	//  - Some KMS providers restrict hashing algorithm. This
-	//    ensures Signer can act as [crypto.SignerOpts] and selects appropriate hash
-	//    supported by the KMS key.
+	//  - Some KMS providers restrict hashing algorithm.
 	//  - If KMS key supports multiple signers, this
 	//    returns sane default, typically [crypto.SHA256].
 	HashFunc() crypto.Hash

@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: Copyright 2023 Prasad Tengse
+// SPDX-License-Identifier: MIT
+
 package filekms
 
 import (
@@ -7,7 +10,6 @@ import (
 	"crypto/ed25519"
 	"crypto/rand"
 	"crypto/rsa"
-	"encoding/pem"
 	"fmt"
 	"io"
 	"os"
@@ -16,6 +18,7 @@ import (
 	"time"
 
 	"github.com/tprasadtp/cryptokms"
+	"github.com/tprasadtp/cryptokms/internal/shared"
 )
 
 // Compile time check to ensure [Signer] implements
@@ -30,7 +33,7 @@ var (
 
 // Signer.
 //
-//nolint:nocontext // ignore
+//nolint:containedctx // ignore
 type Signer struct {
 	ctx    context.Context
 	hash   crypto.Hash
@@ -42,8 +45,8 @@ type Signer struct {
 }
 
 // NewSigner returns a new signer based on key in the path specified.
-func NewSigner(path string) (*Signer, error) {
-	absPath, err := filepath.Abs(path)
+func NewSigner(input string) (*Signer, error) {
+	absPath, err := filepath.Abs(input)
 	if err != nil {
 		return nil, fmt.Errorf("filekms: failed to detect abs path: %w", err)
 	}
@@ -59,7 +62,7 @@ func NewSigner(path string) (*Signer, error) {
 	}
 
 	if fileInfo.Size() > 10000 {
-		return nil, fmt.Errorf("filekms: file size is larger than 10kB(%dB)",
+		return nil, fmt.Errorf("filekms: file size too large(%dB)",
 			fileInfo.Size())
 	}
 
@@ -73,16 +76,10 @@ func NewSigner(path string) (*Signer, error) {
 		return nil, fmt.Errorf("filekms: failed to read from file: %w", err)
 	}
 
-	block, _ := pem.Decode(slurp)
-	if block == nil {
-		return nil, fmt.Errorf("filekms: key must be PEM encoded")
-	}
-
 	// Try to parse key as private key.
-	priv, err := parsePrivateKey(block.Bytes)
+	priv, err := shared.ParsePrivateKey(slurp)
 	if err != nil {
-		return nil, fmt.Errorf(
-			"filekms: cannot parse PEM encoded bytes as private key: %w", err)
+		return nil, fmt.Errorf("filekms: cannot parse private key: %w", err)
 	}
 
 	signer := &Signer{
@@ -104,8 +101,7 @@ func NewSigner(path string) (*Signer, error) {
 			signer.hash = crypto.SHA256
 			signer.algo = cryptokms.AlgorithmRSA4096
 		default:
-			return nil, fmt.Errorf("filekms: RSA key len(%d) is not supported: %w",
-				v.N.BitLen(), cryptokms.ErrKeyAlgorithm)
+			return nil, fmt.Errorf("filekms: RSA key len(%d) is not supported", v.N.BitLen())
 		}
 	case *ecdsa.PrivateKey:
 		signer.pub = v.Public()
@@ -120,6 +116,8 @@ func NewSigner(path string) (*Signer, error) {
 		case 521:
 			signer.hash = crypto.SHA512
 			signer.algo = cryptokms.AlgorithmECP521
+		default:
+			return nil, fmt.Errorf("memkms: ECDSA curve %s is not supported", v.Params().Name)
 		}
 	case ed25519.PrivateKey:
 		signer.pub = v.Public()
@@ -127,7 +125,7 @@ func NewSigner(path string) (*Signer, error) {
 		signer.algo = cryptokms.AlgorithmED25519
 		signer.hash = crypto.SHA512
 	default:
-		return nil, fmt.Errorf("%w: unknown key type: %T", cryptokms.ErrKeyAlgorithm, v)
+		return nil, fmt.Errorf("filekms: unknown key type: %T", v)
 	}
 
 	return signer, nil
@@ -186,8 +184,12 @@ func (s *Signer) Sign(_ io.Reader, digest []byte, opts crypto.SignerOpts) ([]byt
 //
 //nolint:gocognit // ignore
 func (s *Signer) SignContext(ctx context.Context, _ io.Reader, digest []byte, opts crypto.SignerOpts) ([]byte, error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
 	if err := context.Cause(ctx); err != nil {
-		return nil, fmt.Errorf("%w: filekms: %w", cryptokms.ErrAsymmetricSign, err)
+		return nil, fmt.Errorf("filekms: %w", err)
 	}
 
 	if opts == nil {
@@ -213,69 +215,63 @@ func (s *Signer) SignContext(ctx context.Context, _ io.Reader, digest []byte, op
 			// So, restrict to file as well.
 			if pss.SaltLength != pss.Hash.Size() {
 				return nil, fmt.Errorf(
-					"%w: filekms: salt length(%d) must be same as digest length(%d)",
-					cryptokms.ErrSignerOpts, pss.SaltLength, pss.Hash.Size())
+					"filekms: salt length(%d) must be same as digest length(%d)",
+					pss.SaltLength, pss.Hash.Size())
 			}
 		}
 
 		if len(digest) != opts.HashFunc().Size() {
-			return nil, fmt.Errorf("%w: fakekms: digest length is %d, want %d",
-				cryptokms.ErrDigestLength, len(digest), opts.HashFunc().Size())
+			return nil, fmt.Errorf("filekms: digest length is %d, expected %d",
+				len(digest), opts.HashFunc().Size())
 		}
 	case *ecdsa.PrivateKey:
 		switch ov := opts.(type) {
 		case *crypto.Hash, crypto.Hash:
 		default:
-			return nil, fmt.Errorf("%w: filekms: ECDSA unsupported signer options: %T",
-				cryptokms.ErrSignerOpts, ov)
+			return nil, fmt.Errorf("filekms: ECDSA unsupported signer option type: %T", ov)
 		}
 
 		switch s.algo {
 		case cryptokms.AlgorithmECP256:
 			if opts.HashFunc().HashFunc() != crypto.SHA256 {
-				return nil, fmt.Errorf("%w: filekms: ECDSA-P256 key only supports hash algorithm %s",
-					cryptokms.ErrDigestAlgorithm, crypto.SHA256)
+				return nil, fmt.Errorf("filekms: ECDSA-P256 key only supports SHA256")
 			}
 		case cryptokms.AlgorithmECP384:
 			if opts.HashFunc() != crypto.SHA384 {
-				return nil, fmt.Errorf("%w: filekms: ECDSA-P384 key only supports hash algorithm %s",
-					cryptokms.ErrDigestAlgorithm, crypto.SHA384)
+				return nil, fmt.Errorf("filekms: ECDSA-P384 key only supports SHA384")
 			}
 		case cryptokms.AlgorithmECP521:
 			if opts.HashFunc() != crypto.SHA512 {
-				return nil, fmt.Errorf("%w: filekms: ECDSA-P521 key only supports hash algorithm %s",
-					cryptokms.ErrDigestAlgorithm, crypto.SHA512)
+				return nil, fmt.Errorf("filekms: ECDSA-P521 key only supports SHA512")
 			}
 		default:
 			panic(fmt.Sprintf("filekms: unknown ECDSA algorithm: %s", s.algo))
 		}
 	case ed25519.PrivateKey, *ed25519.PrivateKey:
 		switch ov := opts.(type) {
-		case *crypto.Hash, crypto.Hash:
+		case crypto.Hash:
 		default:
-			return nil, fmt.Errorf("%w: filekms: ED25519 unsupported signer options: %T",
-				cryptokms.ErrSignerOpts, ov)
+			return nil, fmt.Errorf("filekms: ED25519 unsupported signer options: %T", ov)
 		}
 
 		if opts.HashFunc() != crypto.SHA512 {
-			return nil, fmt.Errorf("%w: filekms: ED25519 unsupported signer options: %s",
-				cryptokms.ErrDigestAlgorithm, opts.HashFunc())
+			return nil, fmt.Errorf("filekms: ED25519 unsupported signer options: %s",
+				opts.HashFunc())
 		}
 	default:
-		return nil, fmt.Errorf("%w: filekms: unknown key type: %T", cryptokms.ErrKeyAlgorithm, v)
+		return nil, fmt.Errorf("filekms: unknown key type: %T", v)
 	}
 
 	// Ensure digest length is valid.
 	if len(digest) != opts.HashFunc().Size() {
-		return nil, fmt.Errorf("%w: filekms: length is %d, want %d",
-			cryptokms.ErrDigestLength, len(digest), s.hash.Size())
+		return nil, fmt.Errorf("filekms: invalid digest length %d, expected %d",
+			len(digest), s.hash.Size())
 	}
 
 	// Perform signing operation.
 	signature, err := s.signer.Sign(rand.Reader, digest, opts)
 	if err != nil {
-		return nil, fmt.Errorf("%w: filekms: failed to sign: %w",
-			cryptokms.ErrAsymmetricSign, err)
+		return nil, fmt.Errorf("filekms: failed to sign: %w", err)
 	}
 	return signature, nil
 }

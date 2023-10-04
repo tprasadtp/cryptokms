@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: Copyright 2023 Prasad Tengse
+// SPDX-License-Identifier: MIT
+
 package cryptokms
 
 import (
@@ -15,9 +18,7 @@ type Signer interface {
 	// Same as [crypto.Signer], but [context.Context] aware.
 	//  - KMS libraries are already context aware and should help with tracing,
 	//    and cancellation.
-	//  - Unlike [crypto.Signer], rand is ignored, as signing happens remotely.
-	//  - It is recommended that you use HashFunc() for opts as it automatically
-	//    selects the hash supported by the KMS key.
+	//  - Unlike [crypto.Signer], rand is always ignored, as signing may be remote.
 	SignContext(ctx context.Context, rand io.Reader, digest []byte, opts crypto.SignerOpts) (signature []byte, err error)
 
 	// KMS key creation time.

@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: Copyright 2023 Prasad Tengse
+// SPDX-License-Identifier: MIT
+
 package awskms
 
 import (
@@ -16,6 +19,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/kms/types"
 	"github.com/google/uuid"
 	"github.com/tprasadtp/cryptokms"
+	"github.com/tprasadtp/cryptokms/internal/shared"
 	"github.com/tprasadtp/cryptokms/internal/testkeys"
 )
 
@@ -77,8 +81,6 @@ func mustMarshalPKIXPublicKey(pub crypto.PublicKey) []byte {
 }
 
 // create a new KMS client for mocking.
-//
-//nolint:gocognit // this has to be complex as it builds all key states, algorithms and arns.
 func newMockKMSClient() *mockKMSClient {
 	rv := mockKMSClient{
 		store: make(map[string]KeyInfo),
@@ -289,7 +291,7 @@ func newMockKMSClient() *mockKMSClient {
 		KeyState:          types.KeyStateEnabled,
 		KeyUsage:          types.KeyUsageType("unknown"),
 		KeySpec:           types.KeySpecRsa4096,
-		PublicKeyPEM:      testkeys.GetRSA4096PublicKeyPEM(),
+		PublicKeyPEM:      shared.MustMarshalPublicKey(testkeys.GetRSA4096PublicKey()),
 		Signer:            testkeys.GetRSA4096PrivateKey(),
 		SigningAlgorithms: keySpecToSigningAlgorithms[types.KeySpecRsa4096],
 		CreatedAt:         knownTS,

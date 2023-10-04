@@ -1,1 +1,49 @@
-{"Keys":[{"KeyAlgorithm":"ECC_NIST_P256","KeyID":"arn:aws:kms:us-east-1:000000000000:key/4b4734b0-d248-481d-85a1-8791bb8d8ade","KeyUsage":"SIGN_VERIFY"},{"KeyAlgorithm":"ECC_NIST_P384","KeyID":"arn:aws:kms:us-east-1:000000000000:key/a5dc6661-e171-4bd1-ab4e-0c65c0d8b16b","KeyUsage":"SIGN_VERIFY"},{"KeyAlgorithm":"ECC_NIST_P521","KeyID":"arn:aws:kms:us-east-1:000000000000:key/77d0a400-577e-409c-9739-a584793d9db6","KeyUsage":"SIGN_VERIFY"},{"KeyAlgorithm":"RSA_2048","KeyID":"arn:aws:kms:us-east-1:000000000000:key/da9b5630-82f4-4390-b4da-75fb955c2a80","KeyUsage":"SIGN_VERIFY"},{"KeyAlgorithm":"RSA_3072","KeyID":"arn:aws:kms:us-east-1:000000000000:key/f17321e0-33d5-46d8-807a-6033642c19e4","KeyUsage":"SIGN_VERIFY"},{"KeyAlgorithm":"RSA_4096","KeyID":"arn:aws:kms:us-east-1:000000000000:key/d0e362d7-f144-4d8d-b4c0-2496f6c4e0a0","KeyUsage":"SIGN_VERIFY"},{"KeyAlgorithm":"RSA_2048","KeyID":"arn:aws:kms:us-east-1:000000000000:key/891b5194-8f37-4a31-820f-8784e913be99","KeyUsage":"ENCRYPT_DECRYPT"},{"KeyAlgorithm":"RSA_3072","KeyID":"arn:aws:kms:us-east-1:000000000000:key/e9205d5b-0870-4832-8bd1-707b16ca4857","KeyUsage":"ENCRYPT_DECRYPT"},{"KeyAlgorithm":"RSA_4096","KeyID":"arn:aws:kms:us-east-1:000000000000:key/563e26bd-626a-4999-bd3d-e01d8246fdb7","KeyUsage":"ENCRYPT_DECRYPT"}]}
+{
+  "Keys": [
+    {
+      "KeyAlgorithm": "ECC_NIST_P256",
+      "KeyID": "arn:aws:kms:us-east-1:000000000000:key/4b4734b0-d248-481d-85a1-8791bb8d8ade",
+      "KeyUsage": "SIGN_VERIFY"
+    },
+    {
+      "KeyAlgorithm": "ECC_NIST_P384",
+      "KeyID": "arn:aws:kms:us-east-1:000000000000:key/a5dc6661-e171-4bd1-ab4e-0c65c0d8b16b",
+      "KeyUsage": "SIGN_VERIFY"
+    },
+    {
+      "KeyAlgorithm": "ECC_NIST_P521",
+      "KeyID": "arn:aws:kms:us-east-1:000000000000:key/77d0a400-577e-409c-9739-a584793d9db6",
+      "KeyUsage": "SIGN_VERIFY"
+    },
+    {
+      "KeyAlgorithm": "RSA_2048",
+      "KeyID": "arn:aws:kms:us-east-1:000000000000:key/da9b5630-82f4-4390-b4da-75fb955c2a80",
+      "KeyUsage": "SIGN_VERIFY"
+    },
+    {
+      "KeyAlgorithm": "RSA_3072",
+      "KeyID": "arn:aws:kms:us-east-1:000000000000:key/f17321e0-33d5-46d8-807a-6033642c19e4",
+      "KeyUsage": "SIGN_VERIFY"
+    },
+    {
+      "KeyAlgorithm": "RSA_4096",
+      "KeyID": "arn:aws:kms:us-east-1:000000000000:key/d0e362d7-f144-4d8d-b4c0-2496f6c4e0a0",
+      "KeyUsage": "SIGN_VERIFY"
+    },
+    {
+      "KeyAlgorithm": "RSA_2048",
+      "KeyID": "arn:aws:kms:us-east-1:000000000000:key/891b5194-8f37-4a31-820f-8784e913be99",
+      "KeyUsage": "ENCRYPT_DECRYPT"
+    },
+    {
+      "KeyAlgorithm": "RSA_3072",
+      "KeyID": "arn:aws:kms:us-east-1:000000000000:key/e9205d5b-0870-4832-8bd1-707b16ca4857",
+      "KeyUsage": "ENCRYPT_DECRYPT"
+    },
+    {
+      "KeyAlgorithm": "RSA_4096",
+      "KeyID": "arn:aws:kms:us-east-1:000000000000:key/563e26bd-626a-4999-bd3d-e01d8246fdb7",
+      "KeyUsage": "ENCRYPT_DECRYPT"
+    }
+  ]
+}

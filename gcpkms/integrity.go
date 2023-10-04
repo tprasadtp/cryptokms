@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: Copyright 2023 Prasad Tengse
+// SPDX-License-Identifier: MIT
+
 package gcpkms
 
 import (
@@ -13,7 +16,7 @@ var crcTable = crc32.MakeTable(crc32.Castagnoli)
 //
 // [E2E in-transit integrity guidelines]: https://cloud.google.com/kms/docs/data-integrity-guidelines
 func ComputeCRC32(data []byte) *wrapperspb.Int64Value {
-	// type conversion is safe here as wrapperspb.Int64Value is always
-	// guaranteed to fit in unsigned 32 bit integer.
+	// Type conversion is safe here as wrapperspb.Int64Value is always
+	// guaranteed to fit a unsigned 32 bit integer.
 	return wrapperspb.Int64(int64(crc32.Checksum(data, crcTable)))
 }

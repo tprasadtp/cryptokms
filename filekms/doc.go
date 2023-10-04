@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: MIT
 
 // Package filekms implements [crypto.Signer] and [crypto.Decrypter]
-// for keys stored on filesystem.
+// for keys stored on locally mounted filesystem or memory.
 //
-// Unless file is backed by ramfs or other in memory file-system
-// this may be insecure. Keys MUST NOT be password protected.
+// Unless file is backed by in memory file-system this may be insecure.
+// Keys MUST NOT be password protected. Keys may be base64 encoded.
 package filekms

@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: Copyright 2023 Prasad Tengse
+// SPDX-License-Identifier: MIT
+
 package gcpkms
 
 import (
@@ -10,7 +13,7 @@ import (
 	"time"
 
 	"cloud.google.com/go/kms/apiv1/kmspb"
-	"github.com/tprasadtp/cryptokms"
+	"github.com/tprasadtp/cryptokms/internal/shared"
 	"github.com/tprasadtp/cryptokms/internal/testkeys"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -133,66 +136,68 @@ func (svc *fakeService) GetPublicKey(ctx context.Context, req *kmspb.GetPublicKe
 	switch {
 	// RSA PKCS1
 	case strings.Contains(req.Name, "RSA_SIGN_PKCS1_2048_SHA256"):
-		resp.Pem = string(testkeys.GetRSA2048PublicKeyPEM())
+		resp.Pem = string(shared.MustMarshalPublicKey(testkeys.GetRSA2048PublicKey()))
 		resp.Algorithm = kmspb.CryptoKeyVersion_RSA_SIGN_PKCS1_2048_SHA256
 	case strings.Contains(req.Name, "RSA_SIGN_PKCS1_3072_SHA256"):
-		resp.Pem = string(testkeys.GetRSA3072PublicKeyPEM())
+		resp.Pem = string(shared.MustMarshalPublicKey(testkeys.GetRSA3072PublicKey()))
 		resp.Algorithm = kmspb.CryptoKeyVersion_RSA_SIGN_PKCS1_3072_SHA256
 	case strings.Contains(req.Name, "RSA_SIGN_PKCS1_4096_SHA256"):
-		resp.Pem = string(testkeys.GetRSA4096PublicKeyPEM())
+		resp.Pem = string(shared.MustMarshalPublicKey(testkeys.GetRSA4096PublicKey()))
 		resp.Algorithm = kmspb.CryptoKeyVersion_RSA_SIGN_PKCS1_4096_SHA256
 	case strings.Contains(req.Name, "RSA_SIGN_PKCS1_4096_SHA512"):
-		resp.Pem = string(testkeys.GetRSA4096PublicKeyPEM())
+		resp.Pem = string(shared.MustMarshalPublicKey(testkeys.GetRSA4096PublicKey()))
 		resp.Algorithm = kmspb.CryptoKeyVersion_RSA_SIGN_PKCS1_4096_SHA512
 	// PSS
 	case strings.Contains(req.Name, "RSA_SIGN_PSS_2048_SHA256"):
-		resp.Pem = string(testkeys.GetRSA2048PublicKeyPEM())
+		resp.Pem = string(shared.MustMarshalPublicKey(testkeys.GetRSA2048PublicKey()))
 		resp.Algorithm = kmspb.CryptoKeyVersion_RSA_SIGN_PSS_2048_SHA256
 	case strings.Contains(req.Name, "RSA_SIGN_PSS_3072_SHA256"):
-		resp.Pem = string(testkeys.GetRSA3072PublicKeyPEM())
+		resp.Pem = string(shared.MustMarshalPublicKey(testkeys.GetRSA3072PublicKey()))
 		resp.Algorithm = kmspb.CryptoKeyVersion_RSA_SIGN_PSS_3072_SHA256
 	case strings.Contains(req.Name, "RSA_SIGN_PSS_4096_SHA256"):
-		resp.Pem = string(testkeys.GetRSA4096PublicKeyPEM())
+		resp.Pem = string(shared.MustMarshalPublicKey(testkeys.GetRSA4096PublicKey()))
 		resp.Algorithm = kmspb.CryptoKeyVersion_RSA_SIGN_PSS_4096_SHA256
 	case strings.Contains(req.Name, "RSA_SIGN_PSS_4096_SHA512"):
-		resp.Pem = string(testkeys.GetRSA4096PublicKeyPEM())
+		resp.Pem = string(shared.MustMarshalPublicKey(testkeys.GetRSA4096PublicKey()))
 		resp.Algorithm = kmspb.CryptoKeyVersion_RSA_SIGN_PSS_4096_SHA512
 	// EC Keys
 	case strings.Contains(req.Name, "EC_SIGN_P256_SHA256"):
-		resp.Pem = string(testkeys.GetECP256PublicKeyPEM())
+		resp.Pem = string(shared.MustMarshalPublicKey(testkeys.GetECP256PublicKey()))
 		resp.Algorithm = kmspb.CryptoKeyVersion_EC_SIGN_P256_SHA256
 	case strings.Contains(req.Name, "EC_SIGN_P384_SHA384"):
 		resp.Algorithm = kmspb.CryptoKeyVersion_EC_SIGN_P384_SHA384
-		resp.Pem = string(testkeys.GetECP384PublicKeyPEM())
+		resp.Pem = string(shared.MustMarshalPublicKey(testkeys.GetECP384PublicKey()))
 	// Symmetric Keys
 	case strings.Contains(req.Name, "GOOGLE_SYMMETRIC_ENCRYPTION"):
 		resp.Algorithm = kmspb.CryptoKeyVersion_GOOGLE_SYMMETRIC_ENCRYPTION
 	// Encryption keys
 	case strings.Contains(req.Name, "RSA_DECRYPT_OAEP_2048_SHA1"):
-		resp.Pem = string(testkeys.GetRSA2048PublicKeyPEM())
+		resp.Pem = string(shared.MustMarshalPublicKey(testkeys.GetRSA2048PublicKey()))
 		resp.Algorithm = kmspb.CryptoKeyVersion_RSA_DECRYPT_OAEP_2048_SHA1
 	case strings.Contains(req.Name, "RSA_DECRYPT_OAEP_2048_SHA256"):
-		resp.Pem = string(testkeys.GetRSA2048PublicKeyPEM())
+		resp.Pem = string(shared.MustMarshalPublicKey(testkeys.GetRSA2048PublicKey()))
 		resp.Algorithm = kmspb.CryptoKeyVersion_RSA_DECRYPT_OAEP_2048_SHA256
 	case strings.Contains(req.Name, "RSA_DECRYPT_OAEP_3072_SHA1"):
-		resp.Pem = string(testkeys.GetRSA3072PublicKeyPEM())
+		resp.Pem = string(shared.MustMarshalPublicKey(testkeys.GetRSA3072PublicKey()))
 		resp.Algorithm = kmspb.CryptoKeyVersion_RSA_DECRYPT_OAEP_2048_SHA1
 	case strings.Contains(req.Name, "RSA_DECRYPT_OAEP_3072_SHA256"):
-		resp.Pem = string(testkeys.GetRSA3072PublicKeyPEM())
+		resp.Pem = string(shared.MustMarshalPublicKey(testkeys.GetRSA3072PublicKey()))
 		resp.Algorithm = kmspb.CryptoKeyVersion_RSA_DECRYPT_OAEP_3072_SHA256
 	case strings.Contains(req.Name, "RSA_DECRYPT_OAEP_4096_SHA1"):
-		resp.Pem = string(testkeys.GetRSA4096PublicKeyPEM())
+		resp.Pem = string(shared.MustMarshalPublicKey(testkeys.GetRSA4096PublicKey()))
 		resp.Algorithm = kmspb.CryptoKeyVersion_RSA_DECRYPT_OAEP_4096_SHA1
 	case strings.Contains(req.Name, "RSA_DECRYPT_OAEP_4096_SHA256"):
-		resp.Pem = string(testkeys.GetRSA4096PublicKeyPEM())
+		resp.Pem = string(shared.MustMarshalPublicKey(testkeys.GetRSA4096PublicKey()))
 		resp.Algorithm = kmspb.CryptoKeyVersion_RSA_DECRYPT_OAEP_4096_SHA256
 	case strings.Contains(req.Name, "RSA_DECRYPT_OAEP_4096_SHA512"):
-		resp.Pem = string(testkeys.GetRSA4096PublicKeyPEM())
+		resp.Pem = string(shared.MustMarshalPublicKey(testkeys.GetRSA4096PublicKey()))
 		resp.Algorithm = kmspb.CryptoKeyVersion_RSA_DECRYPT_OAEP_4096_SHA512
 	case strings.Contains(req.Name, "EC_SIGN_SECP256K1_SHA256"):
-		return nil, cryptokms.ErrKeyAlgorithm
+		return nil, fmt.Errorf(
+			"gcpkms(fake-server): GetPublicKey : unsupported EC_SIGN_SECP256K1_SHA256 key %s",
+			req.Name)
 	default:
-		return nil, fmt.Errorf("%w: GetPublicKey", cryptokms.ErrKeyAlgorithm)
+		return nil, fmt.Errorf("gcpkms(fake-server): GetPublicKey : unknown key %s", req.Name)
 	}
 
 	// forces response to be corrupt.
@@ -254,7 +259,8 @@ func (svc *fakeService) AsymmetricSign(ctx context.Context, req *kmspb.Asymmetri
 			rand.Reader, req.Digest.GetSha384(), crypto.SHA384,
 		)
 	default:
-		return nil, fmt.Errorf("%w: AsymmetricSign with %s", cryptokms.ErrKeyAlgorithm, req.Name)
+		return nil, fmt.Errorf("gcpkms(fake-server):: AsymmetricSign unknown key %s",
+			req.Name)
 	}
 
 	if strings.Contains(req.Name, "ERROR_RESP_INTEGRITY") {
@@ -325,7 +331,7 @@ func (svc *fakeService) AsymmetricDecrypt(ctx context.Context, req *kmspb.Asymme
 				Hash: crypto.SHA512,
 			})
 	default:
-		return nil, fmt.Errorf("%w: AsymmetricSign with %s", cryptokms.ErrKeyAlgorithm, req.Name)
+		return nil, fmt.Errorf("gcpkms(fake-server): AsymmetricDecrypt unknown key %s", req.Name)
 	}
 
 	if strings.Contains(req.Name, "ERROR_RESP_INTEGRITY") {
