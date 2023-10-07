@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: Copyright 2023 Prasad Tengse
+// SPDX-License-Identifier: MIT
+
 package awskms_test
 
 import (
@@ -82,7 +85,7 @@ func Test_Signer_Replay(t *testing.T) {
 				t.Fatalf("failed to build signer")
 			}
 
-			// sign using replayer
+			// Sign using replayer
 			signature, err := signer.SignContext(ctx, rand.Reader, tc.Digest, nil)
 			if err != nil {
 				t.Errorf("unexpected error on sign: %s", err)
@@ -93,7 +96,7 @@ func Test_Signer_Replay(t *testing.T) {
 				t.Errorf("signature not verified: %s", err)
 			}
 
-			// ensure created at is not zero time
+			// Ensure created at is not zero time
 			if signer.CreatedAt().IsZero() {
 				t.Errorf("CreatedAt() must not be zero")
 			}

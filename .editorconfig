@@ -23,8 +23,5 @@ indent_size = 2
 [Dockerfile]
 indent_size = 4
 
-[*.txt]
+[data.txt]
 insert_final_newline = false
-
-[Vagrantfile]
-indent_size = 2

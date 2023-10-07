@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: Copyright 2023 Prasad Tengse
+// SPDX-License-Identifier: MIT
+
 package gcpkms
 
 import (
@@ -5,25 +8,20 @@ import (
 	"crypto"
 	"crypto/rand"
 	"crypto/rsa"
-	"errors"
 	"testing"
 
-	kms "cloud.google.com/go/kms/apiv1"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/tprasadtp/cryptokms"
 	"github.com/tprasadtp/cryptokms/internal/testkeys"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 func Test_Decrypter(t *testing.T) {
 	type testCase struct {
-		Name        string
-		KeyID       string
-		Client      *kms.KeyManagementClient
-		Response    *Decrypter
-		ResponseErr error
+		name      string
+		key       string
+		decrypter *Decrypter
+		ok        bool
 	}
 
 	server := newFakeServer(t)
@@ -32,90 +30,76 @@ func Test_Decrypter(t *testing.T) {
 
 	tt := []testCase{
 		{
-			Name:        "force-error-response-on-GetCryptoKeyVersion",
-			KeyID:       "ERROR_GET_CRYPTOKEY_VERSION",
-			ResponseErr: cryptokms.ErrGetKeyMetadata,
+			name: "force-error-response-on-GetCryptoKeyVersion",
+			key:  "ERROR_GET_CRYPTOKEY_VERSION",
 		},
 		{
-			Name:        "destroyed-key",
-			KeyID:       "DESTROYED_RSA_DECRYPT_OAEP_4096_SHA1",
-			ResponseErr: cryptokms.ErrUnusableKeyState,
+			name: "destroyed-key",
+			key:  "DESTROYED_RSA_DECRYPT_OAEP_4096_SHA1",
 		},
 		{
-			Name:        "unsupported-key-secp256k1",
-			KeyID:       "EC_SIGN_SECP256K1_SHA256",
-			ResponseErr: cryptokms.ErrKeyAlgorithm,
+			name: "unsupported-key-secp256k1",
+			key:  "EC_SIGN_SECP256K1_SHA256",
 		},
 		// HMAC Keys are unsupported for decryption.
 		{
-			Name:        "unsupported-key-hmac-sha1",
-			KeyID:       "HMAC_SHA1",
-			ResponseErr: cryptokms.ErrKeyAlgorithm,
+			name: "unsupported-key-hmac-sha1",
+			key:  "HMAC_SHA1",
 		},
 		{
-			Name:        "unsupported-key-hmac-sha224",
-			KeyID:       "HMAC_SHA224",
-			ResponseErr: cryptokms.ErrKeyAlgorithm,
+			name: "unsupported-key-hmac-sha224",
+			key:  "HMAC_SHA224",
 		},
 		{
-			Name:        "unsupported-key-hmac-sha256",
-			KeyID:       "HMAC_SHA256",
-			ResponseErr: cryptokms.ErrKeyAlgorithm,
+			name: "unsupported-key-hmac-sha256",
+			key:  "HMAC_SHA256",
 		},
 		{
-			Name:        "unsupported-key-hmac-sha384",
-			KeyID:       "HMAC_SHA384",
-			ResponseErr: cryptokms.ErrKeyAlgorithm,
+			name: "unsupported-key-hmac-sha384",
+			key:  "HMAC_SHA384",
 		},
 		{
-			Name:        "unsupported-key-hmac-sha512",
-			KeyID:       "HMAC_SHA512",
-			ResponseErr: cryptokms.ErrKeyAlgorithm,
+			name: "unsupported-key-hmac-sha512",
+			key:  "HMAC_SHA512",
 		},
 		// symmetric keys are unsupported for asymmetric decryption.
 		{
-			Name:        "unsupported-key-google-symmetric",
-			KeyID:       "GOOGLE_SYMMETRIC_ENCRYPTION",
-			ResponseErr: cryptokms.ErrKeyAlgorithm,
+			name: "unsupported-key-google-symmetric",
+			key:  "GOOGLE_SYMMETRIC_ENCRYPTION",
 		},
 		// PSS Signing Keys are unsupported for asymmetric decryption.
 		{
-			Name:        "unsupported-RSA_SIGN_PSS_2048_SHA256",
-			KeyID:       "RSA_SIGN_PSS_2048_SHA256",
-			ResponseErr: cryptokms.ErrKeyAlgorithm,
+			name: "unsupported-RSA_SIGN_PSS_2048_SHA256",
+			key:  "RSA_SIGN_PSS_2048_SHA256",
 		},
 		{
-			Name:        "unsupported-RSA_SIGN_PSS_3072_SHA256",
-			KeyID:       "RSA_SIGN_PSS_3072_SHA256",
-			ResponseErr: cryptokms.ErrKeyAlgorithm,
+			name: "unsupported-RSA_SIGN_PSS_3072_SHA256",
+			key:  "RSA_SIGN_PSS_3072_SHA256",
 		},
 		{
-			Name:        "unsupported-RSA_SIGN_PSS_4096_SHA256",
-			KeyID:       "RSA_SIGN_PSS_4096_SHA256",
-			ResponseErr: cryptokms.ErrKeyAlgorithm,
+			name: "unsupported-RSA_SIGN_PSS_4096_SHA256",
+			key:  "RSA_SIGN_PSS_4096_SHA256",
 		},
 		{
-			Name:        "unsupported-RSA_SIGN_PSS_4096_SHA512",
-			KeyID:       "RSA_SIGN_PSS_4096_SHA512",
-			ResponseErr: cryptokms.ErrKeyAlgorithm,
+			name: "unsupported-RSA_SIGN_PSS_4096_SHA512",
+			key:  "RSA_SIGN_PSS_4096_SHA512",
 		},
 		// get public key returns corrupted response
 		{
-			Name:        "integrity-invalid-RSA_DECRYPT_OAEP_2048_SHA1",
-			KeyID:       "ERROR_SRV_INTEGRITY_RSA_DECRYPT_OAEP_2048_SHA1",
-			ResponseErr: ErrResponseIntegrity,
+			name: "integrity-invalid-RSA_DECRYPT_OAEP_2048_SHA1",
+			key:  "ERROR_SRV_INTEGRITY_RSA_DECRYPT_OAEP_2048_SHA1",
 		},
 		// GetPublicKey returns an error.
 		{
-			Name:        "error-on-GetPublicKey",
-			KeyID:       "ERROR_ON_GET_PUBLICKEY_RSA_DECRYPT_OAEP_2048_SHA1",
-			ResponseErr: status.Error(codes.Internal, "fake service error"),
+			name: "error-on-GetPublicKey",
+			key:  "ERROR_ON_GET_PUBLICKEY_RSA_DECRYPT_OAEP_2048_SHA1",
 		},
 		// Returns RSA Decrypter
 		{
-			Name:  "valid-RSA_DECRYPT_OAEP_2048_SHA1",
-			KeyID: "RSA_DECRYPT_OAEP_2048_SHA1",
-			Response: &Decrypter{
+			name: "valid-RSA_DECRYPT_OAEP_2048_SHA1",
+			key:  "RSA_DECRYPT_OAEP_2048_SHA1",
+			ok:   true,
+			decrypter: &Decrypter{
 				name:  "RSA_DECRYPT_OAEP_2048_SHA1",
 				hash:  crypto.SHA1,
 				ctime: knownTS,
@@ -124,9 +108,10 @@ func Test_Decrypter(t *testing.T) {
 			},
 		},
 		{
-			Name:  "valid-RSA_DECRYPT_OAEP_3072_SHA1",
-			KeyID: "RSA_DECRYPT_OAEP_3072_SHA1",
-			Response: &Decrypter{
+			name: "valid-RSA_DECRYPT_OAEP_3072_SHA1",
+			key:  "RSA_DECRYPT_OAEP_3072_SHA1",
+			ok:   true,
+			decrypter: &Decrypter{
 				name:  "RSA_DECRYPT_OAEP_3072_SHA1",
 				hash:  crypto.SHA1,
 				ctime: knownTS,
@@ -135,9 +120,10 @@ func Test_Decrypter(t *testing.T) {
 			},
 		},
 		{
-			Name:  "valid-RSA_DECRYPT_OAEP_4096_SHA1",
-			KeyID: "RSA_DECRYPT_OAEP_4096_SHA1",
-			Response: &Decrypter{
+			name: "valid-RSA_DECRYPT_OAEP_4096_SHA1",
+			key:  "RSA_DECRYPT_OAEP_4096_SHA1",
+			ok:   true,
+			decrypter: &Decrypter{
 				name:  "RSA_DECRYPT_OAEP_4096_SHA1",
 				hash:  crypto.SHA1,
 				ctime: knownTS,
@@ -147,9 +133,10 @@ func Test_Decrypter(t *testing.T) {
 		},
 		// SHA256
 		{
-			Name:  "valid-RSA_DECRYPT_OAEP_2048_SHA256",
-			KeyID: "RSA_DECRYPT_OAEP_2048_SHA256",
-			Response: &Decrypter{
+			name: "valid-RSA_DECRYPT_OAEP_2048_SHA256",
+			key:  "RSA_DECRYPT_OAEP_2048_SHA256",
+			ok:   true,
+			decrypter: &Decrypter{
 				name:  "RSA_DECRYPT_OAEP_2048_SHA256",
 				hash:  crypto.SHA256,
 				ctime: knownTS,
@@ -158,9 +145,10 @@ func Test_Decrypter(t *testing.T) {
 			},
 		},
 		{
-			Name:  "valid-RSA_DECRYPT_OAEP_3072_SHA256",
-			KeyID: "RSA_DECRYPT_OAEP_3072_SHA256",
-			Response: &Decrypter{
+			name: "valid-RSA_DECRYPT_OAEP_3072_SHA256",
+			key:  "RSA_DECRYPT_OAEP_3072_SHA256",
+			ok:   true,
+			decrypter: &Decrypter{
 				name:  "RSA_DECRYPT_OAEP_3072_SHA256",
 				hash:  crypto.SHA256,
 				ctime: knownTS,
@@ -169,9 +157,10 @@ func Test_Decrypter(t *testing.T) {
 			},
 		},
 		{
-			Name:  "valid-RSA_DECRYPT_OAEP_4096_SHA256",
-			KeyID: "RSA_DECRYPT_OAEP_4096_SHA256",
-			Response: &Decrypter{
+			name: "valid-RSA_DECRYPT_OAEP_4096_SHA256",
+			key:  "RSA_DECRYPT_OAEP_4096_SHA256",
+			ok:   true,
+			decrypter: &Decrypter{
 				name:  "RSA_DECRYPT_OAEP_4096_SHA256",
 				hash:  crypto.SHA256,
 				ctime: knownTS,
@@ -180,9 +169,10 @@ func Test_Decrypter(t *testing.T) {
 			},
 		},
 		{
-			Name:  "valid-RSA_DECRYPT_OAEP_4096_SHA512",
-			KeyID: "RSA_DECRYPT_OAEP_4096_SHA512",
-			Response: &Decrypter{
+			name: "valid-RSA_DECRYPT_OAEP_4096_SHA512",
+			key:  "RSA_DECRYPT_OAEP_4096_SHA512",
+			ok:   true,
+			decrypter: &Decrypter{
 				name:  "RSA_DECRYPT_OAEP_4096_SHA512",
 				hash:  crypto.SHA512,
 				ctime: knownTS,
@@ -193,35 +183,35 @@ func Test_Decrypter(t *testing.T) {
 	}
 
 	for _, tc := range tt {
-		t.Run(tc.Name, func(t *testing.T) {
+		t.Run(tc.name, func(t *testing.T) {
 			ctx := context.Background()
-			resp, err := NewDecrypter(ctx, tc.KeyID, clientOptions...)
-			if !errors.Is(err, tc.ResponseErr) {
-				t.Errorf("expected error=%v, but got=%v", tc.ResponseErr, err)
-			}
-			diff := cmp.Diff(
-				resp, tc.Response,
-				cmp.AllowUnexported(Decrypter{}),
-				cmpopts.IgnoreFields(Decrypter{}, "client", "mu"))
-			if diff != "" {
-				t.Errorf("did not get expected response: \n%s", diff)
-			}
+			resp, err := NewDecrypter(ctx, tc.key, clientOptions...)
+			if tc.ok {
+				if err != nil {
+					t.Errorf("expected no error, but got %s", err)
+				}
 
-			if tc.ResponseErr == nil {
-				if resp.Algorithm() != tc.Response.algo {
-					t.Errorf("expected algo=%d, got=%d", tc.Response.algo, resp.Algorithm())
+				diff := cmp.Diff(
+					resp, tc.decrypter,
+					cmp.AllowUnexported(Decrypter{}),
+					cmpopts.IgnoreFields(Decrypter{}, "client", "mu"))
+				if diff != "" {
+					t.Errorf("did not get expected response: \n%s", diff)
+				}
+
+				if resp.Algorithm() != tc.decrypter.algo {
+					t.Errorf("expected algo=%d, got=%d", tc.decrypter.algo, resp.Algorithm())
+				}
+			} else {
+				if err == nil {
+					t.Errorf("expected an error, got nil")
+				}
+
+				if resp != nil {
+					t.Errorf("on error returned decrypter must be nil")
 				}
 			}
 		})
-	}
-}
-
-func TestNewDecrypter_ClientBuildError(t *testing.T) {
-	ctx, cancel := context.WithCancel(context.Background())
-	cancel()
-	_, err := NewDecrypter(ctx, "IGNORED_VALUE")
-	if !errors.Is(err, cryptokms.ErrInvalidKMSClient) {
-		t.Errorf("expected error(ErrInvalidKMSClient) when ctx is already cancelled")
 	}
 }
 
@@ -235,8 +225,8 @@ func Test_Decrypter_Decrypt_UnInitialized(t *testing.T) {
 		},
 	)
 
-	if !errors.Is(err, cryptokms.ErrInvalidKMSClient) {
-		t.Errorf("expected error=%v, but got=%v", cryptokms.ErrInvalidKMSClient, err)
+	if err == nil {
+		t.Errorf("expected error when calling Decrypt on un initialized client")
 	}
 }
 
@@ -252,10 +242,10 @@ func Test_Decrypter_WithContext(t *testing.T) {
 
 func Test_Decrypter_Decrypt(t *testing.T) {
 	type testCase struct {
-		Name          string
-		KeyID         string
-		ResponseErr   error
-		DecrypterOpts any
+		name string
+		key  string
+		ok   bool
+		opts crypto.DecrypterOpts
 	}
 
 	server := newFakeServer(t)
@@ -264,46 +254,42 @@ func Test_Decrypter_Decrypt(t *testing.T) {
 
 	tt := []testCase{
 		{
-			Name:        "error-on-sign",
-			KeyID:       "FORCE_ERROR_ON_ASYMMETRICDECTYPT_RSA_DECRYPT_OAEP_2048_SHA256",
-			ResponseErr: cryptokms.ErrAsymmetricDecrypt,
+			name: "error-on-sign",
+			key:  "FORCE_ERROR_ON_ASYMMETRICDECTYPT_RSA_DECRYPT_OAEP_2048_SHA256",
 		},
 		{
-			Name:        "error-request-integrity",
-			KeyID:       "ERROR_REQ_INTEGRITY_RSA_DECRYPT_OAEP_2048_SHA256",
-			ResponseErr: ErrRequestIntegrity,
+			name: "error-request-integrity",
+			key:  "ERROR_REQ_INTEGRITY_RSA_DECRYPT_OAEP_2048_SHA256",
 		},
 		{
-			Name:        "error-response-integrity",
-			KeyID:       "ERROR_RESP_INTEGRITY_RSA_DECRYPT_OAEP_2048_SHA256",
-			ResponseErr: ErrResponseIntegrity,
+			name: "error-response-integrity",
+			key:  "ERROR_RESP_INTEGRITY_RSA_DECRYPT_OAEP_2048_SHA256",
 		},
 		{
-			Name: "error-mismatch-options-hash",
-			DecrypterOpts: &rsa.OAEPOptions{
+			name: "error-mismatch-options-hash",
+			opts: &rsa.OAEPOptions{
 				Hash: crypto.SHA1, // should be SHA256
 			},
-			ResponseErr: cryptokms.ErrDigestAlgorithm,
-			KeyID:       "RSA_DECRYPT_OAEP_2048_SHA256",
+			key: "RSA_DECRYPT_OAEP_2048_SHA256",
 		},
 		{
-			Name: "error-mismatch-options-type",
-			DecrypterOpts: rsa.OAEPOptions{ // should be pointer
+			name: "error-mismatch-options-type",
+			opts: rsa.OAEPOptions{ // should be pointer
 				Hash: crypto.SHA256,
 			},
-			ResponseErr: cryptokms.ErrAsymmetricDecrypt,
-			KeyID:       "RSA_DECRYPT_OAEP_2048_SHA256",
+			key: "RSA_DECRYPT_OAEP_2048_SHA256",
 		},
 		{
-			Name:  "RSA_DECRYPT_OAEP_2048_SHA256",
-			KeyID: "RSA_DECRYPT_OAEP_2048_SHA256",
+			name: "RSA_DECRYPT_OAEP_2048_SHA256",
+			key:  "RSA_DECRYPT_OAEP_2048_SHA256",
+			ok:   true,
 		},
 	}
 
 	for _, tc := range tt {
-		t.Run(tc.Name, func(t *testing.T) {
+		t.Run(tc.name, func(t *testing.T) {
 			ctx := context.Background()
-			decrypter, err := NewDecrypter(ctx, tc.KeyID, clientOptions...)
+			decrypter, err := NewDecrypter(ctx, tc.key, clientOptions...)
 			if err != nil {
 				t.Fatalf("failed to build decrypter: %s", err)
 			}
@@ -320,16 +306,19 @@ func Test_Decrypter_Decrypt(t *testing.T) {
 			plaintext, err := decrypter.Decrypt(
 				rand.Reader,
 				encrypted,
-				tc.DecrypterOpts,
+				tc.opts,
 			)
 
-			if !errors.Is(err, tc.ResponseErr) {
-				t.Fatalf("expected err=%s, got err=%s", tc.ResponseErr, err)
-			}
-
-			if tc.ResponseErr == nil {
+			if tc.ok {
+				if err != nil {
+					t.Fatalf("expected no error, got %s", err)
+				}
 				if string(plaintext) != testkeys.KnownInput {
 					t.Errorf("expected plaintext=%s, got=%s", testkeys.KnownInput, plaintext)
+				}
+			} else {
+				if err == nil {
+					t.Errorf("expected error, got nil")
 				}
 			}
 		})

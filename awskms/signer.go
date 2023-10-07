@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: Copyright 2023 Prasad Tengse
+// SPDX-License-Identifier: MIT
+
 package awskms
 
 import (
@@ -25,13 +28,15 @@ var (
 
 // Signer implements [crypto.Signer] interface backed by AWS KMS asymmetric key.
 // Only keys with SIGN_VERIFY usage are supported.
+//
+//nolint:containedctx // ignore
 type Signer struct {
 	// Key ID is key ARN
 	keyID   string
 	ctx     context.Context
 	mu      sync.RWMutex
 	keySpec types.KeySpec
-	// signer can use different hashes
+	// Signer can use different hashes
 	// this maps crypto.Hash to SigningAlgorithmSpec
 	// invalid signing algorithms are never populated.
 	signingSpecMap map[crypto.Hash]types.SigningAlgorithmSpec
@@ -42,7 +47,7 @@ type Signer struct {
 	client         Client
 }
 
-// Returns a new signer backed by AWS KMS asymmetric key which supports signing.
+// Returns a new signer backed by AWS KMS key which supports signing.
 // keyID must be either key ARN or key alias ARN.
 //   - Key Usage MUST be set to SIGN_VERIFY.
 //
@@ -62,7 +67,7 @@ type Signer struct {
 // See https://docs.aws.amazon.com/kms/latest/developerguide/key-policies.html for more info.
 func NewSigner(ctx context.Context, client Client, keyID string) (*Signer, error) {
 	if client == nil {
-		return nil, fmt.Errorf("%w: awskms: client is nil", cryptokms.ErrInvalidKMSClient)
+		return nil, fmt.Errorf("awskms: client is nil")
 	}
 
 	keyInfo, err := client.DescribeKey(
@@ -73,21 +78,20 @@ func NewSigner(ctx context.Context, client Client, keyID string) (*Signer, error
 	)
 	if err != nil {
 		return nil, fmt.Errorf(
-			"%w: awskms: failed to describe key: %w", cryptokms.ErrGetKeyMetadata, err)
+			"awskms: failed to describe key: %w", err)
 	}
 
 	// Ensure Key is enabled.
 	if keyInfo.KeyMetadata.KeyState != types.KeyStateEnabled {
-		return nil, fmt.Errorf("%w: awskms: key(%s) unusable key state - %s",
-			cryptokms.ErrUnusableKeyState,
+		return nil, fmt.Errorf("awskms: key(%s) is in unusable state - %s",
 			*keyInfo.KeyMetadata.Arn,
 			keyInfo.KeyMetadata.KeyState)
 	}
 
 	// Ensure KeyKeyUsage is SIGN_VERIFY
 	if keyInfo.KeyMetadata.KeyUsage != types.KeyUsageTypeSignVerify {
-		return nil, fmt.Errorf("%w: awskms: unsupported key usage(%s) for key(%s)",
-			cryptokms.ErrKeyAlgorithm, keyInfo.KeyMetadata.KeyUsage, keyID)
+		return nil, fmt.Errorf("awskms: unsupported key usage(%s) for key(%s)",
+			keyInfo.KeyMetadata.KeyUsage, keyID)
 	}
 
 	// Create new signer
@@ -113,8 +117,7 @@ func NewSigner(ctx context.Context, client Client, keyID string) (*Signer, error
 	case types.KeySpecEccNistP521:
 		signer.algo = cryptokms.AlgorithmECP521
 	default:
-		return nil, fmt.Errorf("%w: awskms: unsupported key algorithm: %s",
-			cryptokms.ErrKeyAlgorithm,
+		return nil, fmt.Errorf("awskms: unsupported key algorithm: %s",
 			keyInfo.KeyMetadata.KeySpec)
 	}
 
@@ -124,8 +127,8 @@ func NewSigner(ctx context.Context, client Client, keyID string) (*Signer, error
 			KeyId: keyInfo.KeyMetadata.Arn,
 		})
 	if err != nil {
-		return nil, fmt.Errorf("%w : awskms: failed to get public key for %s: %w",
-			cryptokms.ErrGetKeyMetadata, signer.keyID, err)
+		return nil, fmt.Errorf("awskms: failed to get public key for %s: %w",
+			signer.keyID, err)
 	}
 
 	// Parse Public key and store it in signer.
@@ -133,8 +136,7 @@ func NewSigner(ctx context.Context, client Client, keyID string) (*Signer, error
 	if err != nil {
 		// This code path is not reachable, as KMS service always returns
 		// valid DER keys when GetPublicKey does not return an error.
-		return nil, fmt.Errorf("%w: failed to parse public key DER: %w",
-			cryptokms.ErrGetKeyMetadata, err)
+		return nil, fmt.Errorf("failed to parse public key DER: %w", err)
 	}
 
 	// KMS keys only support certain signing (thus digest) algorithms.
@@ -162,8 +164,8 @@ func NewSigner(ctx context.Context, client Client, keyID string) (*Signer, error
 	}
 	// Ensure signer.hashToSigningAlgoMap has at-least one key.
 	if len(signer.signingSpecMap) == 0 {
-		return nil, fmt.Errorf("%w: no supported signing algorithm for key(%s)",
-			cryptokms.ErrKeyAlgorithm, signer.keyID)
+		return nil, fmt.Errorf("awskms: no supported signing algorithm for key(%s)",
+			signer.keyID)
 	}
 
 	// Build default hasher.
@@ -233,7 +235,7 @@ func (s *Signer) Sign(rand io.Reader, digest []byte, opts crypto.SignerOpts) ([]
 // The random parameter is ignored, and thus it can be as nil.
 func (s *Signer) SignContext(ctx context.Context, _ io.Reader, digest []byte, opts crypto.SignerOpts) ([]byte, error) {
 	if s.client == nil || s.keyID == "" || s.pub == nil {
-		return nil, cryptokms.ErrInvalidKMSClient
+		return nil, fmt.Errorf("awskms: client not initialized")
 	}
 
 	// When no options are specified, use default provided by signer.
@@ -244,12 +246,14 @@ func (s *Signer) SignContext(ctx context.Context, _ io.Reader, digest []byte, op
 	// Check if given hash function is supported by KMS key
 	// If unsupported hash function is given, return a helpful message.
 	if _, ok := s.signingSpecMap[opts.HashFunc()]; !ok {
-		return nil, fmt.Errorf("%w: awskms: hash(%s) is not supported by key(%s), use(%s) instead",
-			cryptokms.ErrDigestAlgorithm, opts.HashFunc().String(), s.keyID, s.defaultHasher.String())
+		return nil, fmt.Errorf(
+			"awskms: hash(%s) is not supported by key(%s), use(%s) instead",
+			opts.HashFunc().String(), s.keyID, s.defaultHasher.String())
 	}
 
 	if len(digest) != opts.HashFunc().Size() {
-		return nil, fmt.Errorf("%w: length is %d, want %d", cryptokms.ErrDigestLength, len(digest), opts.HashFunc().Size())
+		return nil, fmt.Errorf("awskms: digest length is %d, expected %d",
+			len(digest), opts.HashFunc().Size())
 	}
 
 	// Sign Digest with KMS API.
@@ -262,8 +266,7 @@ func (s *Signer) SignContext(ctx context.Context, _ io.Reader, digest []byte, op
 		},
 	)
 	if err != nil {
-		return nil, fmt.Errorf("%w: awskms: failed to sign with key(%s): %w",
-			cryptokms.ErrAsymmetricSign, s.keyID, err)
+		return nil, fmt.Errorf("awskms: failed to sign with key(%s): %w", s.keyID, err)
 	}
 
 	return signatureResp.Signature, nil

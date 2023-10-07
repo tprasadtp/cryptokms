@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: Copyright 2023 Prasad Tengse
+// SPDX-License-Identifier: MIT
+
 package awskms
 
 import (
@@ -25,9 +28,10 @@ var (
 
 // Decrypter implements [crypto.Decrypter] interface backed by AWS KMS asymmetric key.
 // Only keys with ENCRYPT_DECRYPT usage are supported.
+//
+//nolint:containedctx // ignore
 type Decrypter struct {
-	// Key ID is key ARN
-	keyID   string
+	keyID   string // key ARN
 	ctx     context.Context
 	mu      sync.RWMutex
 	keySpec types.KeySpec
@@ -65,7 +69,7 @@ type Decrypter struct {
 // See https://docs.aws.amazon.com/kms/latest/developerguide/key-policies.html for more info.
 func NewDecrypter(ctx context.Context, client Client, keyID string) (*Decrypter, error) {
 	if client == nil {
-		return nil, cryptokms.ErrInvalidKMSClient
+		return nil, fmt.Errorf("awskms: client not initialized")
 	}
 
 	keyInfo, err := client.DescribeKey(
@@ -75,22 +79,21 @@ func NewDecrypter(ctx context.Context, client Client, keyID string) (*Decrypter,
 		},
 	)
 	if err != nil {
-		return nil, fmt.Errorf("%w: awskms: failed to describe key: %w",
-			cryptokms.ErrGetKeyMetadata, err)
+		return nil, fmt.Errorf(
+			"awskms: failed to describe key: %w", err)
 	}
 
 	// Ensure KeyState is valid and enabled
 	if keyInfo.KeyMetadata.KeyState != types.KeyStateEnabled {
-		return nil, fmt.Errorf("%w: awskms: key(%s) is in unusable state - %s",
-			cryptokms.ErrUnusableKeyState,
+		return nil, fmt.Errorf("awskms: key(%s) is in unusable state - %s",
 			*keyInfo.KeyMetadata.Arn,
 			keyInfo.KeyMetadata.KeyState)
 	}
 
 	// Ensure KeyKeyUsage is ENCRYPT_DECRYPT
 	if keyInfo.KeyMetadata.KeyUsage != types.KeyUsageTypeEncryptDecrypt {
-		return nil, fmt.Errorf("%w: awskms: unsupported key usage(%s) for key(%s)",
-			cryptokms.ErrKeyAlgorithm, keyInfo.KeyMetadata.KeyUsage, keyID)
+		return nil, fmt.Errorf("awskms: unsupported key usage(%s) for key(%s)",
+			keyInfo.KeyMetadata.KeyUsage, keyID)
 	}
 
 	// Create new decrypter
@@ -110,8 +113,8 @@ func NewDecrypter(ctx context.Context, client Client, keyID string) (*Decrypter,
 	// GetPublicKey
 	getPublicKeyResp, err := client.GetPublicKey(ctx, &kms.GetPublicKeyInput{KeyId: keyInfo.KeyMetadata.Arn})
 	if err != nil {
-		return nil, fmt.Errorf("%w : awskms: failed to get public key for %s: %w",
-			cryptokms.ErrGetKeyMetadata, decrypter.keyID, err)
+		return nil, fmt.Errorf("awskms: failed to get public key for %s: %w",
+			decrypter.keyID, err)
 	}
 
 	// Parse Public key and store it in signer.
@@ -119,8 +122,7 @@ func NewDecrypter(ctx context.Context, client Client, keyID string) (*Decrypter,
 	if err != nil {
 		// This code path is not reachable, as KMS service always returns
 		// valid DER keys when GetPublicKey does not return an error.
-		return nil, fmt.Errorf("%w: failed to parse public key DER: %w",
-			cryptokms.ErrGetKeyMetadata, err)
+		return nil, fmt.Errorf("failed to parse public key DER: %w", err)
 	}
 
 	// maxCiphertextLen is key modulus.
@@ -195,7 +197,7 @@ func (d *Decrypter) Decrypt(rand io.Reader, ciphertext []byte, opts crypto.Decry
 // The rand parameter is ignored, and it can be nil.
 func (d *Decrypter) DecryptContext(ctx context.Context, _ io.Reader, ciphertext []byte, opts crypto.DecrypterOpts) ([]byte, error) {
 	if d.client == nil || d.keyID == "" || d.pub == nil {
-		return nil, cryptokms.ErrInvalidKMSClient
+		return nil, fmt.Errorf("awskms: client not initialized")
 	}
 
 	// Fallback to default DecrypterOpts when no options are specified.
@@ -214,31 +216,29 @@ func (d *Decrypter) DecryptContext(ctx context.Context, _ io.Reader, ciphertext 
 	switch v := opts.(type) {
 	case *rsa.OAEPOptions:
 		if _, ok := d.hashToEncryptionAlgoMap[v.Hash]; !ok {
-			return nil, fmt.Errorf("%w: hash %s is not supported by KMS key(%s)",
-				cryptokms.ErrDigestAlgorithm, v.Hash, d.keyID)
+			return nil, fmt.Errorf("awskms: hash %s is not supported by KMS key(%s)",
+				v.Hash, d.keyID)
 		}
 		hasher = v.Hash
 
 		// Ensure MGFHash is same as Hash when it is set to non zero value.
 		if v.MGFHash != crypto.Hash(0) {
 			if v.MGFHash != v.Hash {
-				return nil, fmt.Errorf("%w: expected MGFHash=%s, but got=%s",
-					cryptokms.ErrDigestAlgorithm, v.Hash, v.MGFHash)
+				return nil, fmt.Errorf("awskms: invalid options, expected MGFHash=%s, but got=%s",
+					v.Hash, v.MGFHash)
 			}
 		}
 	// return a helpful error if PKCS1v15DecryptOptions are specified.
 	case *rsa.PKCS1v15DecryptOptions:
 		return nil, fmt.Errorf(
-			"%w: PKCS1v15 encryption is not supported by AWS KMS use OAEP instead",
-			cryptokms.ErrAsymmetricDecrypt)
+			"awskms: invalid option, PKCS1v15 is not supported by AWS KMS use OAEP instead")
 	default:
-		return nil, fmt.Errorf("%w: unknown decrypter opts type %T",
-			cryptokms.ErrAsymmetricDecrypt, opts)
+		return nil, fmt.Errorf("awskms: unknown decrypter opts type %T", opts)
 	}
 
 	if len(ciphertext) > d.maxCiphertextLen {
-		return nil, fmt.Errorf("%w: ciphertext cannot be larger than %d bytes",
-			cryptokms.ErrPayloadTooLarge, d.maxCiphertextLen)
+		return nil, fmt.Errorf("awskms: ciphertext cannot be larger than %d bytes",
+			d.maxCiphertextLen)
 	}
 
 	decryptResp, err := d.client.Decrypt(ctx,
@@ -250,8 +250,8 @@ func (d *Decrypter) DecryptContext(ctx context.Context, _ io.Reader, ciphertext 
 	)
 
 	if err != nil {
-		return nil, fmt.Errorf("%w: awskms: failed to decrypt with key(%s): %w",
-			cryptokms.ErrAsymmetricDecrypt, d.keyID, err)
+		return nil, fmt.Errorf("awskms: failed to decrypt with key(%s): %w",
+			d.keyID, err)
 	}
 
 	return decryptResp.Plaintext, nil

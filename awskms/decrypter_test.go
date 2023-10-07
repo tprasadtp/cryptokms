@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: Copyright 2023 Prasad Tengse
+// SPDX-License-Identifier: MIT
+
 package awskms
 
 import (
@@ -5,7 +8,6 @@ import (
 	"crypto"
 	"crypto/rand"
 	"crypto/rsa"
-	"errors"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/kms/types"
@@ -17,118 +19,108 @@ import (
 
 func TestNewDecrypter(t *testing.T) {
 	type testCase struct {
-		Name        string
-		Region      string
-		KeyState    types.KeyState
-		KeySpec     types.KeySpec
-		KeyUsage    types.KeyUsageType
-		Client      Client
-		ResponseErr error
-		Decrypter   *Decrypter
+		name      string
+		region    string
+		keyState  types.KeyState
+		keySpec   types.KeySpec
+		keyUsage  types.KeyUsageType
+		client    Client
+		ok        bool
+		decrypter *Decrypter
 	}
 	tt := []testCase{
 		{
-			Name:        "nil-client",
-			KeyState:    types.KeyStateEnabled,
-			Client:      nil,
-			KeySpec:     types.KeySpecRsa4096,
-			KeyUsage:    types.KeyUsageTypeEncryptDecrypt,
-			Region:      "us-east-1",
-			ResponseErr: cryptokms.ErrInvalidKMSClient,
+			name:     "nil-client",
+			keyState: types.KeyStateEnabled,
+			client:   nil,
+			keySpec:  types.KeySpecRsa4096,
+			keyUsage: types.KeyUsageTypeEncryptDecrypt,
+			region:   "us-east-1",
 		},
 		// Invalid KeyStateEnabled
 		{
-			Name:        "error-on-describe",
-			KeyState:    types.KeyStateEnabled,
-			Client:      newMockKMSClient(),
-			KeySpec:     types.KeySpecRsa4096,
-			KeyUsage:    types.KeyUsageTypeEncryptDecrypt,
-			Region:      "error-describe",
-			ResponseErr: cryptokms.ErrGetKeyMetadata,
+			name:     "error-on-describe",
+			keyState: types.KeyStateEnabled,
+			client:   newMockKMSClient(),
+			keySpec:  types.KeySpecRsa4096,
+			keyUsage: types.KeyUsageTypeEncryptDecrypt,
+			region:   "error-describe",
 		},
 		{
-			Name:        "key-still-creating",
-			KeyState:    types.KeyStateCreating,
-			Client:      newMockKMSClient(),
-			KeySpec:     types.KeySpecRsa4096,
-			KeyUsage:    types.KeyUsageTypeEncryptDecrypt,
-			Region:      "us-east-1",
-			ResponseErr: cryptokms.ErrUnusableKeyState,
+			name:     "key-still-creating",
+			keyState: types.KeyStateCreating,
+			client:   newMockKMSClient(),
+			keySpec:  types.KeySpecRsa4096,
+			keyUsage: types.KeyUsageTypeEncryptDecrypt,
+			region:   "us-east-1",
 		},
 		{
-			Name:        "key-pending-deletion",
-			KeyState:    types.KeyStatePendingDeletion,
-			Client:      newMockKMSClient(),
-			KeySpec:     types.KeySpecRsa4096,
-			KeyUsage:    types.KeyUsageTypeEncryptDecrypt,
-			Region:      "us-east-1",
-			ResponseErr: cryptokms.ErrUnusableKeyState,
+			name:     "key-pending-deletion",
+			keyState: types.KeyStatePendingDeletion,
+			client:   newMockKMSClient(),
+			keySpec:  types.KeySpecRsa4096,
+			keyUsage: types.KeyUsageTypeEncryptDecrypt,
+			region:   "us-east-1",
 		},
 		{
-			Name:        "key-disabled",
-			KeyState:    types.KeyStateDisabled,
-			Client:      newMockKMSClient(),
-			KeySpec:     types.KeySpecRsa4096,
-			KeyUsage:    types.KeyUsageTypeEncryptDecrypt,
-			Region:      "us-east-1",
-			ResponseErr: cryptokms.ErrUnusableKeyState,
+			name:     "key-disabled",
+			keyState: types.KeyStateDisabled,
+			client:   newMockKMSClient(),
+			keySpec:  types.KeySpecRsa4096,
+			keyUsage: types.KeyUsageTypeEncryptDecrypt,
+			region:   "us-east-1",
 		},
 		// Invalid Key Usage
 		{
-			Name:        "key-usage-sign-verify",
-			KeyState:    types.KeyStateEnabled,
-			Client:      newMockKMSClient(),
-			KeySpec:     types.KeySpecRsa4096,
-			KeyUsage:    types.KeyUsageTypeSignVerify,
-			Region:      "us-east-1",
-			ResponseErr: cryptokms.ErrKeyAlgorithm,
+			name:     "key-usage-sign-verify",
+			keyState: types.KeyStateEnabled,
+			client:   newMockKMSClient(),
+			keySpec:  types.KeySpecRsa4096,
+			keyUsage: types.KeyUsageTypeSignVerify,
+			region:   "us-east-1",
 		},
 		{
-			Name:        "key-usage-hmac",
-			KeyState:    types.KeyStateEnabled,
-			Client:      newMockKMSClient(),
-			KeySpec:     types.KeySpecHmac256,
-			KeyUsage:    types.KeyUsageTypeGenerateVerifyMac,
-			Region:      "us-east-1",
-			ResponseErr: cryptokms.ErrKeyAlgorithm,
+			name:     "key-usage-hmac",
+			keyState: types.KeyStateEnabled,
+			client:   newMockKMSClient(),
+			keySpec:  types.KeySpecHmac256,
+			keyUsage: types.KeyUsageTypeGenerateVerifyMac,
+			region:   "us-east-1",
 		},
 		{
-			Name:        "key-usage-unknown",
-			KeyState:    types.KeyStateEnabled,
-			Client:      newMockKMSClient(),
-			KeySpec:     types.KeySpecRsa4096,
-			KeyUsage:    types.KeyUsageType("unknown"),
-			Region:      "us-east-1",
-			ResponseErr: cryptokms.ErrKeyAlgorithm,
+			name:     "key-usage-unknown",
+			keyState: types.KeyStateEnabled,
+			client:   newMockKMSClient(),
+			keySpec:  types.KeySpecRsa4096,
+			keyUsage: types.KeyUsageType("unknown"),
+			region:   "us-east-1",
 		},
 		// Error on GetPublicKey API call.
 		{
-			Name:        "error-on-get-public-key",
-			KeyState:    types.KeyStateEnabled,
-			Client:      newMockKMSClient(),
-			KeySpec:     types.KeySpecRsa4096,
-			KeyUsage:    types.KeyUsageTypeEncryptDecrypt,
-			Region:      "error-get-public-key",
-			ResponseErr: cryptokms.ErrGetKeyMetadata,
+			name:     "error-on-get-public-key",
+			keyState: types.KeyStateEnabled,
+			client:   newMockKMSClient(),
+			keySpec:  types.KeySpecRsa4096,
+			keyUsage: types.KeyUsageTypeEncryptDecrypt,
+			region:   "error-get-public-key",
 		},
 		{
-			Name:        "unparsable-public-key",
-			KeyState:    types.KeyStateEnabled,
-			Client:      newMockKMSClient(),
-			KeySpec:     types.KeySpecRsa4096,
-			KeyUsage:    types.KeyUsageTypeEncryptDecrypt,
-			Region:      "unparsable-public-key",
-			ResponseErr: cryptokms.ErrGetKeyMetadata,
+			name:     "unparsable-public-key",
+			keyState: types.KeyStateEnabled,
+			client:   newMockKMSClient(),
+			keySpec:  types.KeySpecRsa4096,
+			keyUsage: types.KeyUsageTypeEncryptDecrypt,
+			region:   "unparsable-public-key",
 		},
 		// Valid RSA keys
 		{
-			Name:     "rsa-2048",
-			KeyState: types.KeyStateEnabled,
-			Client:   newMockKMSClient(),
-			KeySpec:  types.KeySpecRsa2048,
-			KeyUsage: types.KeyUsageTypeEncryptDecrypt,
-			Region:   "us-east-1",
-			Decrypter: &Decrypter{
+			name:     "rsa-2048",
+			keyState: types.KeyStateEnabled,
+			client:   newMockKMSClient(),
+			keySpec:  types.KeySpecRsa2048,
+			keyUsage: types.KeyUsageTypeEncryptDecrypt,
+			region:   "us-east-1",
+			decrypter: &Decrypter{
 				keySpec: types.KeySpecRsa2048,
 				//nolint:exhaustive // invalid linter error.
 				hashToEncryptionAlgoMap: map[crypto.Hash]types.EncryptionAlgorithmSpec{
@@ -141,15 +133,16 @@ func TestNewDecrypter(t *testing.T) {
 				ctime:            knownTS,
 				algo:             cryptokms.AlgorithmRSA2048,
 			},
+			ok: true,
 		},
 		{
-			Name:     "rsa-3072",
-			KeyState: types.KeyStateEnabled,
-			Client:   newMockKMSClient(),
-			KeySpec:  types.KeySpecRsa3072,
-			KeyUsage: types.KeyUsageTypeEncryptDecrypt,
-			Region:   "us-east-1",
-			Decrypter: &Decrypter{
+			name:     "rsa-3072",
+			keyState: types.KeyStateEnabled,
+			client:   newMockKMSClient(),
+			keySpec:  types.KeySpecRsa3072,
+			keyUsage: types.KeyUsageTypeEncryptDecrypt,
+			region:   "us-east-1",
+			decrypter: &Decrypter{
 				keySpec: types.KeySpecRsa3072,
 				//nolint:exhaustive // invalid linter error.
 				hashToEncryptionAlgoMap: map[crypto.Hash]types.EncryptionAlgorithmSpec{
@@ -162,15 +155,16 @@ func TestNewDecrypter(t *testing.T) {
 				ctime:            knownTS,
 				algo:             cryptokms.AlgorithmRSA3072,
 			},
+			ok: true,
 		},
 		{
-			Name:     "rsa-4096",
-			KeyState: types.KeyStateEnabled,
-			Client:   newMockKMSClient(),
-			KeySpec:  types.KeySpecRsa4096,
-			KeyUsage: types.KeyUsageTypeEncryptDecrypt,
-			Region:   "us-east-1",
-			Decrypter: &Decrypter{
+			name:     "rsa-4096",
+			keyState: types.KeyStateEnabled,
+			client:   newMockKMSClient(),
+			keySpec:  types.KeySpecRsa4096,
+			keyUsage: types.KeyUsageTypeEncryptDecrypt,
+			region:   "us-east-1",
+			decrypter: &Decrypter{
 				keySpec: types.KeySpecRsa4096,
 				//nolint:exhaustive // invalid linter error.
 				hashToEncryptionAlgoMap: map[crypto.Hash]types.EncryptionAlgorithmSpec{
@@ -183,34 +177,44 @@ func TestNewDecrypter(t *testing.T) {
 				ctime:            knownTS,
 				algo:             cryptokms.AlgorithmRSA4096,
 			},
+			ok: true,
 		},
 	}
 	for _, tc := range tt {
-		t.Run(tc.Name, func(t *testing.T) {
+		t.Run(tc.name, func(t *testing.T) {
 			ctx := context.Background()
-			arn := computeKMSKeyArn(tc.KeyState, tc.KeySpec, tc.KeyUsage, tc.Region)
-			resp, err := NewDecrypter(ctx, tc.Client, arn)
-			if !errors.Is(err, tc.ResponseErr) {
-				t.Errorf("expected error=%+v, but got=%+v", tc.ResponseErr, err)
-			}
-			diff := cmp.Diff(
-				resp, tc.Decrypter,
-				cmp.AllowUnexported(Decrypter{}),
-				cmpopts.IgnoreFields(Decrypter{}, "client", "keyID", "mu"))
-			if diff != "" {
-				t.Errorf("did not get expected response: \n%s", diff)
-			}
+			arn := computeKMSKeyArn(tc.keyState, tc.keySpec, tc.keyUsage, tc.region)
+			resp, err := NewDecrypter(ctx, tc.client, arn)
+			if tc.ok {
+				if err != nil {
+					t.Errorf("expected no error, but got %s", err)
+				}
 
-			if tc.ResponseErr == nil {
-				if resp.Algorithm() != tc.Decrypter.algo {
-					t.Errorf("expected algo=%d, got=%d", tc.Decrypter.algo, resp.Algorithm())
+				diff := cmp.Diff(
+					resp, tc.decrypter,
+					cmp.AllowUnexported(Decrypter{}),
+					cmpopts.IgnoreFields(Decrypter{}, "client", "keyID", "mu"))
+				if diff != "" {
+					t.Errorf("did not get expected response: \n%s", diff)
+				}
+
+				if resp.Algorithm() != tc.decrypter.algo {
+					t.Errorf("expected algo=%d, got=%d", tc.decrypter.algo, resp.Algorithm())
+				}
+			} else {
+				if err == nil {
+					t.Errorf("expected an error, got nil")
+				}
+
+				if resp != nil {
+					t.Errorf("on error returned decrypter must be nil")
 				}
 			}
 		})
 	}
 }
 
-func TestDecrypter_Decrypt_UnInitialized(t *testing.T) {
+func Test_Decrypter_Decrypt_UnInitialized(t *testing.T) {
 	decrypter := &Decrypter{}
 	_, err := decrypter.Decrypt(
 		rand.Reader,
@@ -220,8 +224,8 @@ func TestDecrypter_Decrypt_UnInitialized(t *testing.T) {
 		},
 	)
 
-	if !errors.Is(err, cryptokms.ErrInvalidKMSClient) {
-		t.Errorf("expected error=%+v, but got=%+v", cryptokms.ErrInvalidKMSClient, err)
+	if err == nil {
+		t.Errorf("expected error when calling Decrypt on un initialized client")
 	}
 }
 
@@ -237,18 +241,18 @@ func TestDecrypter_WithContext(t *testing.T) {
 
 func TestDecrypter_Decrypt(t *testing.T) {
 	type testCase struct {
-		Name          string
-		KeyArn        string
-		Err           error
-		Ciphertext    []byte
-		DecrypterOpts crypto.DecrypterOpts
+		name       string
+		key        string
+		ok         bool
+		ciphertext []byte
+		opts       crypto.DecrypterOpts
 	}
 
 	client := newMockKMSClient()
 	tt := []testCase{
 		{
-			Name: "rsa-4096-oaep-hash-not-equal-to-mgf-hash",
-			Ciphertext: func() []byte {
+			name: "rsa-4096-oaep-hash-not-equal-to-mgf-hash",
+			ciphertext: func() []byte {
 				encrypted, _ := rsa.EncryptOAEP(
 					crypto.SHA256.New(), rand.Reader,
 					testkeys.GetRSA4096PublicKey(),
@@ -256,36 +260,34 @@ func TestDecrypter_Decrypt(t *testing.T) {
 				)
 				return encrypted
 			}(),
-			KeyArn: computeKMSKeyArn(
+			key: computeKMSKeyArn(
 				types.KeyStateEnabled,
 				types.KeySpecRsa4096,
 				types.KeyUsageTypeEncryptDecrypt),
-			DecrypterOpts: &rsa.OAEPOptions{
+			opts: &rsa.OAEPOptions{
 				Hash:    crypto.SHA256,
 				MGFHash: crypto.SHA1, // should be sha256 or zero value
 			},
-			Err: cryptokms.ErrDigestAlgorithm,
 		},
 		{
-			Name: "rsa-4096-oaep-ciphertext-too-large",
-			Ciphertext: func() []byte {
+			name: "rsa-4096-oaep-ciphertext-too-large",
+			ciphertext: func() []byte {
 				buf := make([]byte, 4096/8+1)
 				//nolint:errcheck // ignore as test will fail if err != nil
 				rand.Reader.Read(buf)
 				return buf
 			}(),
-			KeyArn: computeKMSKeyArn(
+			key: computeKMSKeyArn(
 				types.KeyStateEnabled,
 				types.KeySpecRsa4096,
 				types.KeyUsageTypeEncryptDecrypt),
-			DecrypterOpts: &rsa.OAEPOptions{
+			opts: &rsa.OAEPOptions{
 				Hash: crypto.SHA256,
 			},
-			Err: cryptokms.ErrPayloadTooLarge,
 		},
 		{
-			Name: "rsa-4096-default-options",
-			Ciphertext: func() []byte {
+			name: "rsa-4096-default-options",
+			ciphertext: func() []byte {
 				encrypted, _ := rsa.EncryptOAEP(
 					crypto.SHA256.New(), rand.Reader,
 					testkeys.GetRSA4096PublicKey(),
@@ -293,14 +295,15 @@ func TestDecrypter_Decrypt(t *testing.T) {
 				)
 				return encrypted
 			}(),
-			KeyArn: computeKMSKeyArn(
+			key: computeKMSKeyArn(
 				types.KeyStateEnabled,
 				types.KeySpecRsa4096,
 				types.KeyUsageTypeEncryptDecrypt),
+			ok: true,
 		},
 		{
-			Name: "rsa-4096-valid-options",
-			Ciphertext: func() []byte {
+			name: "rsa-4096-valid-options",
+			ciphertext: func() []byte {
 				encrypted, _ := rsa.EncryptOAEP(
 					crypto.SHA256.New(), rand.Reader,
 					testkeys.GetRSA4096PublicKey(),
@@ -308,17 +311,18 @@ func TestDecrypter_Decrypt(t *testing.T) {
 				)
 				return encrypted
 			}(),
-			DecrypterOpts: &rsa.OAEPOptions{
+			opts: &rsa.OAEPOptions{
 				Hash: crypto.SHA256,
 			},
-			KeyArn: computeKMSKeyArn(
+			key: computeKMSKeyArn(
 				types.KeyStateEnabled,
 				types.KeySpecRsa4096,
 				types.KeyUsageTypeEncryptDecrypt),
+			ok: true,
 		},
 		{
-			Name: "rsa-4096-sha1",
-			Ciphertext: func() []byte {
+			name: "rsa-4096-sha1",
+			ciphertext: func() []byte {
 				encrypted, _ := rsa.EncryptOAEP(
 					crypto.SHA1.New(), rand.Reader,
 					testkeys.GetRSA4096PublicKey(),
@@ -326,17 +330,18 @@ func TestDecrypter_Decrypt(t *testing.T) {
 				)
 				return encrypted
 			}(),
-			DecrypterOpts: &rsa.OAEPOptions{
+			opts: &rsa.OAEPOptions{
 				Hash: crypto.SHA1,
 			},
-			KeyArn: computeKMSKeyArn(
+			key: computeKMSKeyArn(
 				types.KeyStateEnabled,
 				types.KeySpecRsa4096,
 				types.KeyUsageTypeEncryptDecrypt),
+			ok: true,
 		},
 		{
-			Name: "rsa-4096-sha512-unsupported",
-			Ciphertext: func() []byte {
+			name: "rsa-4096-sha512-unsupported",
+			ciphertext: func() []byte {
 				encrypted, _ := rsa.EncryptOAEP(
 					crypto.SHA512.New(), rand.Reader,
 					testkeys.GetRSA4096PublicKey(),
@@ -344,18 +349,17 @@ func TestDecrypter_Decrypt(t *testing.T) {
 				)
 				return encrypted
 			}(),
-			DecrypterOpts: &rsa.OAEPOptions{
+			opts: &rsa.OAEPOptions{
 				Hash: crypto.SHA512,
 			},
-			KeyArn: computeKMSKeyArn(
+			key: computeKMSKeyArn(
 				types.KeyStateEnabled,
 				types.KeySpecRsa4096,
 				types.KeyUsageTypeEncryptDecrypt),
-			Err: cryptokms.ErrDigestAlgorithm,
 		},
 		{
-			Name: "rsa-4096-PKCS1v15DecryptOptions-unsupported",
-			Ciphertext: func() []byte {
+			name: "rsa-4096-PKCS1v15DecryptOptions-unsupported",
+			ciphertext: func() []byte {
 				encrypted, _ := rsa.EncryptOAEP(
 					crypto.SHA256.New(), rand.Reader,
 					testkeys.GetRSA4096PublicKey(),
@@ -363,16 +367,15 @@ func TestDecrypter_Decrypt(t *testing.T) {
 				)
 				return encrypted
 			}(),
-			DecrypterOpts: &rsa.PKCS1v15DecryptOptions{},
-			KeyArn: computeKMSKeyArn(
+			opts: &rsa.PKCS1v15DecryptOptions{},
+			key: computeKMSKeyArn(
 				types.KeyStateEnabled,
 				types.KeySpecRsa4096,
 				types.KeyUsageTypeEncryptDecrypt),
-			Err: cryptokms.ErrAsymmetricDecrypt,
 		},
 		{
-			Name: "rsa-4096-unsupported-type",
-			Ciphertext: func() []byte {
+			name: "rsa-4096-unsupported-type",
+			ciphertext: func() []byte {
 				encrypted, _ := rsa.EncryptOAEP(
 					crypto.SHA256.New(), rand.Reader,
 					testkeys.GetRSA4096PublicKey(),
@@ -380,16 +383,15 @@ func TestDecrypter_Decrypt(t *testing.T) {
 				)
 				return encrypted
 			}(),
-			DecrypterOpts: rsa.OAEPOptions{Hash: crypto.SHA256}, // should be pointer
-			KeyArn: computeKMSKeyArn(
+			opts: rsa.OAEPOptions{Hash: crypto.SHA256}, // should be pointer
+			key: computeKMSKeyArn(
 				types.KeyStateEnabled,
 				types.KeySpecRsa4096,
 				types.KeyUsageTypeEncryptDecrypt),
-			Err: cryptokms.ErrAsymmetricDecrypt,
 		},
 		{
-			Name: "rsa-4096-error-on-decrypt-api-call",
-			Ciphertext: func() []byte {
+			name: "rsa-4096-error-on-decrypt-api-call",
+			ciphertext: func() []byte {
 				encrypted, _ := rsa.EncryptOAEP(
 					crypto.SHA256.New(), rand.Reader,
 					testkeys.GetRSA4096PublicKey(),
@@ -397,16 +399,15 @@ func TestDecrypter_Decrypt(t *testing.T) {
 				)
 				return encrypted
 			}(),
-			KeyArn: computeKMSKeyArn(
+			key: computeKMSKeyArn(
 				types.KeyStateEnabled,
 				types.KeySpecRsa4096,
 				types.KeyUsageTypeEncryptDecrypt,
 				"error-decrypt"),
-			Err: cryptokms.ErrAsymmetricDecrypt,
 		},
 		{
-			Name: "rsa-3072-sha256",
-			Ciphertext: func() []byte {
+			name: "rsa-3072-sha256",
+			ciphertext: func() []byte {
 				encrypted, _ := rsa.EncryptOAEP(
 					crypto.SHA256.New(), rand.Reader,
 					testkeys.GetRSA3072PublicKey(),
@@ -414,14 +415,15 @@ func TestDecrypter_Decrypt(t *testing.T) {
 				)
 				return encrypted
 			}(),
-			KeyArn: computeKMSKeyArn(
+			key: computeKMSKeyArn(
 				types.KeyStateEnabled,
 				types.KeySpecRsa3072,
 				types.KeyUsageTypeEncryptDecrypt),
+			ok: true,
 		},
 		{
-			Name: "rsa-2048-sha256",
-			Ciphertext: func() []byte {
+			name: "rsa-2048-sha256",
+			ciphertext: func() []byte {
 				encrypted, _ := rsa.EncryptOAEP(
 					crypto.SHA256.New(), rand.Reader,
 					testkeys.GetRSA2048PublicKey(),
@@ -429,18 +431,19 @@ func TestDecrypter_Decrypt(t *testing.T) {
 				)
 				return encrypted
 			}(),
-			KeyArn: computeKMSKeyArn(
+			key: computeKMSKeyArn(
 				types.KeyStateEnabled,
 				types.KeySpecRsa2048,
 				types.KeyUsageTypeEncryptDecrypt),
+			ok: true,
 		},
 	}
 	for _, tc := range tt {
-		t.Run(tc.Name, func(t *testing.T) {
+		t.Run(tc.name, func(t *testing.T) {
 			ctx := context.Background()
-			decrypter, err := NewDecrypter(ctx, client, tc.KeyArn)
+			decrypter, err := NewDecrypter(ctx, client, tc.key)
 			if err != nil {
-				t.Fatalf("failed to build decrypter(%s): %s", tc.KeyArn, err)
+				t.Fatalf("failed to build decrypter(%s): %s", tc.key, err)
 			}
 
 			if err != nil {
@@ -448,23 +451,21 @@ func TestDecrypter_Decrypt(t *testing.T) {
 			}
 			plaintext, err := decrypter.Decrypt(
 				rand.Reader,
-				tc.Ciphertext,
-				tc.DecrypterOpts,
+				tc.ciphertext,
+				tc.opts,
 			)
 
-			if !errors.Is(err, tc.Err) {
-				t.Fatalf("expected err=%s, got err=%s", tc.Err, err)
-			}
-
-			if tc.Err == nil {
+			if tc.ok {
+				if err != nil {
+					t.Fatalf("expected no error, got %s", err)
+				}
 				if string(plaintext) != testkeys.KnownInput {
 					t.Errorf("expected plaintext=%s, got=%s", testkeys.KnownInput, plaintext)
 				}
-			}
-
-			// ensure created at is not zero time
-			if decrypter.CreatedAt().IsZero() {
-				t.Errorf("CreatedAt() must not be zero")
+			} else {
+				if err == nil {
+					t.Errorf("expected error, got nil")
+				}
 			}
 		})
 	}

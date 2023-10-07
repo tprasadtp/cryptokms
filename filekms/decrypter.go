@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: Copyright 2023 Prasad Tengse
+// SPDX-License-Identifier: MIT
+
 package filekms
 
 import (
@@ -16,6 +19,7 @@ import (
 	"time"
 
 	"github.com/tprasadtp/cryptokms"
+	"github.com/tprasadtp/cryptokms/internal/shared"
 )
 
 var (
@@ -24,6 +28,8 @@ var (
 )
 
 // Decrypter.
+//
+//nolint:containedctx // ignore
 type Decrypter struct {
 	ctx              context.Context
 	hash             crypto.Hash
@@ -73,10 +79,9 @@ func NewDecrypter(path string) (*Decrypter, error) {
 	}
 
 	// Try to parse key as private key.
-	priv, err := parsePrivateKey(block.Bytes)
+	priv, err := shared.ParsePrivateKey(slurp)
 	if err != nil {
-		return nil, fmt.Errorf(
-			"filekms: cannot parse PEM encoded bytes as private key: %w", err)
+		return nil, fmt.Errorf("filekms: cannot parse private key: %w", err)
 	}
 
 	decrypter := &Decrypter{
@@ -101,15 +106,14 @@ func NewDecrypter(path string) (*Decrypter, error) {
 			decrypter.algo = cryptokms.AlgorithmRSA4096
 			decrypter.maxCiphertextLen = 4096 / 8
 		default:
-			return nil, fmt.Errorf("filekms: RSA key len(%d) is not supported: %w",
-				v.N.BitLen(), cryptokms.ErrKeyAlgorithm)
+			return nil, fmt.Errorf("filekms: RSA key len(%d) is not supported", v.N.BitLen())
 		}
 	case *ecdsa.PrivateKey:
-		return nil, fmt.Errorf("%w: filekms: ECDSA key is not supported for decryption", cryptokms.ErrKeyAlgorithm)
+		return nil, fmt.Errorf("filekms: ECDSA key is not supported for decryption")
 	case ed25519.PrivateKey, *ed25519.PrivateKey:
-		return nil, fmt.Errorf("%w: filekms: ed25519 key is not supported for decryption", cryptokms.ErrKeyAlgorithm)
+		return nil, fmt.Errorf("filekms: ed25519 key is not supported for decryption")
 	default:
-		return nil, fmt.Errorf("%w: unknown key type: %T", cryptokms.ErrKeyAlgorithm, v)
+		return nil, fmt.Errorf("filekms: unknown key type: %T", v)
 	}
 
 	return decrypter, nil
@@ -165,8 +169,12 @@ func (d *Decrypter) Decrypt(_ io.Reader, ciphertext []byte, opts crypto.Decrypte
 // DecryptContext decrypts the message with asymmetric key.
 // The rand parameter is ignored, and it can be nil.
 func (d *Decrypter) DecryptContext(ctx context.Context, _ io.Reader, ciphertext []byte, opts crypto.DecrypterOpts) ([]byte, error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
 	if err := context.Cause(ctx); err != nil {
-		return nil, fmt.Errorf("%w: fakekms: %w", cryptokms.ErrAsymmetricDecrypt, err)
+		return nil, fmt.Errorf("filekms: %w", err)
 	}
 
 	if opts == nil {
@@ -180,28 +188,27 @@ func (d *Decrypter) DecryptContext(ctx context.Context, _ io.Reader, ciphertext 
 		// Ensure MGFHash is same as Hash when it is set to non zero value.
 		if v.MGFHash != crypto.Hash(0) {
 			if v.MGFHash != v.Hash {
-				return nil, fmt.Errorf("%w: expected MGFHash=%s, but got=%s",
-					cryptokms.ErrDecrypterOpts, v.Hash, v.MGFHash)
+				return nil, fmt.Errorf(
+					"filekms: invalid options, expected OAEPOptions.Hash=%s, got=%s",
+					v.Hash, d.hash)
 			}
 		}
 	// return a helpful error if PKCS1v15DecryptOptions are specified.
 	case *rsa.PKCS1v15DecryptOptions:
-		return nil, fmt.Errorf("%w: PKCS1v15 encryption is not supported, use OAEP instead",
-			cryptokms.ErrDecrypterOpts)
+		return nil, fmt.Errorf("filekms: PKCS1v15 encryption is not supported, use OAEP instead")
 	default:
-		return nil, fmt.Errorf("%w: unknown decrypter options type %T", cryptokms.ErrDecrypterOpts, opts)
+		return nil, fmt.Errorf("filekms: unknown DecrypterOpts type %T", opts)
 	}
 
 	if len(ciphertext) > d.maxCiphertextLen {
-		return nil, fmt.Errorf("%w: ciphertext cannot be larger than %d bytes",
-			cryptokms.ErrPayloadTooLarge, d.maxCiphertextLen)
+		return nil, fmt.Errorf("filekms: ciphertext cannot be larger than %d bytes",
+			d.maxCiphertextLen)
 	}
 
 	plaintext, err := d.decrypter.Decrypt(rand.Reader, ciphertext, opts)
 
 	if err != nil {
-		return nil, fmt.Errorf("%w: fakekms: failed to decrypt: %w",
-			cryptokms.ErrAsymmetricDecrypt, err)
+		return nil, fmt.Errorf("filekms: failed to decrypt: %w", err)
 	}
 
 	return plaintext, nil

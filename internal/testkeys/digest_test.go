@@ -1,9 +1,17 @@
+// SPDX-FileCopyrightText: Copyright 2023 Prasad Tengse
+// SPDX-License-Identifier: MIT
+
 package testkeys_test
 
 import (
 	"crypto"
 	"encoding/hex"
 	"testing"
+
+	//nolint:gosec // only used for testing
+	_ "crypto/sha1"
+	_ "crypto/sha256"
+	_ "crypto/sha512"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/tprasadtp/cryptokms/internal/testkeys"

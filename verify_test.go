@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: Copyright 2023 Prasad Tengse
+// SPDX-License-Identifier: MIT
+
 package cryptokms_test
 
 import (
@@ -6,11 +9,15 @@ import (
 	"crypto/ed25519"
 	"crypto/rand"
 	"crypto/rsa"
-	"errors"
 	"fmt"
 	"io"
 	"testing"
 	"testing/iotest"
+
+	//nolint:gosec // only used for testing
+	_ "crypto/sha1"
+	_ "crypto/sha256"
+	_ "crypto/sha512"
 
 	"github.com/tprasadtp/cryptokms"
 	"github.com/tprasadtp/cryptokms/internal/testkeys"
@@ -18,20 +25,35 @@ import (
 
 func TestVerifyDigest(t *testing.T) {
 	type testCase struct {
-		Name      string
-		PublicKey crypto.PublicKey
-		Digest    []byte
-		Signature []byte
-		Hash      crypto.Hash
-		Err       error
+		name      string
+		pub       crypto.PublicKey
+		digest    []byte
+		signature []byte
+		hash      crypto.Hash
+		ok        bool
 	}
 	tt := []testCase{
 		{
-			Name:      "valid-rsa2048-sha1",
-			PublicKey: testkeys.GetRSA2048PublicKey(),
-			Digest:    testkeys.KnownInputHash(crypto.SHA1),
-			Hash:      crypto.SHA1,
-			Signature: func() []byte {
+			name:   "insecure-rsa1024-sha256",
+			pub:    testkeys.GetRSA1024PublicKey(),
+			digest: testkeys.KnownInputHash(crypto.SHA256),
+			hash:   crypto.SHA256,
+			signature: func() []byte {
+				signer := testkeys.GetRSA1024PrivateKey()
+				signature, err := signer.Sign(
+					rand.Reader, testkeys.KnownInputHash(crypto.SHA256), crypto.SHA256)
+				if err != nil {
+					t.Fatalf("failed to sign: %s", err)
+				}
+				return signature
+			}(),
+		},
+		{
+			name:   "insecure-rsa2048-sha1",
+			pub:    testkeys.GetRSA2048PublicKey(),
+			digest: testkeys.KnownInputHash(crypto.SHA1),
+			hash:   crypto.SHA1,
+			signature: func() []byte {
 				signer := testkeys.GetRSA2048PrivateKey()
 				signature, err := signer.Sign(
 					rand.Reader, testkeys.KnownInputHash(crypto.SHA1), crypto.SHA1)
@@ -42,11 +64,12 @@ func TestVerifyDigest(t *testing.T) {
 			}(),
 		},
 		{
-			Name:      "valid-rsa2048-sha256",
-			PublicKey: testkeys.GetRSA2048PublicKey(),
-			Digest:    testkeys.KnownInputHash(crypto.SHA256),
-			Hash:      crypto.SHA256,
-			Signature: func() []byte {
+			name:   "valid-rsa2048-sha256",
+			pub:    testkeys.GetRSA2048PublicKey(),
+			digest: testkeys.KnownInputHash(crypto.SHA256),
+			hash:   crypto.SHA256,
+			ok:     true,
+			signature: func() []byte {
 				signer := testkeys.GetRSA2048PrivateKey()
 				signature, err := signer.Sign(
 					rand.Reader, testkeys.KnownInputHash(crypto.SHA256), crypto.SHA256)
@@ -57,11 +80,12 @@ func TestVerifyDigest(t *testing.T) {
 			}(),
 		},
 		{
-			Name:      "valid-rsa4096-sha512",
-			PublicKey: testkeys.GetRSA4096PublicKey(),
-			Digest:    testkeys.KnownInputHash(crypto.SHA512),
-			Hash:      crypto.SHA512,
-			Signature: func() []byte {
+			name:   "valid-rsa4096-sha512",
+			pub:    testkeys.GetRSA4096PublicKey(),
+			digest: testkeys.KnownInputHash(crypto.SHA512),
+			hash:   crypto.SHA512,
+			ok:     true,
+			signature: func() []byte {
 				signer := testkeys.GetRSA4096PrivateKey()
 				signature, err := signer.Sign(
 					rand.Reader, testkeys.KnownInputHash(crypto.SHA512), crypto.SHA512)
@@ -72,11 +96,27 @@ func TestVerifyDigest(t *testing.T) {
 			}(),
 		},
 		{
-			Name:      "valid-ecp256-sha256",
-			PublicKey: testkeys.GetECP256PublicKey(),
-			Digest:    testkeys.KnownInputHash(crypto.SHA256),
-			Hash:      crypto.SHA256,
-			Signature: func() []byte {
+			name:   "insecure-ecp2224-sha224",
+			pub:    testkeys.GetECP224PublicKey(),
+			digest: testkeys.KnownInputHash(crypto.SHA256),
+			hash:   crypto.SHA224,
+			signature: func() []byte {
+				signer := testkeys.GetECP224PrivateKey()
+				signature, err := signer.Sign(
+					rand.Reader, testkeys.KnownInputHash(crypto.SHA224), crypto.SHA224)
+				if err != nil {
+					t.Fatalf("failed to sign: %s", err)
+				}
+				return signature
+			}(),
+		},
+		{
+			name:   "valid-ecp256-sha256",
+			pub:    testkeys.GetECP256PublicKey(),
+			digest: testkeys.KnownInputHash(crypto.SHA256),
+			hash:   crypto.SHA256,
+			ok:     true,
+			signature: func() []byte {
 				signer := testkeys.GetECP256PrivateKey()
 				signature, err := signer.Sign(
 					rand.Reader, testkeys.KnownInputHash(crypto.SHA256), crypto.SHA256)
@@ -88,11 +128,12 @@ func TestVerifyDigest(t *testing.T) {
 		},
 		// ED 25519 keys
 		{
-			Name:      "valid-ed25519-sha512",
-			PublicKey: testkeys.GetED25519PublicKey(),
-			Digest:    testkeys.KnownInputHash(crypto.SHA512),
-			Hash:      crypto.SHA512,
-			Signature: func() []byte {
+			name:   "valid-ed25519-sha512",
+			pub:    testkeys.GetED25519PublicKey(),
+			digest: testkeys.KnownInputHash(crypto.SHA512),
+			hash:   crypto.SHA512,
+			ok:     true,
+			signature: func() []byte {
 				signer := testkeys.GetED25519PrivateKey()
 				signature, err := signer.Sign(
 					rand.Reader, testkeys.KnownInputHash(crypto.SHA512), crypto.SHA512)
@@ -103,12 +144,11 @@ func TestVerifyDigest(t *testing.T) {
 			}(),
 		},
 		{
-			Name:      "ed25519-digest-mismatch",
-			PublicKey: testkeys.GetED25519PublicKey(),
-			Digest:    testkeys.KnownInputHash(crypto.SHA256),
-			Hash:      crypto.SHA512,
-			Err:       cryptokms.ErrDigestLength,
-			Signature: func() []byte {
+			name:   "ed25519-digest-mismatch",
+			pub:    testkeys.GetED25519PublicKey(),
+			digest: testkeys.KnownInputHash(crypto.SHA256),
+			hash:   crypto.SHA512,
+			signature: func() []byte {
 				signer := testkeys.GetED25519PrivateKey()
 				signature, err := signer.Sign(
 					rand.Reader, testkeys.KnownInputHash(crypto.SHA512), crypto.SHA512)
@@ -119,12 +159,11 @@ func TestVerifyDigest(t *testing.T) {
 			}(),
 		},
 		{
-			Name:      "ed25519-digest-not-sha512",
-			PublicKey: testkeys.GetED25519PublicKey(),
-			Digest:    testkeys.KnownInputHash(crypto.SHA256),
-			Hash:      crypto.SHA256,
-			Err:       cryptokms.ErrSignatureEd25519,
-			Signature: func() []byte {
+			name:   "ed25519-digest-not-sha512",
+			pub:    testkeys.GetED25519PublicKey(),
+			digest: testkeys.KnownInputHash(crypto.SHA256),
+			hash:   crypto.SHA256,
+			signature: func() []byte {
 				signer := testkeys.GetED25519PrivateKey()
 				signature, err := signer.Sign(
 					rand.Reader, testkeys.KnownInputHash(crypto.SHA512), crypto.SHA512)
@@ -135,15 +174,14 @@ func TestVerifyDigest(t *testing.T) {
 			}(),
 		},
 		{
-			Name: "ed25519-signature-valid-but-wrong-key",
-			PublicKey: func() ed25519.PublicKey {
+			name: "ed25519-signature-valid-but-wrong-key",
+			pub: func() ed25519.PublicKey {
 				pub, _, _ := ed25519.GenerateKey(rand.Reader)
 				return pub
 			}(),
-			Digest: testkeys.KnownInputHash(crypto.SHA512),
-			Hash:   crypto.SHA512,
-			Err:    cryptokms.ErrSignatureEd25519,
-			Signature: func() []byte {
+			digest: testkeys.KnownInputHash(crypto.SHA512),
+			hash:   crypto.SHA512,
+			signature: func() []byte {
 				signer := testkeys.GetED25519PrivateKey()
 				signature, err := signer.Sign(
 					rand.Reader, testkeys.KnownInputHash(crypto.SHA512), crypto.SHA512)
@@ -154,12 +192,11 @@ func TestVerifyDigest(t *testing.T) {
 			}(),
 		},
 		{
-			Name:      "ed25519-signature-invalid",
-			PublicKey: testkeys.GetED25519PublicKey(),
-			Digest:    testkeys.KnownInputHash(crypto.SHA512),
-			Hash:      crypto.SHA512,
-			Err:       cryptokms.ErrSignatureEd25519,
-			Signature: func() []byte {
+			name:   "ed25519-signature-invalid",
+			pub:    testkeys.GetED25519PublicKey(),
+			digest: testkeys.KnownInputHash(crypto.SHA512),
+			hash:   crypto.SHA512,
+			signature: func() []byte {
 				signer := testkeys.GetED25519PrivateKey()
 				signature, err := signer.Sign(
 					rand.Reader, testkeys.KnownInputHash(crypto.SHA512), crypto.SHA512)
@@ -172,14 +209,15 @@ func TestVerifyDigest(t *testing.T) {
 		},
 		// ED25529 as pointer
 		{
-			Name: "valid-ptr-ed25519-sha512",
-			PublicKey: func() *ed25519.PublicKey {
+			name: "valid-ptr-ed25519-sha512",
+			pub: func() *ed25519.PublicKey {
 				pub := testkeys.GetED25519PublicKey()
 				return &pub
 			}(),
-			Digest: testkeys.KnownInputHash(crypto.SHA512),
-			Hash:   crypto.SHA512,
-			Signature: func() []byte {
+			ok:     true,
+			digest: testkeys.KnownInputHash(crypto.SHA512),
+			hash:   crypto.SHA512,
+			signature: func() []byte {
 				signer := testkeys.GetED25519PrivateKey()
 				signature, err := signer.Sign(
 					rand.Reader, testkeys.KnownInputHash(crypto.SHA512), crypto.SHA512)
@@ -190,15 +228,14 @@ func TestVerifyDigest(t *testing.T) {
 			}(),
 		},
 		{
-			Name: "ed25519-ptr-digest-mismatch",
-			PublicKey: func() *ed25519.PublicKey {
+			name: "ed25519-ptr-digest-mismatch",
+			pub: func() *ed25519.PublicKey {
 				pub := testkeys.GetED25519PublicKey()
 				return &pub
 			}(),
-			Digest: testkeys.KnownInputHash(crypto.SHA256),
-			Hash:   crypto.SHA512,
-			Err:    cryptokms.ErrDigestLength,
-			Signature: func() []byte {
+			digest: testkeys.KnownInputHash(crypto.SHA256),
+			hash:   crypto.SHA512,
+			signature: func() []byte {
 				signer := testkeys.GetED25519PrivateKey()
 				signature, err := signer.Sign(
 					rand.Reader, testkeys.KnownInputHash(crypto.SHA512), crypto.SHA512)
@@ -209,15 +246,14 @@ func TestVerifyDigest(t *testing.T) {
 			}(),
 		},
 		{
-			Name: "ed25519-ptr-digest-not-sha512",
-			PublicKey: func() *ed25519.PublicKey {
+			name: "ed25519-ptr-digest-not-sha512",
+			pub: func() *ed25519.PublicKey {
 				pub := testkeys.GetED25519PublicKey()
 				return &pub
 			}(),
-			Digest: testkeys.KnownInputHash(crypto.SHA256),
-			Hash:   crypto.SHA256,
-			Err:    cryptokms.ErrSignatureEd25519,
-			Signature: func() []byte {
+			digest: testkeys.KnownInputHash(crypto.SHA256),
+			hash:   crypto.SHA256,
+			signature: func() []byte {
 				signer := testkeys.GetED25519PrivateKey()
 				signature, err := signer.Sign(
 					rand.Reader, testkeys.KnownInputHash(crypto.SHA512), crypto.SHA512)
@@ -228,15 +264,14 @@ func TestVerifyDigest(t *testing.T) {
 			}(),
 		},
 		{
-			Name: "ed25519-ptr-signature-valid-but-wrong-key",
-			PublicKey: func() *ed25519.PublicKey {
+			name: "ed25519-ptr-signature-valid-but-wrong-key",
+			pub: func() *ed25519.PublicKey {
 				pub, _, _ := ed25519.GenerateKey(rand.Reader)
 				return &pub
 			}(),
-			Digest: testkeys.KnownInputHash(crypto.SHA512),
-			Hash:   crypto.SHA512,
-			Err:    cryptokms.ErrSignatureEd25519,
-			Signature: func() []byte {
+			digest: testkeys.KnownInputHash(crypto.SHA512),
+			hash:   crypto.SHA512,
+			signature: func() []byte {
 				signer := testkeys.GetED25519PrivateKey()
 				signature, err := signer.Sign(
 					rand.Reader, testkeys.KnownInputHash(crypto.SHA512), crypto.SHA512)
@@ -247,12 +282,11 @@ func TestVerifyDigest(t *testing.T) {
 			}(),
 		},
 		{
-			Name:      "ed25519-signature-invalid",
-			PublicKey: testkeys.GetED25519PublicKey(),
-			Digest:    testkeys.KnownInputHash(crypto.SHA512),
-			Hash:      crypto.SHA512,
-			Err:       cryptokms.ErrSignatureEd25519,
-			Signature: func() []byte {
+			name:   "ed25519-signature-invalid",
+			pub:    testkeys.GetED25519PublicKey(),
+			digest: testkeys.KnownInputHash(crypto.SHA512),
+			hash:   crypto.SHA512,
+			signature: func() []byte {
 				signer := testkeys.GetED25519PrivateKey()
 				signature, err := signer.Sign(
 					rand.Reader, testkeys.KnownInputHash(crypto.SHA512), crypto.SHA512)
@@ -265,12 +299,11 @@ func TestVerifyDigest(t *testing.T) {
 		},
 		// Key mismatch.
 		{
-			Name:      "invalid-rsa-signature-ec-public-key",
-			PublicKey: testkeys.GetECP256PublicKey(),
-			Digest:    testkeys.KnownInputHash(crypto.SHA256),
-			Hash:      crypto.SHA256,
-			Err:       cryptokms.ErrSignatureECDSA,
-			Signature: func() []byte {
+			name:   "invalid-rsa-signature-ec-public-key",
+			pub:    testkeys.GetECP256PublicKey(),
+			digest: testkeys.KnownInputHash(crypto.SHA256),
+			hash:   crypto.SHA256,
+			signature: func() []byte {
 				signer := testkeys.GetRSA2048PrivateKey()
 				signature, err := signer.Sign(
 					rand.Reader, testkeys.KnownInputHash(crypto.SHA256), crypto.SHA256)
@@ -282,29 +315,27 @@ func TestVerifyDigest(t *testing.T) {
 		},
 		//  hash length mismatch
 		{
-			Name:      "invalid-hash-length-mismatch",
-			PublicKey: testkeys.GetECP256PublicKey(),
-			Digest:    testkeys.KnownInputHash(crypto.SHA256),
-			Hash:      crypto.SHA384,
-			Err:       cryptokms.ErrDigestLength,
-			Signature: func() []byte {
+			name:   "invalid-hash-length-mismatch",
+			pub:    testkeys.GetECP256PublicKey(),
+			digest: testkeys.KnownInputHash(crypto.SHA256),
+			hash:   crypto.SHA384,
+			signature: func() []byte {
 				signer := testkeys.GetECP256PrivateKey()
 				signature, err := signer.Sign(
 					rand.Reader, testkeys.KnownInputHash(crypto.SHA256), crypto.SHA256)
 				if err != nil {
 					t.Fatalf("failed to sign: %s", err)
 				}
-				return signature
+				return signature[1:]
 			}(),
 		},
 		// invalid signature
 		{
-			Name:      "invalid-ec-signature",
-			PublicKey: testkeys.GetECP256PublicKey(),
-			Digest:    testkeys.KnownInputHash(crypto.SHA256),
-			Hash:      crypto.SHA256,
-			Err:       cryptokms.ErrSignatureECDSA,
-			Signature: func() []byte {
+			name:   "invalid-ec-signature",
+			pub:    testkeys.GetECP256PublicKey(),
+			digest: testkeys.KnownInputHash(crypto.SHA256),
+			hash:   crypto.SHA256,
+			signature: func() []byte {
 				signer := testkeys.GetECP256PrivateKey()
 				signature, err := signer.Sign(
 					rand.Reader, testkeys.KnownInputHash(crypto.SHA256), crypto.SHA256)
@@ -316,12 +347,11 @@ func TestVerifyDigest(t *testing.T) {
 			}(),
 		},
 		{
-			Name:      "invalid-rsa-signature",
-			PublicKey: testkeys.GetRSA2048PublicKey(),
-			Digest:    testkeys.KnownInputHash(crypto.SHA256),
-			Hash:      crypto.SHA256,
-			Err:       cryptokms.ErrSignatureRSA,
-			Signature: func() []byte {
+			name:   "invalid-rsa-signature",
+			pub:    testkeys.GetRSA2048PublicKey(),
+			digest: testkeys.KnownInputHash(crypto.SHA256),
+			hash:   crypto.SHA256,
+			signature: func() []byte {
 				signer := testkeys.GetRSA2048PrivateKey()
 				signature, err := signer.Sign(
 					rand.Reader, testkeys.KnownInputHash(crypto.SHA256), crypto.SHA256)
@@ -334,12 +364,11 @@ func TestVerifyDigest(t *testing.T) {
 		},
 		// RSA PSS
 		{
-			Name:      "invalid-rsa-pss-signature",
-			PublicKey: testkeys.GetRSA2048PublicKey(),
-			Digest:    testkeys.KnownInputHash(crypto.SHA256),
-			Hash:      crypto.SHA256,
-			Err:       cryptokms.ErrSignatureRSA,
-			Signature: func() []byte {
+			name:   "invalid-rsa-pss-signature",
+			pub:    testkeys.GetRSA2048PublicKey(),
+			digest: testkeys.KnownInputHash(crypto.SHA256),
+			hash:   crypto.SHA256,
+			signature: func() []byte {
 				signer := testkeys.GetRSA2048PrivateKey()
 				signature, err := signer.Sign(
 					rand.Reader,
@@ -356,12 +385,11 @@ func TestVerifyDigest(t *testing.T) {
 			}(),
 		},
 		{
-			Name:      "rsa-pss-signature-invalid-hash",
-			PublicKey: testkeys.GetRSA2048PublicKey(),
-			Digest:    testkeys.KnownInputHash(crypto.SHA256),
-			Hash:      crypto.SHA256,
-			Err:       cryptokms.ErrSignatureRSA,
-			Signature: func() []byte {
+			name:   "rsa-pss-signature-invalid-hash",
+			pub:    testkeys.GetRSA2048PublicKey(),
+			digest: testkeys.KnownInputHash(crypto.SHA256),
+			hash:   crypto.SHA256,
+			signature: func() []byte {
 				signer := testkeys.GetRSA2048PrivateKey()
 				signature, err := signer.Sign(
 					rand.Reader,
@@ -377,11 +405,12 @@ func TestVerifyDigest(t *testing.T) {
 			}(),
 		},
 		{
-			Name:      "rsa-pss-signature-valid",
-			PublicKey: testkeys.GetRSA2048PublicKey(),
-			Digest:    testkeys.KnownInputHash(crypto.SHA256),
-			Hash:      crypto.SHA256,
-			Signature: func() []byte {
+			name:   "rsa-pss-signature-valid",
+			pub:    testkeys.GetRSA2048PublicKey(),
+			digest: testkeys.KnownInputHash(crypto.SHA256),
+			hash:   crypto.SHA256,
+			ok:     true,
+			signature: func() []byte {
 				signer := testkeys.GetRSA2048PrivateKey()
 				signature, err := signer.Sign(
 					rand.Reader,
@@ -397,11 +426,12 @@ func TestVerifyDigest(t *testing.T) {
 			}(),
 		},
 		{
-			Name:      "rsa-pss-signature-valid-default-options",
-			PublicKey: testkeys.GetRSA2048PublicKey(),
-			Digest:    testkeys.KnownInputHash(crypto.SHA256),
-			Hash:      crypto.SHA256,
-			Signature: func() []byte {
+			name:   "rsa-pss-signature-valid-default-options",
+			pub:    testkeys.GetRSA2048PublicKey(),
+			digest: testkeys.KnownInputHash(crypto.SHA256),
+			hash:   crypto.SHA256,
+			ok:     true,
+			signature: func() []byte {
 				signer := testkeys.GetRSA2048PrivateKey()
 				signature, err := signer.Sign(
 					rand.Reader,
@@ -417,12 +447,11 @@ func TestVerifyDigest(t *testing.T) {
 		},
 		// key-mismatch-ecdsa
 		{
-			Name:      "correct-signature-wrong-ec-key",
-			PublicKey: testkeys.GetECP256PublicKey(),
-			Digest:    testkeys.KnownInputHash(crypto.SHA384),
-			Hash:      crypto.SHA384,
-			Err:       cryptokms.ErrSignatureECDSA,
-			Signature: func() []byte {
+			name:   "correct-signature-wrong-ec-key",
+			pub:    testkeys.GetECP256PublicKey(),
+			digest: testkeys.KnownInputHash(crypto.SHA384),
+			hash:   crypto.SHA384,
+			signature: func() []byte {
 				signer := testkeys.GetECP384PrivateKey()
 				signature, err := signer.Sign(
 					rand.Reader, testkeys.KnownInputHash(crypto.SHA384), crypto.SHA384)
@@ -433,12 +462,11 @@ func TestVerifyDigest(t *testing.T) {
 			}(),
 		},
 		{
-			Name:      "correct-signature-wrong-rsa-key",
-			PublicKey: testkeys.GetRSA4096PublicKey(),
-			Digest:    testkeys.KnownInputHash(crypto.SHA256),
-			Hash:      crypto.SHA256,
-			Err:       cryptokms.ErrSignatureRSA,
-			Signature: func() []byte {
+			name:   "correct-signature-wrong-rsa-key",
+			pub:    testkeys.GetRSA4096PublicKey(),
+			digest: testkeys.KnownInputHash(crypto.SHA256),
+			hash:   crypto.SHA256,
+			signature: func() []byte {
 				signer := testkeys.GetRSA2048PrivateKey()
 				signature, err := signer.Sign(
 					rand.Reader, testkeys.KnownInputHash(crypto.SHA256), crypto.SHA256)
@@ -450,12 +478,11 @@ func TestVerifyDigest(t *testing.T) {
 		},
 		// invalid public key
 		{
-			Name:      "correct-signature-wrong-rsa-key",
-			PublicKey: nil,
-			Digest:    testkeys.KnownInputHash(crypto.SHA256),
-			Hash:      crypto.SHA256,
-			Err:       cryptokms.ErrKeyAlgorithm,
-			Signature: func() []byte {
+			name:   "correct-signature-wrong-rsa-key",
+			pub:    nil,
+			digest: testkeys.KnownInputHash(crypto.SHA256),
+			hash:   crypto.SHA256,
+			signature: func() []byte {
 				signer := testkeys.GetRSA2048PrivateKey()
 				signature, err := signer.Sign(
 					rand.Reader, testkeys.KnownInputHash(crypto.SHA256), crypto.SHA256)
@@ -467,10 +494,16 @@ func TestVerifyDigest(t *testing.T) {
 		},
 	}
 	for _, tc := range tt {
-		t.Run(tc.Name, func(t *testing.T) {
-			err := cryptokms.VerifyDigestSignature(tc.PublicKey, tc.Hash, tc.Digest, tc.Signature)
-			if !errors.Is(err, tc.Err) {
-				t.Errorf("Expects error: %s, bit got: %s", tc.Err, err)
+		t.Run(tc.name, func(t *testing.T) {
+			err := cryptokms.VerifyDigestSignature(tc.pub, tc.hash, tc.digest, tc.signature)
+			if tc.ok {
+				if err != nil {
+					t.Errorf("expected no error, but got %s", err)
+				}
+			} else {
+				if err == nil {
+					t.Errorf("expected error, but got nil")
+				}
 			}
 		})
 	}
@@ -486,21 +519,20 @@ func (uselessReader) Read(_ []byte) (int, error) {
 
 func Test_Verify(t *testing.T) {
 	type testCase struct {
-		Name      string
-		PublicKey crypto.PublicKey
-		Data      io.Reader
-		Signature []byte
-		Hash      crypto.Hash
-		Err       error
+		name string
+		pub  crypto.PublicKey
+		data io.Reader
+		sig  []byte
+		hash crypto.Hash
+		ok   bool
 	}
 	tt := []testCase{
 		{
-			Name:      "nil-data",
-			PublicKey: testkeys.GetRSA2048PublicKey(),
-			Data:      nil,
-			Hash:      crypto.SHA256,
-			Err:       cryptokms.ErrInvalidInput,
-			Signature: func() []byte {
+			name: "nil-data",
+			pub:  testkeys.GetRSA2048PublicKey(),
+			data: nil,
+			hash: crypto.SHA256,
+			sig: func() []byte {
 				signer := testkeys.GetRSA2048PrivateKey()
 				signature, err := signer.Sign(
 					rand.Reader, testkeys.KnownInputHash(crypto.SHA256), crypto.SHA256)
@@ -511,34 +543,15 @@ func Test_Verify(t *testing.T) {
 			}(),
 		},
 		{
-			Name:      "valid-rsa4096-sha512",
-			PublicKey: testkeys.GetRSA4096PublicKey(),
-			Data: func() *bytes.Buffer {
+			name: "unsupported-hash-algorithm",
+			pub:  testkeys.GetECP256PublicKey(),
+			data: func() *bytes.Buffer {
 				b := &bytes.Buffer{}
 				b.WriteString(testkeys.KnownInput)
 				return b
 			}(),
-			Hash: crypto.SHA512,
-			Signature: func() []byte {
-				signer := testkeys.GetRSA4096PrivateKey()
-				signature, err := signer.Sign(
-					rand.Reader, testkeys.KnownInputHash(crypto.SHA512), crypto.SHA512)
-				if err != nil {
-					t.Fatalf("failed to sign: %s", err)
-				}
-				return signature
-			}(),
-		},
-		{
-			Name:      "valid-ecp256-sha256",
-			PublicKey: testkeys.GetECP256PublicKey(),
-			Data: func() *bytes.Buffer {
-				b := &bytes.Buffer{}
-				b.WriteString(testkeys.KnownInput)
-				return b
-			}(),
-			Hash: crypto.SHA256,
-			Signature: func() []byte {
+			hash: crypto.Hash(0),
+			sig: func() []byte {
 				signer := testkeys.GetECP256PrivateKey()
 				signature, err := signer.Sign(
 					rand.Reader, testkeys.KnownInputHash(crypto.SHA256), crypto.SHA256)
@@ -549,12 +562,51 @@ func Test_Verify(t *testing.T) {
 			}(),
 		},
 		{
-			Name:      "reader-error",
-			PublicKey: testkeys.GetECP256PublicKey(),
-			Data:      &uselessReader{},
-			Err:       iotest.ErrTimeout,
-			Hash:      crypto.SHA256,
-			Signature: func() []byte {
+			name: "valid-rsa4096-sha512",
+			pub:  testkeys.GetRSA4096PublicKey(),
+			data: func() *bytes.Buffer {
+				b := &bytes.Buffer{}
+				b.WriteString(testkeys.KnownInput)
+				return b
+			}(),
+			hash: crypto.SHA512,
+			ok:   true,
+			sig: func() []byte {
+				signer := testkeys.GetRSA4096PrivateKey()
+				signature, err := signer.Sign(
+					rand.Reader, testkeys.KnownInputHash(crypto.SHA512), crypto.SHA512)
+				if err != nil {
+					t.Fatalf("failed to sign: %s", err)
+				}
+				return signature
+			}(),
+		},
+		{
+			name: "valid-ecp256-sha256",
+			pub:  testkeys.GetECP256PublicKey(),
+			ok:   true,
+			data: func() *bytes.Buffer {
+				b := &bytes.Buffer{}
+				b.WriteString(testkeys.KnownInput)
+				return b
+			}(),
+			hash: crypto.SHA256,
+			sig: func() []byte {
+				signer := testkeys.GetECP256PrivateKey()
+				signature, err := signer.Sign(
+					rand.Reader, testkeys.KnownInputHash(crypto.SHA256), crypto.SHA256)
+				if err != nil {
+					t.Fatalf("failed to sign: %s", err)
+				}
+				return signature
+			}(),
+		},
+		{
+			name: "reader-error",
+			pub:  testkeys.GetECP256PublicKey(),
+			data: &uselessReader{},
+			hash: crypto.SHA256,
+			sig: func() []byte {
 				signer := testkeys.GetECP256PrivateKey()
 				signature, err := signer.Sign(
 					rand.Reader, testkeys.KnownInputHash(crypto.SHA256), crypto.SHA256)
@@ -566,10 +618,16 @@ func Test_Verify(t *testing.T) {
 		},
 	}
 	for _, tc := range tt {
-		t.Run(tc.Name, func(t *testing.T) {
-			err := cryptokms.VerifySignature(tc.PublicKey, tc.Hash, tc.Data, tc.Signature)
-			if !errors.Is(err, tc.Err) {
-				t.Errorf("Expects error: %s, bit got: %s", tc.Err, err)
+		t.Run(tc.name, func(t *testing.T) {
+			err := cryptokms.VerifySignature(tc.pub, tc.hash, tc.data, tc.sig)
+			if tc.ok {
+				if err != nil {
+					t.Errorf("expected no error, but got %s", err)
+				}
+			} else {
+				if err == nil {
+					t.Errorf("expected error, but got nil")
+				}
 			}
 		})
 	}

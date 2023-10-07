@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: Copyright 2023 Prasad Tengse
+// SPDX-License-Identifier: MIT
+
 package ioutils
 
 import (
@@ -36,7 +39,7 @@ func RenderGoTemplate(output string, tpl string, data any) error {
 		return fmt.Errorf("cryptokms(ioutils): failed to render template: %w", err)
 	}
 
-	// gofmt rendered output
+	// gofmt rendered output.
 	blob, err := format.Source(buf.Bytes())
 	if err != nil {
 		return fmt.Errorf("cryptokms(ioutils): failed to format rendered template: %w", err)

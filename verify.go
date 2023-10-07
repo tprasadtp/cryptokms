@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: Copyright 2023 Prasad Tengse
+// SPDX-License-Identifier: MIT
+
 package cryptokms
 
 import (
@@ -9,19 +12,6 @@ import (
 	"fmt"
 	"io"
 	"math/big"
-
-	"github.com/tprasadtp/cryptokms/internal/ioutils"
-)
-
-const (
-	// ErrSignatureRSA is returned when RSA signature verification fails.
-	ErrSignatureRSA = Error("cryptokms: RSA signature verification failed")
-
-	// ErrSignatureECDSA is returned when ECDSA signature verification fails.
-	ErrSignatureECDSA = Error("cryptokms: ECDSA signature verification failed")
-
-	// ErrSignatureEd25519 is returned when ed25519 signature verification fails.
-	ErrSignatureEd25519 = Error("cryptokms: ed25519 signature verification failed")
 )
 
 // VerifyDigestSignature is a wrapper around following, used to verify asymmetric signatures.
@@ -33,23 +23,29 @@ const (
 // Even though keys may be backed by KMS, this does not make use of KMS APIs
 // for verifying signatures, instead uses locally available Public keys.
 //
-// For ed25519 signatures, only Ed25519ph is supported with (SHA512).
+// For 25519 signatures, only Ed25519ph is supported with (SHA512).
 //
 // Public key must of one of
 //   - *[crypto/rsa.PublicKey]
 //   - *[crypto/ecdsa.PublicKey]
 //   - [crypto/ed25519.PublicKey]
 //   - *[crypto/ed25519.PublicKey]
+//
+// This does not allow insecure hashing algorithms ([crypto.SHA1] and [crypto.MD5],
+// [crypto.MD4]) and returns an error even though signature might be valid.
+// Similarly, RSA keys of length less than 2048 bits and ECDSA keys of size less than 256
+// are rejected even though signature might be valid.
 func VerifyDigestSignature(pub crypto.PublicKey, hash crypto.Hash, digest, signature []byte) error {
-	if len(digest) != hash.Size() {
-		return fmt.Errorf(
-			"%w: digest length is %d, want %d",
-			ErrDigestLength, len(digest), hash.Size(),
-		)
+	if hash == crypto.SHA1 || hash == crypto.MD4 || hash == crypto.MD5 {
+		return fmt.Errorf("cryptokms(verify): %s signatures are insecure are not supported", hash)
 	}
 
 	switch v := pub.(type) {
 	case *rsa.PublicKey:
+		if v.N.BitLen() < 2048 {
+			return fmt.Errorf("cryptokms(verify): insecure RSA key size (%d) is less than 2048", v.N.BitLen())
+		}
+
 		pkcs1v15 := rsa.VerifyPKCS1v15(v, hash, digest, signature)
 		if pkcs1v15 == nil {
 			return nil
@@ -58,56 +54,57 @@ func VerifyDigestSignature(pub crypto.PublicKey, hash crypto.Hash, digest, signa
 		if pss == nil {
 			return nil
 		}
-
-		return fmt.Errorf("%w: %w : %w", ErrSignatureRSA, pkcs1v15, pss)
+		return fmt.Errorf("cryptokms(verify): RSA signature verification failed")
 	case *ecdsa.PublicKey:
+		if v.Curve.Params().BitSize < 256 {
+			return fmt.Errorf("cryptokms(verify): ECDSA key size(%d) is less than 256 bits",
+				v.Curve.Params().BitSize)
+		}
+
 		var ps struct{ R, S *big.Int }
 		if _, err := asn1.Unmarshal(signature, &ps); err != nil {
-			return fmt.Errorf("%w: failed to asn1.Unmarshal: %w", ErrSignatureECDSA, err)
+			return fmt.Errorf("cryptokms(verify): ECDSA failed to unmarshal public key: %w", err)
 		}
 		if ecdsa.Verify(v, digest, ps.R, ps.S) {
 			return nil
 		}
-		return ErrSignatureECDSA
+		return fmt.Errorf("cryptokms(verify): ECDSA signature verification failed")
 	// https://github.com/golang/go/issues/51974
 	// ed25519 both cases need to be handled.
 	case ed25519.PublicKey:
-		if hash != crypto.SHA512 {
-			return fmt.Errorf("%w: digest algorithm(%s) not supported, ed25519 uses SHA512",
-				ErrSignatureEd25519, hash)
-		}
+		// Skips check for digest size as verifier already does it.
 		err := ed25519.VerifyWithOptions(v, digest, signature, &ed25519.Options{Hash: crypto.SHA512})
 		if err == nil {
 			return nil
 		}
-		return fmt.Errorf("%w: %w", ErrSignatureEd25519, err)
+		return fmt.Errorf("cryptokms(verify): ed25519 signature verification failed: %w", err)
 	case *ed25519.PublicKey:
-		if hash != crypto.SHA512 {
-			return fmt.Errorf("%w: digest algorithm(%s) not supported, ed25519 uses SHA512",
-				ErrSignatureEd25519, hash)
-		}
-		err := ed25519.VerifyWithOptions(*v, digest, signature,
-			&ed25519.Options{
-				Hash: crypto.SHA512,
-			})
+		// Skips check for digest size as verifier already does it.
+		err := ed25519.VerifyWithOptions(*v, digest, signature, &ed25519.Options{Hash: crypto.SHA512})
 		if err == nil {
 			return nil
 		}
-		return fmt.Errorf("%w: %w", ErrSignatureEd25519, err)
+		return fmt.Errorf("cryptokms(verify): ed25519 signature verification failed: %w", err)
+	default:
+		return fmt.Errorf("cryptokms(verify): unknown key type: %T", pub)
 	}
-	return fmt.Errorf("%w: unknown public key type - %T", ErrKeyAlgorithm, pub)
 }
 
 // VerifySignature is a wrapper around VerifyDigestSignature,
 // but accepts an io.Reader, which can hash the data with given hash function.
-func VerifySignature(pub crypto.PublicKey, hash crypto.Hash, data io.Reader, signature []byte) error {
-	if data == nil {
-		return fmt.Errorf("%w: data is nil", ErrInvalidInput)
+func VerifySignature(pub crypto.PublicKey, hash crypto.Hash, in io.Reader, signature []byte) error {
+	if in == nil {
+		return fmt.Errorf("cryptokms(verify): input is nil")
 	}
 
-	digest, err := ioutils.HashBlob(data, hash)
-	if err != nil {
-		return fmt.Errorf("cryptokms: failed to hash data: %w", err)
+	if !hash.Available() {
+		return fmt.Errorf("cryptokms(verify): digest algorithm(%s) is not available", hash)
 	}
-	return VerifyDigestSignature(pub, hash, digest, signature)
+
+	h := hash.New()
+	if _, err := io.Copy(h, in); err != nil {
+		return fmt.Errorf("cryptokms(verify): failed to hash data: %w", err)
+	}
+
+	return VerifyDigestSignature(pub, hash, h.Sum(nil), signature)
 }
