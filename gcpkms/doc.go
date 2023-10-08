@@ -2,5 +2,5 @@
 // SPDX-License-Identifier: MIT
 
 // Package gcpkms implements [crypto.Signer] and [crypto.Decrypter]
-// backed by Google Cloud KMS Asymmetric keys.
+// backed by Google Cloud KMS.
 package gcpkms

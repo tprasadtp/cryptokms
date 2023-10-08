@@ -18,7 +18,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/kms"
 	"github.com/aws/aws-sdk-go-v2/service/kms/types"
 	"github.com/google/uuid"
-	"github.com/tprasadtp/cryptokms"
 	"github.com/tprasadtp/cryptokms/internal/shared"
 	"github.com/tprasadtp/cryptokms/internal/testkeys"
 )
@@ -28,8 +27,8 @@ var (
 )
 
 // Forced errors.
-const (
-	ErrForced = cryptokms.Error("awsmock: forced error for unit testing")
+var (
+	errForced = fmt.Errorf("awskms(mock): forced error for unit testing")
 )
 
 // well known timestamp.
@@ -327,7 +326,7 @@ func newMockKMSClient() *mockKMSClient {
 // Describe Key describes key and its metadata.
 func (m *mockKMSClient) DescribeKey(ctx context.Context, params *kms.DescribeKeyInput, optFns ...func(*kms.Options)) (*kms.DescribeKeyOutput, error) {
 	if strings.Contains(*params.KeyId, "error-describe") {
-		return nil, fmt.Errorf("%w: action=describe", ErrForced)
+		return nil, fmt.Errorf("%w: action=describe", errForced)
 	}
 	metadata := m.store[*params.KeyId]
 	return &kms.DescribeKeyOutput{
@@ -353,7 +352,7 @@ func (m *mockKMSClient) DescribeKey(ctx context.Context, params *kms.DescribeKey
 // get public key.
 func (m *mockKMSClient) GetPublicKey(ctx context.Context, params *kms.GetPublicKeyInput, optFns ...func(*kms.Options)) (*kms.GetPublicKeyOutput, error) {
 	if strings.Contains(*params.KeyId, "error-get-public-key") {
-		return nil, fmt.Errorf("%w: action=get-public-key", ErrForced)
+		return nil, fmt.Errorf("%w: action=get-public-key", errForced)
 	}
 	metadata := m.store[*params.KeyId]
 	return &kms.GetPublicKeyOutput{
@@ -368,7 +367,7 @@ func (m *mockKMSClient) GetPublicKey(ctx context.Context, params *kms.GetPublicK
 
 func (m *mockKMSClient) Sign(ctx context.Context, params *kms.SignInput, optFns ...func(*kms.Options)) (*kms.SignOutput, error) {
 	if strings.Contains(*params.KeyId, "error-sign") {
-		return nil, fmt.Errorf("%w: action=sign", ErrForced)
+		return nil, fmt.Errorf("%w: action=sign", errForced)
 	}
 	metadata := m.store[*params.KeyId]
 
@@ -416,7 +415,7 @@ func (m *mockKMSClient) Sign(ctx context.Context, params *kms.SignInput, optFns 
 
 func (m *mockKMSClient) Decrypt(ctx context.Context, params *kms.DecryptInput, optFns ...func(*kms.Options)) (*kms.DecryptOutput, error) {
 	if strings.Contains(*params.KeyId, "error-decrypt") {
-		return nil, fmt.Errorf("%w: action=decrypt", ErrForced)
+		return nil, fmt.Errorf("%w: action=decrypt", errForced)
 	}
 	metadata := m.store[*params.KeyId]
 

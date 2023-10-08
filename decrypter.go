@@ -29,10 +29,10 @@ type Decrypter interface {
 
 	// Returns default hashing algorithm.
 	//  - Some KMS providers restrict hashing algorithm.
-	//  - If KMS key supports multiple signers, this
+	//  - If KMS key supports multiple algorithms, this
 	//    returns sane default, typically [crypto.SHA256].
 	HashFunc() crypto.Hash
 
-	// Algorithm returns KMS key algorithm.
+	// Algorithm returns key algorithm.
 	Algorithm() Algorithm
 }
