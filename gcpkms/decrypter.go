@@ -139,7 +139,7 @@ func NewDecrypter(ctx context.Context, keyID string, opts ...option.ClientOption
 	}
 
 	// Verify response integrity.
-	crcHash := ComputeCRC32([]byte(pbPublicKey.Pem))
+	crcHash := computeCRC32([]byte(pbPublicKey.Pem))
 	if crcHash.Value != pbPublicKey.PemCrc32C.Value {
 		return nil, fmt.Errorf("gcpkms: public key data integrity is invalid, expected CRC32=%x got=%x",
 			pbPublicKey.PemCrc32C, crcHash.Value)
@@ -253,7 +253,7 @@ func (d *Decrypter) DecryptContext(ctx context.Context, _ io.Reader, ciphertext 
 		&kmspb.AsymmetricDecryptRequest{
 			Name:             d.name,
 			Ciphertext:       ciphertext,
-			CiphertextCrc32C: ComputeCRC32(ciphertext),
+			CiphertextCrc32C: computeCRC32(ciphertext),
 		},
 	)
 
@@ -266,7 +266,7 @@ func (d *Decrypter) DecryptContext(ctx context.Context, _ io.Reader, ciphertext 
 	}
 
 	// Perform integrity verification (server response)
-	plaintextCrc32 := ComputeCRC32(resp.Plaintext)
+	plaintextCrc32 := computeCRC32(resp.Plaintext)
 	if plaintextCrc32.Value != resp.PlaintextCrc32C.Value {
 		return nil, fmt.Errorf("gcpkms: decryption data integrity error, expected CRC32=%x got=%x",
 			resp.PlaintextCrc32C.Value, plaintextCrc32.Value)

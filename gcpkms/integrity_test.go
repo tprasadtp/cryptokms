@@ -1,12 +1,11 @@
 // SPDX-FileCopyrightText: Copyright 2023 Prasad Tengse
 // SPDX-License-Identifier: MIT
 
-package gcpkms_test
+package gcpkms
 
 import (
 	"testing"
 
-	"github.com/tprasadtp/cryptokms/gcpkms"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 )
 
@@ -31,7 +30,7 @@ func Test_ComputeCRC32(t *testing.T) {
 
 	for _, tc := range tt {
 		t.Run(tc.Name, func(t *testing.T) {
-			got := gcpkms.ComputeCRC32(tc.Input)
+			got := computeCRC32(tc.Input)
 			if got.Value != tc.Expect.Value {
 				t.Errorf("expected '%d(%x)', but got '%d(%x)'",
 					tc.Expect.Value,

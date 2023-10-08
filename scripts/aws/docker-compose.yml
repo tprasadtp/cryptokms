@@ -3,7 +3,7 @@ services:
     container_name: "localkms_cryptokms"
     image: nsmithuk/local-kms:latest
     ports:
-      - target: 8080
+      - target: 8088
         published: 8088
         protocol: tcp
     volumes:
@@ -12,6 +12,7 @@ services:
       - type: tmpfs
         target: /data
     environment:
+      PORT: 8088
       KMS_REGION: us-east-1
       KMS_ACCOUNT_ID: "000000000000"
     labels:

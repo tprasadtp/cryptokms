@@ -202,9 +202,9 @@ func (svc *fakeService) GetPublicKey(ctx context.Context, req *kmspb.GetPublicKe
 
 	// forces response to be corrupt.
 	if strings.Contains(req.Name, "ERROR_SRV_INTEGRITY") {
-		resp.PemCrc32C = ComputeCRC32([]byte("error"))
+		resp.PemCrc32C = computeCRC32([]byte("error"))
 	} else {
-		resp.PemCrc32C = ComputeCRC32([]byte(resp.Pem))
+		resp.PemCrc32C = computeCRC32([]byte(resp.Pem))
 	}
 	return resp, nil
 }
@@ -264,9 +264,9 @@ func (svc *fakeService) AsymmetricSign(ctx context.Context, req *kmspb.Asymmetri
 	}
 
 	if strings.Contains(req.Name, "ERROR_RESP_INTEGRITY") {
-		resp.SignatureCrc32C = ComputeCRC32([]byte("error"))
+		resp.SignatureCrc32C = computeCRC32([]byte("error"))
 	} else {
-		resp.SignatureCrc32C = ComputeCRC32(resp.Signature)
+		resp.SignatureCrc32C = computeCRC32(resp.Signature)
 	}
 	return resp, nil
 }
@@ -290,7 +290,7 @@ func (svc *fakeService) AsymmetricDecrypt(ctx context.Context, req *kmspb.Asymme
 	if strings.Contains(req.Name, "ERROR_REQ_INTEGRITY") {
 		resp.VerifiedCiphertextCrc32C = false
 		resp.Plaintext = []byte(testkeys.KnownInput)
-		resp.PlaintextCrc32C = ComputeCRC32(resp.Plaintext)
+		resp.PlaintextCrc32C = computeCRC32(resp.Plaintext)
 		return resp, nil
 	}
 
@@ -335,9 +335,9 @@ func (svc *fakeService) AsymmetricDecrypt(ctx context.Context, req *kmspb.Asymme
 	}
 
 	if strings.Contains(req.Name, "ERROR_RESP_INTEGRITY") {
-		resp.PlaintextCrc32C = ComputeCRC32([]byte("error"))
+		resp.PlaintextCrc32C = computeCRC32([]byte("error"))
 	} else {
-		resp.PlaintextCrc32C = ComputeCRC32(resp.Plaintext)
+		resp.PlaintextCrc32C = computeCRC32(resp.Plaintext)
 	}
 	return resp, nil
 }

@@ -153,7 +153,7 @@ func NewSigner(ctx context.Context, keyID string, opts ...option.ClientOption) (
 	}
 
 	// Verify response integrity.
-	crcHash := ComputeCRC32([]byte(pbPublicKey.Pem))
+	crcHash := computeCRC32([]byte(pbPublicKey.Pem))
 	if crcHash.Value != pbPublicKey.PemCrc32C.Value {
 		return nil, fmt.Errorf("gcpkms: public key data integrity is invalid, expected CRC32=%x got=%x",
 			pbPublicKey.PemCrc32C, crcHash.Value)
@@ -266,7 +266,7 @@ func (s *Signer) SignContext(ctx context.Context, _ io.Reader, digest []byte, op
 	resp, err := s.client.AsymmetricSign(ctx, &kmspb.AsymmetricSignRequest{
 		Name:         s.name,
 		Digest:       digestpb,
-		DigestCrc32C: ComputeCRC32(digest),
+		DigestCrc32C: computeCRC32(digest),
 	})
 	if err != nil {
 		return nil, fmt.Errorf("gcpkms: failed to sign: %w", err)
@@ -278,7 +278,7 @@ func (s *Signer) SignContext(ctx context.Context, _ io.Reader, digest []byte, op
 	}
 
 	// Perform integrity verification (server response)
-	respCrc32Hash := ComputeCRC32(resp.Signature)
+	respCrc32Hash := computeCRC32(resp.Signature)
 	if respCrc32Hash.Value != resp.SignatureCrc32C.Value {
 		return nil, fmt.Errorf("gcpkms: signed data integrity error, expected CRC32=%x got=%x",
 			resp.SignatureCrc32C.Value, respCrc32Hash.Value)
