@@ -1,31 +1,27 @@
 // SPDX-FileCopyrightText: Copyright 2023 Prasad Tengse
 // SPDX-License-Identifier: MIT
 
-package awskms_test
+package filekms_test
 
 import (
 	"context"
 	"crypto/rand"
 	"crypto/rsa"
+	"encoding/hex"
 	"fmt"
 
-	"github.com/aws/aws-sdk-go-v2/service/kms"
 	"github.com/tprasadtp/cryptokms"
-	"github.com/tprasadtp/cryptokms/awskms"
+	"github.com/tprasadtp/cryptokms/filekms"
 )
 
 func ExampleSigner() {
 	ctx := context.Background()
 
-	// Create a New KMS client
-	client := kms.New(kms.Options{Region: "us-east-1"})
-
-	// Key Version Resource name.
-	// Please replace this with your KMS Key ARN.
-	keyID := "arn:aws:kms:us-east-1:000000000000:key/6ac3332a-9900-4c0d-8de2-a8f8748700ff"
+	// Please replace this with path to your PEM encoded key file.
+	keyFile := "internal/testdata/ec-p256.pem"
 
 	// Create a new Signer.
-	signer, err := awskms.NewSigner(ctx, client, keyID)
+	signer, err := filekms.NewSigner(keyFile)
 	if err != nil {
 		// TODO: Handle error
 		panic(err)
@@ -54,20 +50,22 @@ func ExampleSigner() {
 		// TODO: Handle error
 		panic(err)
 	}
+	fmt.Printf("Digest   : %s\n", hex.EncodeToString(digest))
+	fmt.Printf("Signature: Verified\n")
+
+	// Output:
+	// Digest   : 381d492615cee4337ef441d9fb2e3682c0306fb99b82ff966af4cc5dc8db61b7
+	// Signature: Verified
 }
 
 func ExampleDecrypter() {
 	ctx := context.Background()
 
-	// Create a New KMS client
-	client := kms.New(kms.Options{Region: "us-east-1"})
-
-	// Key Version Resource name.
-	// Please replace this with your KMS Key ARN.
-	keyID := "arn:aws:kms:us-east-1:000000000000:key/6ac3332a-9900-4c0d-8de2-a8f8748700ff"
+	// Please replace this with path to your PEM encoded key file.
+	keyFile := "internal/testdata/rsa-3072.pem"
 
 	// Create a new Decrypter
-	decrypter, err := awskms.NewDecrypter(ctx, client, keyID)
+	decrypter, err := filekms.NewDecrypter(keyFile)
 	if err != nil {
 		// TODO: Handle error
 		panic(err)
@@ -77,19 +75,11 @@ func ExampleDecrypter() {
 	// A nod to https://en.wikipedia.org/wiki/Stellar_classification.
 	msg := []byte(`Oh Be A Fine Girl Kiss Me`)
 
-	// This should not be really necessary as currently only asymmetric keys supported
-	// for encryption are RSA keys.
-	pub, ok := decrypter.Public().(*rsa.PublicKey)
-	if !ok {
-		// TODO: Handle error
-		panic("not rsa key")
-	}
-
 	// Encrypt the message using public key.
 	encrypted, err := rsa.EncryptOAEP(
 		decrypter.HashFunc().New(),
 		rand.Reader,
-		pub,
+		decrypter.Public().(*rsa.PublicKey),
 		msg,
 		nil,
 	)
@@ -106,4 +96,6 @@ func ExampleDecrypter() {
 	}
 
 	fmt.Printf("Plaintext: %s", string(plaintext))
+	// Output:
+	// Plaintext: Oh Be A Fine Girl Kiss Me
 }

@@ -14,16 +14,11 @@ import (
 	"math/big"
 )
 
-// VerifyDigestSignature is a wrapper around following, used to verify asymmetric signatures.
+// VerifyDigestSignature is a wrapper around following,
 //   - [crypto/rsa.VerifyPKCS1v15]
 //   - [crypto/ecdsa.Verify]
-//   - [crypto/ed25519.VerifyWithOptions]
+//   - [crypto/ed25519.VerifyWithOptions] (only Ed25519ph with SHA512)
 //   - [crypto/rsa.VerifyPSS]
-//
-// Even though keys may be backed by KMS, this does not make use of KMS APIs
-// for verifying signatures, instead uses locally available Public keys.
-//
-// For 25519 signatures, only Ed25519ph is supported with (SHA512).
 //
 // Public key must of one of
 //   - *[crypto/rsa.PublicKey]
@@ -32,18 +27,24 @@ import (
 //   - *[crypto/ed25519.PublicKey]
 //
 // This does not allow insecure hashing algorithms ([crypto.SHA1] and [crypto.MD5],
-// [crypto.MD4]) and returns an error even though signature might be valid.
-// Similarly, RSA keys of length less than 2048 bits and ECDSA keys of size less than 256
-// are rejected even though signature might be valid.
+// [crypto.MD4]) and returns an error even though signature might be valid. Similarly,
+// RSA keys of length less than 2048 bits and ECDSA keys of size less than 256 are rejected
+// even though signature might be valid.
 func VerifyDigestSignature(pub crypto.PublicKey, hash crypto.Hash, digest, signature []byte) error {
 	if hash == crypto.SHA1 || hash == crypto.MD4 || hash == crypto.MD5 {
 		return fmt.Errorf("cryptokms(verify): %s signatures are insecure are not supported", hash)
 	}
 
+	if !hash.Available() {
+		return fmt.Errorf("cryptokms(verify): digest algorithm(%s) is not available", hash)
+	}
+
 	switch v := pub.(type) {
 	case *rsa.PublicKey:
 		if v.N.BitLen() < 2048 {
-			return fmt.Errorf("cryptokms(verify): insecure RSA key size (%d) is less than 2048", v.N.BitLen())
+			return fmt.Errorf(
+				"cryptokms(verify): insecure RSA key size (%d) is less than 2048",
+				v.N.BitLen())
 		}
 
 		pkcs1v15 := rsa.VerifyPKCS1v15(v, hash, digest, signature)

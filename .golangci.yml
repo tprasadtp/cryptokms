@@ -367,7 +367,6 @@ linters:
     - wrapcheck # checks that errors returned from external packages are wrapped
     - loggercheck # checks key value pairs for common logger libraries (kitlog,klog,logr,zap)
     - importas # enforces consistent import aliases
-    - testableexamples # checks if examples are testable (have an expected output)
     - goheader # checks for headers
     - containedctx # detects struct contained context.Context field
     - thelper # detects golang test helpers without t.Helper() call and checks the consistency of test helpers
@@ -394,6 +393,7 @@ linters:
     #- misspell # [useless] finds commonly misspelled English words in comments
     #- nlreturn # [too strict and mostly code is not more readable] checks for a new line before return and branch statements to increase code clarity
     #- tagliatelle # checks the struct tags
+    #- testableexamples # checks if examples are testable (have an expected output)
     #- wsl # [too strict and mostly code is not more readable] whitespace linter forces you to use empty lines
     #- varnamelen [too noisy] # checks that the length of a variable's name matches its scope
     #- ireturn # [useless as we use functional options with interfaces a lot] accept interfaces, return concrete types (with stdlib interfaces ignored)
