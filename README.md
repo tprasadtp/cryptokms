@@ -1,10 +1,12 @@
 # Crypto Helpers for KMS backed keys
 
-[![Go Reference](https://pkg.go.dev/badge/github.com/tprasadtp/cryptokmssvg)](https://pkg.go.dev/github.com/tprasadtp/cryptokms)
-![GitHub go.mod Go version](https://img.shields.io/github/go-mod/go-version/tprasadtp/cryptokms?label=go&logo=go&logoColor=white)
+[![go-reference](https://img.shields.io/badge/go-reference-00758D?logo=go&logoColor=white)](https://pkg.go.dev/github.com/tprasadtp/cryptokms)
+[![go-version](https://img.shields.io/github/go-mod/go-version/tprasadtp/cryptokms?logo=go&logoColor=white&color=00758D&label=go)](https://github.com/tprasadtp/cryptokms/blob/master/go.mod)
 [![test](https://github.com/tprasadtp/cryptokms/actions/workflows/test.yml/badge.svg)](https://github.com/tprasadtp/cryptokms/actions/workflows/test.yml)
-[![License](https://img.shields.io/github/license/tprasadtp/cryptokms)](https://github.com/tprasadtp/cryptokms/blob/master/LICENSE)
-![GitHub tag (latest SemVer)](https://img.shields.io/github/v/tag/tprasadtp/cryptokms?color=7f50a6&label=release&logo=semver&sort=semver)
+[![lint](https://github.com/tprasadtp/cryptokms/actions/workflows/lint.yml/badge.svg)](https://github.com/tprasadtp/cryptokms/actions/workflows/lint.yml)
+[![release](https://github.com/tprasadtp/cryptokms/actions/workflows/release.yml/badge.svg)](https://github.com/tprasadtp/cryptokms/actions/workflows/release.yml)
+[![license](https://img.shields.io/github/license/tprasadtp/cryptokms)](https://github.com/tprasadtp/cryptokms/blob/master/LICENSE)
+[![latest-version](https://img.shields.io/github/v/tag/tprasadtp/cryptokms?color=7f50a6&label=release&logo=semver&sort=semver)](https://github.com/tprasadtp/cryptokms/releases)
 
 Implements [crypto.Signer] and [crypto.Decrypter] for keys typically backed by KMS service.
 Currently it supports keys backed by,
@@ -73,7 +75,7 @@ Uses sensible and sane defaults.
 
 ## Keys from filesystem
 
-> **Warning**
+> [!IMPORTANT]
 >
 > Use in-memory non swap-able file system (like ramfs) or from kubernetes secret store CSI.
 > For systems using systemd, [systemd-credentials] can be used as keys can be encrypted,

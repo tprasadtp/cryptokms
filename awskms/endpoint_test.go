@@ -9,14 +9,12 @@ import (
 	"github.com/tprasadtp/cryptokms/awskms/internal/testdata"
 )
 
-var (
-	_ kms.EndpointResolver = (*endpointResolver)(nil)
-)
+var _ kms.EndpointResolver = (*endpointResolver)(nil)
 
 // endpointResolver Implements kms.EndpointResolver.
 type endpointResolver struct{}
 
-func (e *endpointResolver) ResolveEndpoint(region string, options kms.EndpointResolverOptions) (aws.Endpoint, error) {
+func (e *endpointResolver) ResolveEndpoint(_ string, _ kms.EndpointResolverOptions) (aws.Endpoint, error) {
 	return aws.Endpoint{
 		URL: testdata.KMSEndpoint,
 	}, nil

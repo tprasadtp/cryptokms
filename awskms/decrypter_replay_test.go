@@ -53,6 +53,7 @@ func TestDecrypter_Replay(t *testing.T) {
 				Credentials: &aws.AnonymousCredentials{},
 			}
 			if testdata.KMSEndpoint != "" {
+				//nolint:staticcheck // ignore
 				kmsOptions.EndpointResolver = &endpointResolver{}
 			}
 			client := kms.New(kmsOptions)

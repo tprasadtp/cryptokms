@@ -1,7 +1,16 @@
 {
+  // Enable golangci-lint with config in the repository.
   "go.lintTool": "golangci-lint",
   "go.lintFlags": [
     "--fast"
-],
-"go.buildTags": "fake",
+  ],
+  // Use gofumpt for formating.
+  "go.useLanguageServer": true,
+  "gopls": {
+      "formatting.gofumpt": true,
+  },
+  // Enable go vulnerability checks.
+  "go.diagnostic.vulncheck": "Imports",
+  // Default test timeouts.
+  "go.testTimeout": "60s",
 }

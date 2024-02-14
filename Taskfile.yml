@@ -1,31 +1,36 @@
-# SPDX-FileCopyrightText: Copyright 2023 Prasad Tengse
+# SPDX-FileCopyrightText: Copyright 2024 Prasad Tengse
 # SPDX-License-Identifier: MIT
-
+#
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
 version: "3"
 
+vars:
+  # Go coverage data directory is root Taskfile's directory + '.gocover'.
+  GO_COVER_DIR: '{{ joinPath .ROOT_DIR ".gocover" }}'
+
 tasks:
+  # -----------------------------------------------------------------
+  # Default Task. Shows List of available tasks.
+  #
+  # This intentionally lacks a desc field to hide it from help output.
+  # -----------------------------------------------------------------
   default:
-    desc: "Show a list of available tasks"
     cmds:
       - cmd: task --list
         silent: true
-  bench-internal:
-    desc: "Benchmark Items"
+  # -----------------------------------------------------------------
+  # Creates a directory if not present.
+  # -----------------------------------------------------------------
+  internal:mkdir:
     internal: true
     requires:
       vars:
-        - GO_BENCH_COUNT
-        - GO_BENCH_PKG
-        - GO_BENCH_NAME
-        - GO_BENCH_OUTPUT_FIE
-        - GO_BENCH_TIMEOUT
+        - DIRECTORY
+    status:
+      - "{{ if .DIRECTORY }}test -d {{ .DIRECTORY|quote }}{{ end }}"
     cmds:
-      - cmd: |
-          go test -benchmem \
-            -run=^$ -count={{.GO_BENCH_COUNT}} \
-            -timeout={{.GO_BENCH_TIMEOUT}} \
-            -bench="{{.GO_BENCH_NAME}}" \
-            {{.GO_BENCH_PKG}} | tee "{{.GO_BENCH_OUTPUT_FIE}}"
+      # Do not use a long form flag --parents as it is not supported on macOS.
+      - cmd: mkdir -p {{.DIRECTORY|quote}}
         platforms:
           - linux
           - darwin
@@ -33,63 +38,222 @@ tasks:
           - netbsd
           - dragonfly
           - openbsd
-      - cmd: |
-          powershell.exe -NonInteractive -NoProfile -NoLogo -Command 'go test -benchmem -run="^$" -count={{.GO_BENCH_COUNT}} -timeout={{.GO_BENCH_TIMEOUT}} -bench="{{.GO_BENCH_NAME}}" {{.GO_BENCH_PKG}} | Tee-Object "{{.GO_BENCH_OUTPUT_FIE}}"'
+      - cmd: powershell.exe -NonInteractive -NoProfile -NoLogo -Command 'New-Item -ItemType Directory -Force -Path "{{.DIRECTORY}}"'
         platforms:
           - windows
-  test-all:
-    desc: "Test all packages"
+  # -----------------------------------------------------------------
+  # Removes files with PATTERN in the given DIRECTORY.
+  # -----------------------------------------------------------------
+  internal:rm-file-glob:
+    internal: true
+    requires:
+      vars:
+        - DIRECTORY
+        - PATTERN
+    status:
+      - "{{ if .DIRECTORY }}! test -d {{ .DIRECTORY|quote }}{{ end }}"
     cmds:
-      - task: test-pkg
-        vars:
-          GO_TEST_PKG: "./..."
-          GO_TEST_TIMEOUT: 2m
-  test-cryptokms:
-    desc: "Test cryptokms package"
+      - cmd: rm -f {{ joinPath (.DIRECTORY | quote) .PATTERN }}
+        platforms:
+          - linux
+          - darwin
+          - freebsd
+          - netbsd
+          - dragonfly
+          - openbsd
+      - cmd: powershell.exe -NonInteractive -NoProfile -NoLogo -Command '(Remove-Item -Force -ErrorAction SilentlyContinue -Path "{{ joinPath .DIRECTORY .PATTERN  }}")'
+        platforms:
+          - windows
+  # -----------------------------------------------------------------
+  # Removes an empty DIRECTORY.
+  # -----------------------------------------------------------------
+  internal:rmdir:
+    internal: true
+    requires:
+      vars:
+        - DIRECTORY
+    status:
+      - "{{ if .DIRECTORY }}! test -d {{ .DIRECTORY|quote }}{{ end }}"
     cmds:
-      - task: test-pkg
-        vars:
-          GO_TEST_PKG: "github.com/tprasadtp/cryptokms"
-          GO_TEST_TIMEOUT: 30s
-  test-gcpkms:
-    desc: "Test gcpkms package"
+      - cmd: rmdir {{ .DIRECTORY | quote }}
+        platforms:
+          - linux
+          - darwin
+          - freebsd
+          - netbsd
+          - dragonfly
+          - openbsd
+      - cmd: powershell.exe -NonInteractive -NoProfile -NoLogo -Command 'Remove-Item -Force -Path "{{ .DIRECTORY }}"'
+        platforms:
+          - windows
+  # -----------------------------------------------------------------
+  # Create .gocover directory to store coverage data
+  # -----------------------------------------------------------------
+  internal:go:create-coverage-dir:
+    internal: true
+    status:
+       - "{{ if .GO_COVER_DIR }}test -d {{ .GO_COVER_DIR|quote }}{{ end }}"
     cmds:
-      - task: test-pkg
+      - task: internal:mkdir
         vars:
-          GO_TEST_PKG: "github.com/tprasadtp/cryptokms/gcpkms"
-          GO_TEST_TIMEOUT: 30s
-  test-awskms:
-    desc: "Test awskms package"
+          DIRECTORY: "{{ .GO_COVER_DIR }}"
+  # -----------------------------------------------------------------
+  # Cleanup coverage files before building/testing.
+  #
+  # This is required to avoid covtool errors when sources change.
+  # Thus, this task fingerprints the sources, and only executed
+  # when relevant source files change.
+  # Unlike clean-coverage task, this will not remove coverage directory.
+  #
+  # Test tasks should use internal:go:clean-coverage-files:pre-build
+  # as it avoids duplicate work by nesting two tasks. Otherwise,
+  # internal:rm-file-glob tasks will be executed multiple times on
+  # change to go sources or Taskfile.
+  # -----------------------------------------------------------------
+  internal:go:clean-coverage-files:
+    internal: true
+    status:
+      - "{{ if .GO_COVER_DIR }}! test -d {{ .GO_COVER_DIR|quote }}{{ end }}"
     cmds:
-      - task: test-pkg
+      - task: internal:rm-file-glob
         vars:
-          GO_TEST_PKG: "github.com/tprasadtp/cryptokms/awskms"
-          GO_TEST_TIMEOUT: 30s
-  test-memkms:
-    desc: "Test memkms package"
+          DIRECTORY: "{{ .GO_COVER_DIR }}"
+          PATTERN: "{{ .ITEM }}"
+        for:
+          - "covcounters.*"
+          - "covmeta.*"
+          - "coverage.*"
+  internal:go:clean-coverage-files:pre-build:
+    internal: true
+    method: checksum
+    sources:
+      - "**/*.go"
+      - "Taskfile.yml"
     cmds:
-      - task: test-pkg
-        vars:
-          GO_TEST_PKG: "github.com/tprasadtp/cryptokms/memkms"
-          GO_TEST_TIMEOUT: 30s
-  test-filekms:
-    desc: "Test filekms package"
-    cmds:
-      - task: test-pkg
-        vars:
-          GO_TEST_PKG: "github.com/tprasadtp/cryptokms/filekms"
-          GO_TEST_TIMEOUT: 30s
-  test-pkg:
-    desc: "Test single package"
+      - task: internal:go:clean-coverage-files
+  # -----------------------------------------------------------------
+  # Run go test on package(s) specified by GO_TEST_PKG.
+  # -----------------------------------------------------------------
+  internal:go:test:
     internal: true
     requires:
       vars:
         - GO_TEST_PKG
-        - GO_TEST_TIMEOUT
+    preconditions:
+      - sh: >-
+          {{- if .GO_COVER_DIR }}
+            {{- if not (osIsAbs .GO_COVER_DIR) }}
+              false
+            {{- end }}
+          {{- end }}
+        msg: "GO_COVER_DIR({{.GO_COVER_DIR}}) must be an absolute path."
     cmds:
-      - cmd: go test -cover -timeout={{.GO_TEST_TIMEOUT}} {{.GO_TEST_PKG}}
+      # Cleanup coverage files if sources have changed.
+      - task: internal:go:clean-coverage-files:pre-build
+      # Create .gocover directory to store coverage data.
+      - task: internal:go:create-coverage-dir
+      # Run go test, optionally with coverage directory specified.
+      - cmd: go test {{ .GO_TEST_FLAG_VERBOSE }} -cover -timeout {{ default "3m" .GO_TEST_TIMEOUT }} {{ .GO_TEST_PKG }} {{ .GO_TEST_FLAG_COVERDIR }} {{.CLI_ARGS}}
+    vars:
+      # GO_TEST_FLAG_COVERDIR will be set if GO_COVER_DIR is already set and is
+      # an absolute path. This is enforced as --test.coverdir does not deal with relative
+      # paths when testing multiple packages or when running trampolines.
+      # See - https://github.com/golang/go/issues/51430#issuecomment-1344711300
+      GO_TEST_FLAG_COVERDIR: >-
+        {{- if .GO_COVER_DIR }}
+          {{- if osIsAbs .GO_COVER_DIR }}
+            {{- printf `--test.gocoverdir "%s"` .GO_COVER_DIR }}
+          {{- end }}
+        {{- end }}
+      # If user already specified -v/-v=true flag, skip checking variables for debug flags.
+      # Otherwise, check if RUNNER_DEBUG or DEBUG is set to truthy value and set GO_TEST_FLAG_VERBOSE
+      # to -v.
+      #
+      # Output of this variable MUST be a single line. i.e no newlines.
+      GO_TEST_FLAG_VERBOSE: >-
+        {{- if not (mustRegexMatch "--?v=?(true|false)?" .CLI_ARGS) }}
+          {{- if eq .RUNNER_DEBUG "1" }}
+            {{- printf "-v" }}
+          {{- else if .DEBUG }}
+            {{- if or (eq .DEBUG "1") (eq (lower .DEBUG) "yes") (eq (lower .DEBUG) "true") }}
+                {{- printf "-v" }}
+              {{- end }}
+          {{- end }}
+        {{- end }}
+  # -----------------------------------------------------------------
+  # Run all configured linters.
+  # -----------------------------------------------------------------
   lint:
-    desc: "Run golangci-lint"
+    desc: "Run all configured linters"
+    summary: |
+      Run all configured linters on the project.
     prefix: "lint"
-    cmd: |
-      golangci-lint run
+    preconditions:
+      - sh: command -v golangci-lint
+        msg: Missing tool 'golangci-lint'.
+    aliases:
+      - "go:lint"
+      - "golangci-lint"
+    cmd: golangci-lint run {{.CLI_ARGS}}
+  # -----------------------------------------------------------------
+  # Test all packages with coverage.
+  # -----------------------------------------------------------------
+  test:
+    desc: "Test all packages"
+    summary: |-
+      Runs Go test on all supported packages.
+
+      This by default will create .gocover directory in Root Taskfile's
+      directory to store coverage data which may be written by the test
+      itself or via test trampolines.
+      Runtime Info:
+
+        OS             : {{ default "NA" OS }}
+        GO_COVER_DIR   : {{ default "NA" .GO_COVER_DIR }}
+    aliases:
+      - "go:test"
+    cmds:
+      - task: internal:go:test
+        vars:
+          GO_TEST_PKG: "./..."
+  # -----------------------------------------------------------------
+  # Cleanup generated data, cache and build artifacts
+  # -----------------------------------------------------------------
+  clean:
+    desc: "Clean cache, build artifacts etc."
+    aliases:
+      - "go:clean"
+    cmds:
+      - task: internal:go:clean-coverage-files
+      - task: internal:rmdir
+        vars:
+          DIRECTORY: '{{ .GO_COVER_DIR }}'
+      - task: internal:rm-file-glob
+        vars:
+          DIRECTORY: '{{ joinPath .ROOT_DIR "dist" }}'
+          PATTERN: "*.json"
+      - task: internal:rm-file-glob
+        vars:
+          DIRECTORY: '{{ joinPath .ROOT_DIR "dist" }}'
+          PATTERN: "*.yml"
+      - task: internal:rm-file-glob
+        vars:
+          DIRECTORY: '{{ joinPath .ROOT_DIR "dist" }}'
+          PATTERN: "*.yaml"
+      - task: internal:rmdir
+        vars:
+          DIRECTORY: '{{ joinPath .ROOT_DIR "dist" }}'
+      - task: internal:rm-file-glob
+        vars:
+          DIRECTORY: '{{ joinPath .ROOT_DIR "example" }}'
+          PATTERN: "example"
+      - task: internal:rm-file-glob
+        vars:
+          DIRECTORY: '{{ joinPath .ROOT_DIR "bin" }}'
+          PATTERN: "example"
+      - task: internal:rmdir
+        vars:
+          DIRECTORY: "{{ .ITEM }}"
+        for:
+          - '{{ .GO_COVER_DIR }}'
+          - '{{ joinPath .ROOT_DIR "bin" }}'

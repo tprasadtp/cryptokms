@@ -22,9 +22,7 @@ import (
 	"github.com/tprasadtp/cryptokms/internal/testkeys"
 )
 
-var (
-	_ Client = (*mockKMSClient)(nil)
-)
+var _ Client = (*mockKMSClient)(nil)
 
 // Forced errors.
 var (
@@ -56,7 +54,7 @@ type mockKMSClient struct {
 // Deterministic key ARN based on key state and key specs and key usage.
 // region is used to force errors on some operations.
 func computeKMSKeyArn(keyState types.KeyState, keySpec types.KeySpec, keyUsage types.KeyUsageType, region ...string) string {
-	var buf = &bytes.Buffer{}
+	buf := &bytes.Buffer{}
 	if len(region) == 0 {
 		region = make([]string, 1)
 		region[0] = "us-east-1"
@@ -324,7 +322,7 @@ func newMockKMSClient() *mockKMSClient {
 }
 
 // Describe Key describes key and its metadata.
-func (m *mockKMSClient) DescribeKey(ctx context.Context, params *kms.DescribeKeyInput, optFns ...func(*kms.Options)) (*kms.DescribeKeyOutput, error) {
+func (m *mockKMSClient) DescribeKey(_ context.Context, params *kms.DescribeKeyInput, _ ...func(*kms.Options)) (*kms.DescribeKeyOutput, error) {
 	if strings.Contains(*params.KeyId, "error-describe") {
 		return nil, fmt.Errorf("%w: action=describe", errForced)
 	}
@@ -350,7 +348,7 @@ func (m *mockKMSClient) DescribeKey(ctx context.Context, params *kms.DescribeKey
 }
 
 // get public key.
-func (m *mockKMSClient) GetPublicKey(ctx context.Context, params *kms.GetPublicKeyInput, optFns ...func(*kms.Options)) (*kms.GetPublicKeyOutput, error) {
+func (m *mockKMSClient) GetPublicKey(_ context.Context, params *kms.GetPublicKeyInput, _ ...func(*kms.Options)) (*kms.GetPublicKeyOutput, error) {
 	if strings.Contains(*params.KeyId, "error-get-public-key") {
 		return nil, fmt.Errorf("%w: action=get-public-key", errForced)
 	}
@@ -365,7 +363,7 @@ func (m *mockKMSClient) GetPublicKey(ctx context.Context, params *kms.GetPublicK
 	}, nil
 }
 
-func (m *mockKMSClient) Sign(ctx context.Context, params *kms.SignInput, optFns ...func(*kms.Options)) (*kms.SignOutput, error) {
+func (m *mockKMSClient) Sign(_ context.Context, params *kms.SignInput, _ ...func(*kms.Options)) (*kms.SignOutput, error) {
 	if strings.Contains(*params.KeyId, "error-sign") {
 		return nil, fmt.Errorf("%w: action=sign", errForced)
 	}
@@ -413,7 +411,7 @@ func (m *mockKMSClient) Sign(ctx context.Context, params *kms.SignInput, optFns 
 	}, nil
 }
 
-func (m *mockKMSClient) Decrypt(ctx context.Context, params *kms.DecryptInput, optFns ...func(*kms.Options)) (*kms.DecryptOutput, error) {
+func (m *mockKMSClient) Decrypt(_ context.Context, params *kms.DecryptInput, _ ...func(*kms.Options)) (*kms.DecryptOutput, error) {
 	if strings.Contains(*params.KeyId, "error-decrypt") {
 		return nil, fmt.Errorf("%w: action=decrypt", errForced)
 	}

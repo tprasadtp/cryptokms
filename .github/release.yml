@@ -1,0 +1,51 @@
+# SPDX-FileCopyrightText: Copyright 2024 Prasad Tengse
+# SPDX-License-Identifier: MIT
+
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
+name: release
+on:
+  push:
+    tags:
+      - "**"
+    branches:
+      - "**"
+  workflow_dispatch:
+  pull_request:
+
+jobs:
+  snapshot:
+    if: ${{ github.ref_type == 'branch' }}
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: GoReleaser Snapshot
+        uses: goreleaser/goreleaser-action@v5
+        with:
+          version: latest
+          args: release --clean --fail-fast --snapshot
+
+  release:
+    if: ${{ github.ref_type == 'tag' }}
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: GoReleaser
+        uses: goreleaser/goreleaser-action@v5
+        with:
+          version: latest
+          args: release --clean --fail-fast
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

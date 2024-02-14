@@ -52,8 +52,6 @@ type Key struct {
 }
 
 // Generates test data.
-//
-//nolint:funlen // test code
 func (o *opts) GenerateTestData(ctx context.Context, keyID, keyUsage, keyAlgorithm string) error {
 	var err error
 

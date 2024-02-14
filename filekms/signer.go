@@ -181,8 +181,6 @@ func (s *Signer) Sign(_ io.Reader, digest []byte, opts crypto.SignerOpts) ([]byt
 // SignContext signs the given digest with asymmetric key.
 // The random parameter is ignored, and thus it can be as nil and is always set to
 // [crypto/rand.Reader].
-//
-//nolint:gocognit // ignore
 func (s *Signer) SignContext(ctx context.Context, _ io.Reader, digest []byte, opts crypto.SignerOpts) ([]byte, error) {
 	if ctx == nil {
 		ctx = context.Background()

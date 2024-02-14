@@ -68,7 +68,7 @@ func (o *opts) Retrieve(_ context.Context) (aws.Credentials, error) {
 }
 
 // Implements [github.com/aws/aws-sdk-go-v2/kms.EndpointResolver].
-func (o *opts) ResolveEndpoint(region string, options kms.EndpointResolverOptions) (aws.Endpoint, error) {
+func (o *opts) ResolveEndpoint(_ string, _ kms.EndpointResolverOptions) (aws.Endpoint, error) {
 	return aws.Endpoint{
 		URL: o.KMSEndpoint,
 	}, nil
@@ -107,6 +107,7 @@ func (o *opts) GenerateTestData(ctx context.Context, keyID, keyUsage, keyAlgorit
 	}
 
 	if o.KMSEndpoint != "" {
+		//nolint:staticcheck // ignore
 		kmsOptions.EndpointResolver = o
 	}
 

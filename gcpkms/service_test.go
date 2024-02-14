@@ -32,9 +32,9 @@ type fakeService struct {
 // Key name determines response.
 //   - keys starting with DISABLED_ are always in DESTROYED state.
 //   - keys containing string ERROR_GET_CRYPTOKEY_VERSION will return an error.
-func (svc *fakeService) GetCryptoKeyVersion(ctx context.Context, req *kmspb.GetCryptoKeyVersionRequest) (*kmspb.CryptoKeyVersion, error) {
+func (svc *fakeService) GetCryptoKeyVersion(_ context.Context, req *kmspb.GetCryptoKeyVersionRequest) (*kmspb.CryptoKeyVersion, error) {
 	// Build a fake response.
-	var resp = &kmspb.CryptoKeyVersion{
+	resp := &kmspb.CryptoKeyVersion{
 		Name:            req.Name,
 		ProtectionLevel: kmspb.ProtectionLevel_SOFTWARE,
 		GenerateTime:    timestamppb.New(knownTS),
@@ -122,7 +122,7 @@ func (svc *fakeService) GetCryptoKeyVersion(ctx context.Context, req *kmspb.GetC
 //
 //   - If key name contains ERROR_ON_GET_PUBLICKEY returns an error.
 //   - If key name contains with ERROR_RESP_INTEGRITY returned response does not match checksum.
-func (svc *fakeService) GetPublicKey(ctx context.Context, req *kmspb.GetPublicKeyRequest) (*kmspb.PublicKey, error) {
+func (svc *fakeService) GetPublicKey(_ context.Context, req *kmspb.GetPublicKeyRequest) (*kmspb.PublicKey, error) {
 	// If key set to force error, return an GRPC error response.
 	if strings.Contains(req.Name, "ERROR_ON_GET_PUBLICKEY") {
 		return nil, status.Error(codes.Internal, "fake service error")
@@ -214,7 +214,7 @@ func (svc *fakeService) GetPublicKey(ctx context.Context, req *kmspb.GetPublicKe
 //   - If key name contains FORCE_ERROR_ON_ASYMMETRICSIGN returns an error.
 //   - If key name contains with ERROR_RESP_INTEGRITY returned response does not match checksum.
 //   - If key name contains with ERROR_REQ_INTEGRITY assumes request was corrupted in transit.
-func (svc *fakeService) AsymmetricSign(ctx context.Context, req *kmspb.AsymmetricSignRequest) (*kmspb.AsymmetricSignResponse, error) {
+func (svc *fakeService) AsymmetricSign(_ context.Context, req *kmspb.AsymmetricSignRequest) (*kmspb.AsymmetricSignResponse, error) {
 	// If key set to force error, return an GRPC error response.
 	if strings.Contains(req.Name, "FORCE_ERROR_ON_ASYMMETRICSIGN") {
 		return nil, status.Error(codes.Internal, "fake service error")
@@ -276,7 +276,7 @@ func (svc *fakeService) AsymmetricSign(ctx context.Context, req *kmspb.Asymmetri
 //   - If key name contains FORCE_ERROR_ON_ASYMMETRICDECTYPT returns an error.
 //   - If key name contains with ERROR_RESP_INTEGRITY returned response does not match checksum.
 //   - If key name contains with ERROR_REQ_INTEGRITY assumes request was corrupted in transit.
-func (svc *fakeService) AsymmetricDecrypt(ctx context.Context, req *kmspb.AsymmetricDecryptRequest) (*kmspb.AsymmetricDecryptResponse, error) {
+func (svc *fakeService) AsymmetricDecrypt(_ context.Context, req *kmspb.AsymmetricDecryptRequest) (*kmspb.AsymmetricDecryptResponse, error) {
 	// If key set to force error, return an GRPC error response.
 	if strings.Contains(req.Name, "FORCE_ERROR_ON_ASYMMETRICDECTYPT") {
 		return nil, status.Error(codes.Internal, "fake service error")
