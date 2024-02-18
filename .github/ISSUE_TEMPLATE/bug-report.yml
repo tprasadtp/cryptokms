@@ -6,8 +6,9 @@ body:
   - type: markdown
     attributes:
       value: |
-        - Thanks for taking the time to fill out this bug report!
-        - If reporting a security issue please report it privately via [Security Advisories](https://github.com/tprasadtp/cryptokms/security/advisories).
+        Thanks for taking the time to fill out this bug report!
+
+        Please report security issues privately via [Security Advisories](https://github.com/tprasadtp/cryptokms/security/advisories).
 
   - type: textarea
     id: more-info

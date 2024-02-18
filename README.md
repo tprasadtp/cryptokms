@@ -1,12 +1,16 @@
+<div align="center">
+
 # Crypto Helpers for KMS backed keys
 
-[![go-reference](https://img.shields.io/badge/go-reference-00758D?logo=go&logoColor=white)](https://pkg.go.dev/github.com/tprasadtp/cryptokms)
-[![go-version](https://img.shields.io/github/go-mod/go-version/tprasadtp/cryptokms?logo=go&logoColor=white&color=00758D&label=go)](https://github.com/tprasadtp/cryptokms/blob/master/go.mod)
+[![go-reference](https://img.shields.io/badge/godoc-reference-5272b4?logo=go&labelColor=3a3a3a&logoColor=959da5)](https://pkg.go.dev/github.com/tprasadtp/cryptokms)
+[![go-version](https://img.shields.io/github/go-mod/go-version/tprasadtp/cryptokms?logo=go&labelColor=3a3a3a&logoColor=959da5&color=00add8&label=go)](https://github.com/tprasadtp/cryptokms/blob/master/go.mod)
 [![test](https://github.com/tprasadtp/cryptokms/actions/workflows/test.yml/badge.svg)](https://github.com/tprasadtp/cryptokms/actions/workflows/test.yml)
 [![lint](https://github.com/tprasadtp/cryptokms/actions/workflows/lint.yml/badge.svg)](https://github.com/tprasadtp/cryptokms/actions/workflows/lint.yml)
 [![release](https://github.com/tprasadtp/cryptokms/actions/workflows/release.yml/badge.svg)](https://github.com/tprasadtp/cryptokms/actions/workflows/release.yml)
-[![license](https://img.shields.io/github/license/tprasadtp/cryptokms)](https://github.com/tprasadtp/cryptokms/blob/master/LICENSE)
-[![latest-version](https://img.shields.io/github/v/tag/tprasadtp/cryptokms?color=7f50a6&label=release&logo=semver&sort=semver)](https://github.com/tprasadtp/cryptokms/releases)
+[![license](https://img.shields.io/github/license/tprasadtp/cryptokms?logo=github&labelColor=3a3a3a&logoColor=959da5)](https://github.com/tprasadtp/cryptokms/blob/master/LICENSE)
+[![version](https://img.shields.io/github/v/tag/tprasadtp/cryptokms?label=version&sort=semver&logo=semver&labelColor=3a3a3a&logoColor=959da5&color=ce3262)](https://github.com/tprasadtp/cryptokms/releases)
+
+</div>
 
 Implements [crypto.Signer] and [crypto.Decrypter] for keys typically backed by KMS service.
 Currently it supports keys backed by,

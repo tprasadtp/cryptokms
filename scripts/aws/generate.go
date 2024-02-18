@@ -190,6 +190,7 @@ func (o *opts) RunE(ctx context.Context) error {
 		return fmt.Errorf("output directory not specified")
 	}
 
+	//nolint:nestif // ignore
 	if !o.TemplatesOnly {
 		if o.AccessKeyID == "" {
 			o.AccessKeyID = os.Getenv("AWS_ACCESS_KEY_ID")
