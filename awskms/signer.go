@@ -17,9 +17,6 @@ import (
 	"github.com/tprasadtp/cryptokms"
 )
 
-// Compile time check to ensure [Signer] implements
-// [github.com/tprasadtp/cryptokms.Signer],
-// [crypto.Signer] and [crypto.SignerOpts].
 var (
 	_ cryptokms.Signer  = (*Signer)(nil)
 	_ crypto.Signer     = (*Signer)(nil)

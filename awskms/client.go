@@ -9,11 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/kms"
 )
 
-// Compile time check to ensure [github.com/aws/aws-sdk-go-v2/service/kms.Client]
-// implements [Client] interface.
-var (
-	_ Client = (*kms.Client)(nil)
-)
+var _ Client = (*kms.Client)(nil)
 
 // AWS KMS Asymmetric KMS client.
 // For all uses this is equivalent to [github.com/aws/aws-sdk-go-v2/service/kms.Client].

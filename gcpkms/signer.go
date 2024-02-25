@@ -21,9 +21,6 @@ import (
 	"google.golang.org/api/option"
 )
 
-// Compile time check to ensure [Signer] implements
-// [github.com/tprasadtp/cryptokms.Signer],
-// [crypto.Signer] and [crypto.SignerOpts].
 var (
 	_ crypto.Signer     = (*Signer)(nil)
 	_ crypto.SignerOpts = (*Signer)(nil)

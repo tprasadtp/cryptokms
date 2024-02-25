@@ -38,7 +38,8 @@ type Decrypter struct {
 	algo             cryptokms.Algorithm
 }
 
-// NewDecrypter returns a new decrypter based on key in the path specified.
+// NewDecrypter returns returns a new [Decrypter] based on key from given input.
+// Input key MUST be PEM encoded (optionally base64 encoded PEM).
 func NewDecrypter[T string | []byte](key T) (*Decrypter, error) {
 	priv, err := shared.ParsePrivateKey(key)
 	if err != nil {
@@ -165,7 +166,6 @@ func (d *Decrypter) DecryptContext(ctx context.Context, _ io.Reader, ciphertext 
 	}
 
 	plaintext, err := d.decrypter.Decrypt(rand.Reader, ciphertext, opts)
-
 	if err != nil {
 		return nil, fmt.Errorf("memkms: failed to decrypt: %w", err)
 	}

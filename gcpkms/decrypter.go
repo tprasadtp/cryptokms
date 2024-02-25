@@ -20,11 +20,9 @@ import (
 	"google.golang.org/api/option"
 )
 
-// Compile time check to ensure [Decrypter] implements
-// [github.com/tprasadtp/cryptokms.Signer] and [crypto.Decrypter].
 var (
-	_ cryptokms.Decrypter = (*Decrypter)(nil)
 	_ crypto.Decrypter    = (*Decrypter)(nil)
+	_ cryptokms.Decrypter = (*Decrypter)(nil)
 )
 
 // Decrypter is backed by a supported Google cloud KMS asymmetric key.
@@ -256,7 +254,6 @@ func (d *Decrypter) DecryptContext(ctx context.Context, _ io.Reader, ciphertext 
 			CiphertextCrc32C: computeCRC32(ciphertext),
 		},
 	)
-
 	if err != nil {
 		return nil, fmt.Errorf("gcpkms: failed to decrypt: %w", err)
 	}

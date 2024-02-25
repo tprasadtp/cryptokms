@@ -19,14 +19,10 @@ import (
 	"github.com/tprasadtp/cryptokms/internal/shared"
 )
 
-// Compile time check to ensure [Signer] implements
-// [github.com/tprasadtp/cryptokms.Signer], [crypto.Signer]
-// [github.com/tprasadtp/cryptokms.Decrypter],
-// and [crypto.SignerOpts].
 var (
-	_ cryptokms.Signer  = (*Signer)(nil)
 	_ crypto.Signer     = (*Signer)(nil)
 	_ crypto.SignerOpts = (*Signer)(nil)
+	_ cryptokms.Signer  = (*Signer)(nil)
 )
 
 // Signer.
@@ -42,9 +38,9 @@ type Signer struct {
 	algo   cryptokms.Algorithm
 }
 
-// NewSigner returns a new signer based on key in the path specified.
+// NewSigner returns a new signer based on key from given input.
+// Input key MUST be PEM encoded (optionally base64 encoded PEM).
 func NewSigner[T string | []byte](key T) (*Signer, error) {
-	// Try to parse key as private key.
 	priv, err := shared.ParsePrivateKey(key)
 	if err != nil {
 		return nil, fmt.Errorf("memkms: cannot parse private key: %w", err)

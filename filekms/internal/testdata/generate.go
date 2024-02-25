@@ -23,6 +23,69 @@ type Key struct {
 	priv crypto.PrivateKey
 }
 
+func CreatePKCS8Files(name string, priv crypto.PrivateKey) error {
+	pem := shared.MustMarshalPrivateKey(priv)
+	err := CreateFileWithData(name, pem)
+	if err != nil {
+		return err
+	}
+
+	err = CreateFileWithData(name+".base64", shared.EncodeBase64(pem))
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func CreatePKCS1File(name string, priv *rsa.PrivateKey) error {
+	pem := shared.MustMarshalPKCS1PrivateKey(priv)
+	err := CreateFileWithData(name, pem)
+	if err != nil {
+		return err
+	}
+
+	err = CreateFileWithData(name+".base64", shared.EncodeBase64(pem))
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func CreateECPrivateKey(name string, priv *ecdsa.PrivateKey) error {
+	pem := shared.MustMarshalECPrivateKey(priv)
+	err := CreateFileWithData(name, pem)
+	if err != nil {
+		return err
+	}
+
+	err = CreateFileWithData(name+".base64", shared.EncodeBase64(pem))
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func CreateFileWithData(name string, data []byte) error {
+	log.Printf("Creating file - %s", name)
+	file, err := os.OpenFile(name, os.O_CREATE|os.O_TRUNC|os.O_TRUNC|os.O_WRONLY, 0o640)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	_, err = file.Write(data)
+	if err != nil {
+		return err
+	}
+
+	err = file.Close()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func main() {
 	flag.StringVar(&output, "output", "", "output directory")
 	flag.Parse()
@@ -85,67 +148,4 @@ func main() {
 			}
 		}
 	}
-}
-
-func CreatePKCS8Files(name string, priv crypto.PrivateKey) error {
-	pem := shared.MustMarshalPrivateKey(priv)
-	err := CreateFileWithData(name, pem)
-	if err != nil {
-		return err
-	}
-
-	err = CreateFileWithData(name+".base64", shared.EncodeBase64(pem))
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func CreatePKCS1File(name string, priv *rsa.PrivateKey) error {
-	pem := shared.MustMarshalPKCS1PrivateKey(priv)
-	err := CreateFileWithData(name, pem)
-	if err != nil {
-		return err
-	}
-
-	err = CreateFileWithData(name+".base64", shared.EncodeBase64(pem))
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func CreateECPrivateKey(name string, priv *ecdsa.PrivateKey) error {
-	pem := shared.MustMarshalECPrivateKey(priv)
-	err := CreateFileWithData(name, pem)
-	if err != nil {
-		return err
-	}
-
-	err = CreateFileWithData(name+".base64", shared.EncodeBase64(pem))
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func CreateFileWithData(name string, data []byte) error {
-	log.Printf("Creating file - %s", name)
-	file, err := os.OpenFile(name, os.O_CREATE|os.O_TRUNC|os.O_TRUNC|os.O_WRONLY, 0o640)
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-
-	_, err = file.Write(data)
-	if err != nil {
-		return err
-	}
-
-	err = file.Close()
-	if err != nil {
-		return err
-	}
-	return nil
 }

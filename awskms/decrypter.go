@@ -18,9 +18,6 @@ import (
 	"github.com/tprasadtp/cryptokms"
 )
 
-// Compile time check to ensure [Signer] implements
-// [github.com/tprasadtp/cryptokms.Decrypter],
-// [crypto.Decrypter].
 var (
 	_ cryptokms.Decrypter = (*Decrypter)(nil)
 	_ crypto.Decrypter    = (*Decrypter)(nil)
@@ -248,7 +245,6 @@ func (d *Decrypter) DecryptContext(ctx context.Context, _ io.Reader, ciphertext 
 			EncryptionAlgorithm: d.hashToEncryptionAlgoMap[hasher],
 		},
 	)
-
 	if err != nil {
 		return nil, fmt.Errorf("awskms: failed to decrypt with key(%s): %w",
 			d.keyID, err)

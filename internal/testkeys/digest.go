@@ -13,7 +13,7 @@ import (
 // [Stellar classification]: https://en.wikipedia.org/wiki/Stellar_classification
 const KnownInput = "Oh Be A Fine Girl Kiss Me"
 
-// KnownInputHash Hashes KnownInput with specified hash algorithm.
+// KnownInputHash Hashes [KnownInput] with specified hash algorithm.
 func KnownInputHash(hash crypto.Hash) []byte {
 	h := hash.New()
 	h.Write([]byte(KnownInput))

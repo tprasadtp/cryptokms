@@ -23,8 +23,8 @@ import (
 )
 
 var (
-	_ cryptokms.Decrypter = (*Decrypter)(nil)
 	_ crypto.Decrypter    = (*Decrypter)(nil)
+	_ cryptokms.Decrypter = (*Decrypter)(nil)
 )
 
 // Decrypter.
@@ -206,7 +206,6 @@ func (d *Decrypter) DecryptContext(ctx context.Context, _ io.Reader, ciphertext 
 	}
 
 	plaintext, err := d.decrypter.Decrypt(rand.Reader, ciphertext, opts)
-
 	if err != nil {
 		return nil, fmt.Errorf("filekms: failed to decrypt: %w", err)
 	}
