@@ -1,14 +1,14 @@
 <div align="center">
 
-# Crypto Helpers for KMS backed keys
+# cryptokms
 
-[![go-reference](https://img.shields.io/badge/godoc-reference-5272b4?logo=go&labelColor=3a3a3a&logoColor=959da5)](https://pkg.go.dev/github.com/tprasadtp/cryptokms)
-[![go-version](https://img.shields.io/github/go-mod/go-version/tprasadtp/cryptokms?logo=go&labelColor=3a3a3a&logoColor=959da5&color=00add8&label=go)](https://github.com/tprasadtp/cryptokms/blob/master/go.mod)
+[![go-reference](https://img.shields.io/badge/godoc-reference-5272b4?labelColor=3a3a3a&logo=go&logoColor=959da5)](https://pkg.go.dev/github.com/tprasadtp/cryptokms)
+[![go-version](https://img.shields.io/github/go-mod/go-version/tprasadtp/cryptokms?labelColor=3a3a3a&color=00758D&label=go&logo=go&logoColor=959da5)](https://github.com/tprasadtp/cryptokms/blob/master/go.mod)
+[![license](https://img.shields.io/github/license/tprasadtp/cryptokms?labelColor=3a3a3a&color=00ADD8&logo=github&logoColor=959da5)](https://github.com/tprasadtp/cryptokms/blob/master/LICENSE)
 [![test](https://github.com/tprasadtp/cryptokms/actions/workflows/test.yml/badge.svg)](https://github.com/tprasadtp/cryptokms/actions/workflows/test.yml)
 [![lint](https://github.com/tprasadtp/cryptokms/actions/workflows/lint.yml/badge.svg)](https://github.com/tprasadtp/cryptokms/actions/workflows/lint.yml)
 [![release](https://github.com/tprasadtp/cryptokms/actions/workflows/release.yml/badge.svg)](https://github.com/tprasadtp/cryptokms/actions/workflows/release.yml)
-[![license](https://img.shields.io/github/license/tprasadtp/cryptokms?logo=github&labelColor=3a3a3a&logoColor=959da5)](https://github.com/tprasadtp/cryptokms/blob/master/LICENSE)
-[![version](https://img.shields.io/github/v/tag/tprasadtp/cryptokms?label=version&sort=semver&logo=semver&labelColor=3a3a3a&logoColor=959da5&color=ce3262)](https://github.com/tprasadtp/cryptokms/releases)
+[![version](https://img.shields.io/github/v/tag/tprasadtp/cryptokms?label=version&sort=semver&labelColor=3a3a3a&color=CE3262&logo=semver&logoColor=959da5)](https://github.com/tprasadtp/cryptokms/releases)
 
 </div>
 
