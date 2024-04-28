@@ -8,6 +8,8 @@ import (
 	"crypto/ecdsa"
 	"crypto/ed25519"
 	"crypto/rsa"
+	_ "crypto/sha256" // hash algorithms
+	_ "crypto/sha512" // hash algorithms
 	"encoding/asn1"
 	"fmt"
 	"io"
@@ -32,7 +34,7 @@ import (
 // even though signature might be valid.
 func VerifyDigestSignature(pub crypto.PublicKey, hash crypto.Hash, digest, signature []byte) error {
 	if hash == crypto.SHA1 || hash == crypto.MD4 || hash == crypto.MD5 {
-		return fmt.Errorf("cryptokms(verify): %s signatures are insecure are not supported", hash)
+		return fmt.Errorf("cryptokms(verify): %s signature is insecure and not supported", hash)
 	}
 
 	if !hash.Available() {
